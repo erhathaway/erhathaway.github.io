@@ -3,79 +3,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Angular Material style sheet -->
   <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css">
+  <!-- Icons! -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
 </head>
   <body ng-app="myApp" ng-cloak>
 
     <div layout="row" ng-controller="MyController">
-      <md-sidenav 
+      <!-- Left nav bar -->
+<!--       <md-sidenav 
           md-component-id="left" 
           class="md-sidenav-left"
           md-whiteframe="6"
-          md-is-locked-open="true">
+          md-is-locked-open="false">
         <md-toolbar class="md-theme-indigo">
           <h1 class="md-toolbar-tools">Sidenav Left</h1>
         </md-toolbar>
-              <md-button>
-        Right Bar Button
-      </md-button>
-      </md-sidenav>
-    <md-content flex layout-padding>
-<!--       <div layout="column" layout-fill layout-align="top center">
-        <div>
-          <md-button ng-click="openLeftMenu()">
-            Open Left Menu
+          <md-button>
+            Right Bar Button
           </md-button>
+      </md-sidenav> -->
+      <div flex="20" layout-padding>
+        <div layout="column" layout-align="space-around center">
+          
+          <div flex="auto">
+            <h3 class="md-headline">
+              Ethan Hathaway
+            </h3>
+            <md-divider></md-divider>
+          </div>
+            <md-divider></md-divider>
+
+          <div flex="auto">
+            <div layout="row" layout-wrap>
+              <md-button>
+                Github
+              </md-button>
+              <md-button>
+                Linkedin
+              </md-button>
+              <md-button>
+                Twitter
+              </md-button>
+            </div>
+          </div>
+
+          <div flex="auto">
+            <md-content>
+              <hr></hr>
+            </md-content>
+            <md-divider flex="100"></md-divider>
+          </div>
         </div>
-      </div> -->
-      <div flex="50"  layout="column">
-        <md-card>
-         <md-card-content>
-         <md-datepicker ng-model="birthday"></md-datepicker>
-           <h2>Card headline</h2>
-           <p>Card content</p>
-         </md-card-content>
-         <md-card-footer>
-           Card footer
-         </md-card-footer>
-        </md-card>
-
-        <md-card>
-         <md-card-content>
-         <md-datepicker ng-model="birthday"></md-datepicker>
-           <h2>Card headline</h2>
-           <p>Card content</p>
-         </md-card-content>
-         <md-card-footer>
-           Card footer
-         </md-card-footer>
-        </md-card>
       </div>
+      <!-- Main Content -->
+      <md-content flex layout="row" layout-padding>
+  <!--       <div layout="column" layout-fill layout-align="top center">
+          <div>
 
-      <div flex="50"  layout="column">
-        <md-card>
-         <md-card-content>
-         <md-datepicker ng-model="birthday"></md-datepicker>
-           <h2>Card headline</h2>
-           <p>Card content</p>
-         </md-card-content>
-         <md-card-footer>
-           Card footer
-         </md-card-footer>
-        </md-card>
+          </div>
+        </div> -->
+        <div flex layout="column">
+          <md-card>
+           <md-card-content>
+<!--             <md-datepicker ng-model="birthday"></md-datepicker>
+            <md-button ng-click="openLeftMenu()">
+              Open Left Menu
+            </md-button> -->
+            <h2>Project 1</h2>
+            <p>
+              Project 1 Details
+            </p>
+           </md-card-content>
+<!--            <md-card-footer>
+             Card footer
+           </md-card-footer> -->
+          </md-card>
+        </div>
 
-        <md-card>
-         <md-card-content>
-         <md-datepicker ng-model="birthday"></md-datepicker>
-           <h2>Card headline</h2>
-           <p>Card content</p>
-         </md-card-content>
-         <md-card-footer>
-           Card footer
-         </md-card-footer>
-        </md-card>
-      </div>
+        <div flex layout="column">
+          <md-card>
+           <md-card-content>
+            <h2>Project 2</h2>
+            <p>
+              Project 2 Details
+            </p>
+          </md-card>
 
-    </md-content>
+          <md-card>
+           <md-card-content>
+           <md-datepicker ng-model="birthday"></md-datepicker>
+            <h2>Project 3</h2>
+            <p>
+              Project 3 Details
+            </p>
+          </md-card>
+        </div>
+
+      </md-content>
 
     </div>
 
