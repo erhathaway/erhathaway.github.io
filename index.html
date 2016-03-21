@@ -6,37 +6,90 @@
 </head>
   <body ng-app="myApp" ng-cloak>
 
-  <div layout="row" ng-controller="MyController">
-    <md-sidenav md-component-id="left" class="md-sidenav-left">
-      Left Nav!
-    </md-sidenav>
-    <md-content>
-      Center Content
-      <md-button ng-click="openLeftMenu()">
-        Open Left Menu
+    <div layout="row" ng-controller="MyController">
+      <md-sidenav 
+          md-component-id="left" 
+          class="md-sidenav-left"
+          md-whiteframe="6"
+          md-is-locked-open="true">
+        <md-toolbar class="md-theme-indigo">
+          <h1 class="md-toolbar-tools">Sidenav Left</h1>
+        </md-toolbar>
+              <md-button>
+        Right Bar Button
       </md-button>
+      </md-sidenav>
+    <md-content flex layout-padding>
+<!--       <div layout="column" layout-fill layout-align="top center">
+        <div>
+          <md-button ng-click="openLeftMenu()">
+            Open Left Menu
+          </md-button>
+        </div>
+      </div> -->
+      <div flex="50"  layout="column">
+        <md-card>
+         <md-card-content>
+         <md-datepicker ng-model="birthday"></md-datepicker>
+           <h2>Card headline</h2>
+           <p>Card content</p>
+         </md-card-content>
+         <md-card-footer>
+           Card footer
+         </md-card-footer>
+        </md-card>
+
+        <md-card>
+         <md-card-content>
+         <md-datepicker ng-model="birthday"></md-datepicker>
+           <h2>Card headline</h2>
+           <p>Card content</p>
+         </md-card-content>
+         <md-card-footer>
+           Card footer
+         </md-card-footer>
+        </md-card>
+      </div>
+
+      <div flex="50"  layout="column">
+        <md-card>
+         <md-card-content>
+         <md-datepicker ng-model="birthday"></md-datepicker>
+           <h2>Card headline</h2>
+           <p>Card content</p>
+         </md-card-content>
+         <md-card-footer>
+           Card footer
+         </md-card-footer>
+        </md-card>
+
+        <md-card>
+         <md-card-content>
+         <md-datepicker ng-model="birthday"></md-datepicker>
+           <h2>Card headline</h2>
+           <p>Card content</p>
+         </md-card-content>
+         <md-card-footer>
+           Card footer
+         </md-card-footer>
+        </md-card>
+      </div>
+
     </md-content>
-    <md-sidenav md-component-id="right" md-is-locked-open="$mdMedia('min-width: 333px')" class="md-sidenav-right">
-      <form>
-        <md-input-container>
-          <label for="testInput">Test input</label>
-          <input id="testInput" type="text" ng-model="data" md-autofocus>
-        </md-input-container>
-      </form>
-    </md-sidenav>
-  </div>
 
-  <!-- Angular.js Libraries -->
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js"></script>
+    </div>
 
-  <!-- Angular Material Library -->
-  <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.js"></script>
-  
-  <!-- Application bootstrap  -->
-  <script src="js/app.js"></script>
+    <!-- Angular.js Libraries -->
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js"></script>
+
+    <!-- Angular Material Library -->
+    <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.js"></script>
+    
+    <!-- Application bootstrap  -->
+    <script src="js/app.js"></script>
 
   </body>
 </html>
