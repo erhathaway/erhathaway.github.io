@@ -9,7 +9,7 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/main.css">
 </head>
-  <body ng-app="myApp" ng-cloak>
+  <body ng-app="myApp" ng-cloak class="darkBackground">
 
     <div layout="row" ng-controller="MyController">
       <!-- Left nav bar -->
@@ -25,18 +25,19 @@
             Right Bar Button
           </md-button>
       </md-sidenav> -->
-      <div flex="20" layout-padding>
-        <div layout="column" layout-align="space-around center">
+      <div flex="25" layout-padding class="container lightBackground">
+        <div layout="column">
           
           <div flex="auto">
-            <h3 class="md-headline">
-              Ethan Hathaway
-            </h3>
-            <md-divider></md-divider>
+            <div layout="row" layout-align="center center" class="titleContainer">
+              <h3 class="md-headline titleColor">
+                Ethan Hathaway
+              </h3>
+            </div>
+            <md-divider class="titleDivider"></md-divider>
           </div>
-            <md-divider></md-divider>
 
-          <div flex="auto">
+          <div flex="15">
             <div layout="row" layout-align="center center">
               <md-button class="linkBtn">
                 Github
@@ -50,16 +51,45 @@
             </div>
           </div>
 
-          <div flex="auto">
-            <md-content>
-              <hr></hr>
-            </md-content>
-            <md-divider flex="100"></md-divider>
+          <div flex="grow">
+            <!-- <md-content> -->
+              <!-- <hr></hr> -->
+            <div layout="column" layout-align="start start">
+
+
+              <md-list layout-align="start start">
+                <md-list-item class="projectListItem">
+                  <h3 class="md-subhead projectListItemContent titleColor">
+                    PROJECTS
+                  </h3>
+                </md-list-item>
+                <md-divider class="projectListDivider"></md-divider>
+
+                <md-list-item class="projectListItem">
+                  <md-button md-no-ink class="projectListItemContent">Software</md-button>
+                </md-list-item>
+                <md-list-item class="projectListItem">
+                  <md-button md-no-ink class="projectListItemContent">Hardware</md-button>
+                </md-list-item>
+                <md-list-item class="projectListItem">
+                  <md-button md-no-ink class="projectListItemContent">Woodworking</md-button>
+                </md-list-item>
+                <md-list-item class="projectListItem">
+                  <md-button md-no-ink class="projectListItemContent">Gardening</md-button>
+                </md-list-item>
+              </md-list>
+            </div>
+
+
+            
+            <!-- </md-content> -->
+            <!-- <md-divider flex="100"></md-divider> -->
           </div>
+
         </div>
       </div>
       <!-- Main Content -->
-      <md-content flex layout="row" layout-padding>
+      <md-content flex layout="row" layout-padding class="darkBackground">
   <!--       <div layout="column" layout-fill layout-align="top center">
           <div>
 

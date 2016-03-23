@@ -1,5 +1,56 @@
+.darkBackground {
+  background-color: rgb(246, 246, 246);
+}
+
+.md-button {
+    /*background-color: rgb(246, 246, 246);*/
+text-transform: none;
+}
+
+.lightBackground {
+  background-color: white;
+
+}
+
+.titleContainer {
+  margin-left: -23px;
+}
+.titleColor {
+  color: rgb(120, 161, 90);
+}
+
+.titleDivider {
+  width: 240px;
+  margin-left: 30px;
+}
+
 .linkBtn { 
   font-size: 12px;
   margin-right: 0px;
   margin-left: 0px;
+}
+
+.projectListItem {
+  padding: 0 0 0 8px ;
+  margin-top: -10px;
+  margin-bottom: -10px;
+}
+
+.projectListItemContent {
+  width: 250px;
+  padding: 0 200px 0 20px;
+}
+
+.projectListDivider {
+  width: 160px;
+  margin-left: 30px;
+  margin-bottom: 10px;
+  margin-top: 8px;
+}
+
+.container {
+/*  border-color: white;
+  border-width: 1px;
+  border-style: solid;*/
+      box-shadow: 0 1px 1px 0 rgba(0, 0, 0, .1);
 }
