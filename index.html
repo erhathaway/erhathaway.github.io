@@ -28,25 +28,19 @@
       <div flex="25" layout-padding class="container lightBackground">
         <div layout="column">
           
-          <div flex="auto">
+          <div flex="auto" ng-controller="myName">
             <div layout="row" layout-align="center center" class="titleContainer">
               <h3 class="md-headline titleColor">
-                Ethan Hathaway
+                {{firstName + " " + lastName}}
               </h3>
             </div>
             <md-divider class="titleDivider"></md-divider>
           </div>
 
-          <div flex="10">
+          <div flex="10" ng-controller="myLinks">
             <div layout="row" layout-align="center center">
-              <md-button class="linkBtn">
-                Github
-              </md-button>
-              <md-button class="linkBtn">
-                Linkedin
-              </md-button>
-              <md-button class="linkBtn">
-                Twitter
+              <md-button class="linkBtn" ng-repeat="link in linkNames">
+                {{link}}
               </md-button>
             </div>
           </div>
