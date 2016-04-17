@@ -45,21 +45,25 @@
             </div>
           </div>
 
-          <div flex="grow">
+          <div flex="grow" ng-controller="myData">
             <div layout="column" layout-align="start start">
 
 
               <md-list layout-align="start start">
-                <md-list-item class="projectListItem listItemTItle">
-                  <h3 class="md-subhead projectListItemContent titleColor">
-                    PROJECTS
-                  </h3>
-                </md-list-item>
-                <md-divider class="projectListDivider"></md-divider>
+                <div ng-repeat="category in categoryNames">
+                  <md-list-item class="projectListItem listItemTItle" >
+                    <h3 class="md-subhead projectListItemContent titleColor">
+                      {{category}}
+                    </h3>
+                  </md-list-item>
+                  <md-divider class="projectListDivider"></md-divider>
+                  <md-list-item class="projectListItem">
+                    <md-button md-no-ink class="projectListItemContent">Software</md-button>
+                  </md-list-item>
+                </div>
 
-                <md-list-item class="projectListItem">
-                  <md-button md-no-ink class="projectListItemContent">Software</md-button>
-                </md-list-item>
+
+
                 <md-list-item class="projectListItem">
                   <md-button md-no-ink class="projectListItemContent">Hardware</md-button>
                 </md-list-item>

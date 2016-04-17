@@ -28,3 +28,41 @@ app.controller('myLinks', function($scope) {
             };
   $scope.linkNames = Object.keys(data);
 });
+
+app.controller('myData', function($scope) {
+  var data = {
+    "categories": [
+      {
+        "name": "Projects",
+        "pieces": [
+          {
+            "name": "Woodworking",
+            "items": [
+              {
+                "image": "blahhh",
+                "description": "ohmyblahh",
+                "position": 1,
+                "default": true,
+              }],
+          },
+          {
+            "name": "Software"
+          }]
+      },
+      {
+        "name": "Resumes",
+        "pieces": [],
+      }]
+  }
+
+  // $scope.categoryNames = function () {
+  //   var names = [];
+  //   for (var category in data["categories"]) {
+  //     names.push(category["name"]);
+  //   };
+  //   return names
+  // };
+  $scope.categoryNames = ["PROJECTS", "RESUME"]
+
+//   // $scope.categoryNames = Objects.keys(data.categories)
+});
