@@ -29,36 +29,30 @@ app.controller('myLinks', function($scope) {
   $scope.linkNames = Object.keys(data);
 });
 
-app.controller('myData', function($scope) {
-  var categories = {
+app.controller('myCategories', function($scope) {
+  var data = {
     "Projects": {
-      "order": 1,
-      "items": [
+      "categories": [
         {
           "name": "Woodworking",
-          // "pieces": [
-          //   {
-          //     "image": "blahhh",
-          //     "description": "ohmyblahh",
-          //     "position": 1,
-          //     "default": true,
-          //   }],
+          "projects": ["Bed", "Shelf"]
         },
         {
           "name": "Software",
-
+          "projects": ["abBlast", "Ryzome", "portfolio single page app"]
         },
         {
           "name": "Hardware",
-
+          "projects": ["Homethermic Heater", "Supersoaker"]
         },
         {
           "name": "Gardening",
+          "projects": ["Hydroponics", "Parents Garden"]
         },
       ]
     },
     "Resumes" : {
-      "items": [
+      "categories": [
         {
           "name": "Biological Science"
         },
@@ -69,19 +63,68 @@ app.controller('myData', function($scope) {
     }
   }
 
-  $scope.getCategoryNames = function() {
-    return Object.keys(categories);
+  $scope.getCategoryTypes = function() {
+    return Object.keys(data);
   }
 
-  $scope.getCategoryItems = function(category_name) {
-    return categories[category_name]["items"];
+  $scope.getCategories = function(category_type) {
+    return data[category_type]["categories"];
+  }
+});
+
+app.controller('myProjects', function($scope) {
+  var projects = {
+    "Bed":
+      {
+        "folder": "Bed",
+        "main_image":"20150927_185810.jpg",
+        "long_name": "Arts and Crafts (Mission) Style Bed",
+        "summary": "oh my blahh",
+        "year": 2015,
+        "pieces": [
+          {
+            "image_name": "lalah.png",
+            "description": "ohlahlah"
+          },
+          {
+            "image_name": "lalah.png",
+            "description": "ohlahlah"
+          }
+        ]
+      },
+    "Shelf":
+      {
+        "folder":"Shelf",
+        "main_image":"20160408_214248.jpg",
+        "long_name": "Scandinavian (Currant) Inspired Shelf",
+        "summary": "oh my shelf!",
+        "year": 2016,
+        "pieces": [
+          {
+            "image_name": "lalah.png",
+            "description": "ohlahlah"
+          },
+          {
+            "image_name": "lalah.png",
+            "description": "ohlahlah"
+          }
+        ]
+      }
+    }
+
+  $scope.getProjects = function() {
+    return projects;
   }
 
-  // $scope.getCategoryItemNames = function(category_name) {
-  //   var items = getCategoryItems(category_name);
-  //   return Object.keys(items);
-  // }
-
-  // $scope.categoryItemNames = getCategoryItemNames(category_name);
-  // $scope.categoryNames = getCategoryNames();
+  $scope.getMainImages = function() {
+    var main_images = []
+    for (var project in projects) {
+      if (!data.hasOwnProperty(project)) {
+        continue;
+      }
+      var image_path = "images/projects/".concat(project).concat("/").concat(projects[project]["main_image"])
+      main_images.push(image_path)
+    }
+    return main_images;
+  }
 });

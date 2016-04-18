@@ -12,22 +12,10 @@
   <body ng-app="myApp" ng-cloak class="darkBackground">
 
     <div layout="row" ng-controller="MyController">
-      <!-- Left nav bar -->
-<!--       <md-sidenav 
-          md-component-id="left" 
-          class="md-sidenav-left"
-          md-whiteframe="6"
-          md-is-locked-open="false">
-        <md-toolbar class="md-theme-indigo">
-          <h1 class="md-toolbar-tools">Sidenav Left</h1>
-        </md-toolbar>
-          <md-button>
-            Right Bar Button
-          </md-button>
-      </md-sidenav> -->
+      <!-- Start Left Side Panel -->
       <div flex="25" layout-padding class="container lightBackground">
         <div layout="column">
-          
+          <!-- Name -->
           <div flex="auto" ng-controller="myName">
             <div layout="row" layout-align="center center" class="titleContainer">
               <h3 class="md-headline titleColor">
@@ -36,7 +24,7 @@
             </div>
             <md-divider class="titleDivider"></md-divider>
           </div>
-
+          <!-- Links -->
           <div flex="10" ng-controller="myLinks">
             <div layout="row" layout-align="center center">
               <md-button class="linkBtn" ng-repeat="link in linkNames">
@@ -45,72 +33,54 @@
             </div>
           </div>
 
-          <div flex="grow" ng-controller="myData">
+          <!-- Categories  -->
+          <div flex="75" ng-controller="myCategories">
             <div layout="column" layout-align="start start">
 
-
               <md-list layout-align="start start">
-                <div ng-repeat="category in getCategoryNames()">
+                <div ng-repeat="category_type in getCategoryTypes()">
                   <md-list-item class="projectListItem listItemTItle" >
                     <h3 class="md-subhead projectListItemContent titleColor">
-                      {{category}}
+                      {{category_type}}
                     </h3>
                   </md-list-item>
+
                   <md-divider class="projectListDivider"></md-divider>
-                  <md-list-item class="projectListItem" ng-repeat="item in getCategoryItems(category)">
-                    <md-button md-no-ink class="projectListItemContent">{{item.name}}</md-button>
+
+                  <!-- Category Items -->
+                  <md-list-item class="projectListItem" ng-repeat="category in getCategories(category_type)">
+                    <md-button md-no-ink class="projectListItemContent">{{category.name}}</md-button>
                   </md-list-item>
                 </div>
               </md-list>
             </div>
 
           </div>
+          <!-- End Categories -->
         </div>
-      
+        <!-- End Column -->
       </div>
+      <!-- End Left Side Panel -->
 
-      <!-- Main Content -->
+      <!-- Start Main Content -->
       <md-content flex layout="row" layout-padding class="darkBackground">
-  <!--       <div layout="column" layout-fill layout-align="top center">
-          <div>
-
-          </div>
-        </div> -->
-        <div flex layout="column">
-          <md-card>
-           <md-card-content>
-<!--             <md-datepicker ng-model="birthday"></md-datepicker>
-            <md-button ng-click="openLeftMenu()">
-              Open Left Menu
-            </md-button> -->
-            <h2>Project 1</h2>
-            <p>
-              Project 1 Details
-            </p>
-           </md-card-content>
-<!--            <md-card-footer>
-             Card footer
-           </md-card-footer> -->
+        <div flex layout="column" ng-controller="myProjects">
+          <md-card ng-repeat="project in getProjects()">
+            <img src="{{'images/projects/'+project.folder+'/'+project.main_image}}" class="md-card-image" alt="image caption">
+            <md-card-footer>
+              {{project.long_name}}
+            </md-card-footer>
           </md-card>
         </div>
 
         <div flex layout="column">
-          <md-card>
+<!--           <md-card>
            <md-card-content>
             <h2>Project 2</h2>
             <p>
               Project 2 Details
             </p>
-          </md-card>
-
-          <md-card>
-           <md-card-content>
-           <md-datepicker ng-model="birthday"></md-datepicker>
-            <h2>Project 3</h2>
-            <p>
-              Project 3 Details
-            </p>
-          </md-card>
+          </md-card> -->
         </div>
 
       </md-content>
