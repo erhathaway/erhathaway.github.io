@@ -96,7 +96,7 @@ app.controller('myProjects', function($scope) {
       {
         "folder":"Shelf",
         "main_image":"20160408_214248.jpg",
-        "long_name": "Scandinavian (Currant) Inspired Shelf",
+        "long_name": "Scandinavian Inspired Shelf",
         "summary": "oh my shelf!",
         "year": 2016,
         "pieces": [
