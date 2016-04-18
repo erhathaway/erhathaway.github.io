@@ -50,42 +50,17 @@
 
 
               <md-list layout-align="start start">
-                <div ng-repeat="category in categoryNames">
+                <div ng-repeat="category in getCategoryNames()">
                   <md-list-item class="projectListItem listItemTItle" >
                     <h3 class="md-subhead projectListItemContent titleColor">
                       {{category}}
                     </h3>
                   </md-list-item>
                   <md-divider class="projectListDivider"></md-divider>
-                  <md-list-item class="projectListItem">
-                    <md-button md-no-ink class="projectListItemContent">Software</md-button>
+                  <md-list-item class="projectListItem" ng-repeat="item in getCategoryItems(category)">
+                    <md-button md-no-ink class="projectListItemContent">{{item.name}}</md-button>
                   </md-list-item>
                 </div>
-
-
-
-                <md-list-item class="projectListItem">
-                  <md-button md-no-ink class="projectListItemContent">Hardware</md-button>
-                </md-list-item>
-                <md-list-item class="projectListItem">
-                  <md-button md-no-ink class="projectListItemContent">Woodworking</md-button>
-                </md-list-item>
-                <md-list-item class="projectListItem">
-                  <md-button md-no-ink class="projectListItemContent">Gardening</md-button>
-                </md-list-item>
-
-                <md-list-item class="projectListItem listItemTitle">
-                  <h3 class="md-subhead projectListItemContent titleColor">
-                    RESUME
-                  </h3>
-                </md-list-item>
-                <md-divider class="projectListDivider"></md-divider>
-                <md-list-item class="projectListItem">
-                  <md-button md-no-ink class="projectListItemContent">Biological Science</md-button>
-                </md-list-item>
-                <md-list-item class="projectListItem">
-                  <md-button md-no-ink class="projectListItemContent">Software Engineering</md-button>
-                </md-list-item>
               </md-list>
             </div>
 
