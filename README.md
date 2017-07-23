@@ -6,7 +6,9 @@ A work in progress personal site and portfolio.
 
 ![Travis Build](https://travis-ci.org/erhathaway/erhathaway.github.io.svg?branch=master)
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/acc567a798904dabbd501316973541ed)](https://www.codacy.com/app/erhathaway/erhathaway.github.io?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=erhathaway/erhathaway.github.io&amp;utm_campaign=Badge_Grade)
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/acc567a798904dabbd501316973541ed)](https://www.codacy.com/app/erhathaway/erhathaway.github.io?utm_source=github.com&utm_medium=referral&utm_content=erhathaway/erhathaway.github.io&utm_campaign=Badge_Coverage)
 
 ## Dev Notes
 
