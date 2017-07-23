@@ -2,11 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './style.css';
 
-require.context('./', true, /^\.\/.*\.html/);
-require.context('./assets/images/', true, /^\.\/.*\.(jpg|png|svg|gif)/);
+// loader needed by webpack for loading of assets
+const fileLoaderModule = require('./config/fileLoader')
 
 const HelloWorld = () => (
-  <div styleName="container">Hello World</div>
+  <div styleName="container">
+    <a> Hello World</a>
+    <img src='./static/images/sampleImage.jpg' alt='sample image'></img>
+  </div>
 );
 
 window.onload = () => {
@@ -14,3 +17,5 @@ window.onload = () => {
     <HelloWorld />
     , document.getElementById('main'));
 };
+
+export default HelloWorld

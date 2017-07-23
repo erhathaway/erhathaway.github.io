@@ -15,14 +15,14 @@ const entry = path.join(__dirname, 'src', 'app.js');
 const devServer = {
   inline: true,
   port: 4000,
-  contentBase: '../static',
+  contentBase: '..',
   historyApiFallback: {
     index: 'index.html',   // fallback to index.html
   },
 };
 const output = {
-  path: path.join(__dirname, 'static'),
-  filename: './js/bundle.js',
+  path: path.join(__dirname, '.'),
+  filename: './static/js/bundle.js',
 };
 const modules = {
   rules: [
@@ -48,16 +48,16 @@ const modules = {
     },
     {
       test: /\.html$/,
-      loader: 'file-loader?name=../[name].html',
+      loader: 'file-loader?name=./[name].html',
     },
-    { test: /\.(jpg|png|svg|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name=./images/[name].[ext]&context=./images' },
+    { test: /\.(jpg|png|svg|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name=./static/images/[name].[ext]&context=./images' },
     { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?limit=10000&mimetype=application/font-woff' },
-    { test: /\.(ttf|eot)$/, loader: 'file-loader?name=fonts/[name].[ext]&context=./fonts' },
+    { test: /\.(ttf|eot)$/, loader: 'file-loader?name=fonts/[name].[ext]&context=./static/fonts' },
   ],
 };
 const plugins = [
   new ExtractTextPlugin({
-    filename: 'css/style.css',   // extract css into single file (from css-modules)
+    filename: 'static/css/style.css',   // extract css into single file (from css-modules)
   }),
   new webpack.DefinePlugin({
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
