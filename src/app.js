@@ -3,19 +3,19 @@ import ReactDOM from 'react-dom';
 import './style.css';
 
 // loader needed by webpack for loading of assets
-const fileLoaderModule = require('./config/fileLoader')
+require('./config/fileLoader');
 
-const HelloWorld = () => (
+const App = () => (
   <div styleName="container">
     <a> Hello World</a>
-    <img src='./static/images/sampleImage.jpg' alt='sample image'></img>
+    <img src="./static/images/sampleImage.jpg" alt="sample" />
   </div>
 );
 
 window.onload = () => {
   ReactDOM.render(
-    <HelloWorld />
+    <App />
     , document.getElementById('main'));
 };
 
-export default HelloWorld
+export default App;

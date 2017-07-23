@@ -11,5 +11,8 @@
   "globals": {
     "document": true,
     "window": true
+  },
+  "env": {
+      "jest": true
   }
 }
