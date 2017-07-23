@@ -2,6 +2,12 @@
 
 A work in progress personal site and portfolio.
 
+## Status
+
+![Travis Build](https://travis-ci.org/erhathaway/erhathaway.github.io.svg?branch=master)
+
+
+
 ## Dev Notes
 
 Built using React, Redux, Redux Sagas, Radium, GraphQL, Jest, ESLint, and Webpack
