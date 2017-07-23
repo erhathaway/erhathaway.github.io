@@ -48,7 +48,7 @@ const modules = {
     },
     {
       test: /\.html$/,
-      loader: 'file-loader?name=[name].html',
+      loader: 'file-loader?name=../[name].html',
     },
     { test: /\.(jpg|png|svg|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name=./images/[name].[ext]&context=./images' },
     { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?limit=10000&mimetype=application/font-woff' },
