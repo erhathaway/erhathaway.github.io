@@ -1,7 +1,7 @@
 import renderer from 'react-test-renderer';
 
 import React from 'react';
-import App from './App';
+import App from './app';
 
 // mock loader needed by webpack for loading of assets
 jest.mock('./config/fileLoader', () => jest.fn(() => undefined));
