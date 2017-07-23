@@ -25,3 +25,6 @@ script:
 
   # run test suite
   - node node_modules/jest/bin/jest.js
+
+  # send code coverage results to codacy
+  - node node_modules/jest/bin/jest.js --coverage && cat ./coverage/lcov.info | ./node_modules/.bin/codacy-coverage && rm -rf ./coverage

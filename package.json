@@ -2,11 +2,11 @@
   "name": "Portfolio",
   "version": "0.1.0",
   "description": "Ethan Hathaway's Portfolio",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
     "start": "webpack-dev-server",
     "lint": "node node_modules/eslint/bin/eslint.js -c ./.eslintrc.json --ignore-pattern 'node_modules/*' --ignore-pattern 'npm/*' --ignore-pattern 'coverage/*' --ignore-pattern 'static/*' .; exit 0",
-    "test": "node node_modules/jest/bin/jest.js --watch",
+    "test": "node node_modules/jest/bin/jest.js",
     "build-dev": "NODE_ENV=development node_modules/.bin/webpack --display-error-details",
     "build": "NODE_ENV=production node_modules/.bin/webpack --display-error-details"
   },
@@ -14,7 +14,14 @@
     "type": "git",
     "url": "git+https://github.com/erhathaway/erhathaway.github.io.git"
   },
-  "keywords": ["portfolio", "sketch app", "react", "redux", "redux-saga", "webpack"],
+  "keywords": [
+    "portfolio",
+    "sketch app",
+    "react",
+    "redux",
+    "redux-saga",
+    "webpack"
+  ],
   "author": "Ethan Hathaway (erhathaway)",
   "license": "Unlicense",
   "bugs": {
@@ -22,29 +29,37 @@
   },
   "homepage": "https://github.com/erhathaway/erhathaway.github.io#readme",
   "dependencies": {
+    "codacy-coverage": "^2.0.2",
     "react": "^15.6.1",
     "react-dom": "^15.6.1"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
-    "babel-loader": "^7.1.1",
     "babel-core": "^6.25.0",
-    "babel-preset-react": "^6.24.1",
+    "babel-jest": "^20.0.3",
+    "babel-loader": "^7.1.1",
     "babel-plugin-react-css-modules": "^3.1.0",
     "babel-preset-es2015": "^6.24.1",
-    "babel-jest": "^20.0.3",
-    "extract-text-webpack-plugin": "^2.1.2",
+    "babel-preset-react": "^6.24.1",
     "css-loader": "^0.28.4",
     "eslint": "^3.19.0",
     "eslint-config-airbnb": "^15.0.1",
     "eslint-plugin-import": "^2.3.0",
     "eslint-plugin-jsx-a11y": "^5.0.3",
     "eslint-plugin-react": "^7.1.0",
+    "extract-text-webpack-plugin": "^2.1.2",
     "file-loader": "^0.11.2",
     "jest": "^20.0.4",
+    "react-test-renderer": "^15.6.1",
     "regenerator-runtime": "^0.10.5",
     "style-loader": "^0.18.2",
     "webpack": "^2.6.1",
     "webpack-dev-server": "2.6.1"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/src/config/fileMock.js",
+      "\\.(css|less)$": "<rootDir>/src/config/styleMock.js"
+    }
   }
 }
