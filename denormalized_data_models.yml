@@ -1,11 +1,12 @@
-Denormalized Data Models
--------------------------------------
+# Proposal for denormalized data models
+# -------------------------------------
+
 landing_page:
  - project_ids: [<relation>]
-categories
+categories:
   - projects: [<relation>]
   - name: <string>
-projects
+projects:
   - category_id: <relation>
   - section_ids: [<relation>]
   - content_ids: [<relation>]
@@ -15,12 +16,12 @@ projects
   - cover: <relation - content_id>
   - description: <string>
   - category: <string>
-project_sections
+project_sections:
   - category_id: <relation>
   - project_id: <relation>
   - content_ids: [<relation>]
   - name: <string>
-project_content
+project_content:
   - category_id: <relation>
   - project_id: <relation>
   - section_id: <relation>
