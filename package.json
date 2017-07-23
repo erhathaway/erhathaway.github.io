@@ -7,8 +7,8 @@
     "start": "webpack-dev-server",
     "lint": "node node_modules/eslint/bin/eslint.js -c ./.eslintrc.json --ignore-pattern 'node_modules/*' --ignore-pattern 'npm/*' --ignore-pattern 'coverage/*' --ignore-pattern 'static/*' .; exit 0",
     "test": "node node_modules/jest/bin/jest.js --watch",
-    "build": "NODE_ENV=development node_modules/.bin/webpack --display-error-details",
-    "build-production": "NODE_ENV=production node_modules/.bin/webpack --display-error-details"
+    "build-dev": "NODE_ENV=development node_modules/.bin/webpack --display-error-details",
+    "build": "NODE_ENV=production node_modules/.bin/webpack --display-error-details"
   },
   "repository": {
     "type": "git",
