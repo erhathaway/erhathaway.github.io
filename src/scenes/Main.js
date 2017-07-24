@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 // routing
 import { Switch, Route } from 'react-router-dom';
@@ -9,14 +10,16 @@ import Category from './Category/Main';
 import Project from './Project/Main';
 
 const Main = () => (
-  <main>
-    <Switch>
-      <Route exact path="/" component={Landing} />
-      <Route exact path="/category/:id" component={Category} />
-      <Route path="/project/:id" component={Project} />
-      <Route path="*" component={Landing} />
-    </Switch>
-  </main>
+  <Switch>
+    <Route exact path="/" component={Landing} />
+    <Route exact path="/category/:id" component={Category} />
+    <Route path="/project/:id" component={Project} />
+    <Route path="*" component={Landing} />
+  </Switch>
 );
+
+Main.contextTypes = {
+  router: PropTypes.object.isRequired,
+};
 
 export default Main;
