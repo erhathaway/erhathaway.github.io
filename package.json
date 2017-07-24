@@ -29,9 +29,12 @@
   },
   "homepage": "https://github.com/erhathaway/erhathaway.github.io#readme",
   "dependencies": {
-    "codacy-coverage": "^2.0.2",
+    "prop-types": "^15.5.10",
     "react": "^15.6.1",
-    "react-dom": "^15.6.1"
+    "react-dom": "^15.6.1",
+    "react-redux": "^5.0.5",
+    "react-router-dom": "^4.1.2",
+    "redux": "^3.7.2"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
@@ -54,7 +57,8 @@
     "regenerator-runtime": "^0.10.5",
     "style-loader": "^0.18.2",
     "webpack": "^2.6.1",
-    "webpack-dev-server": "2.6.1"
+    "webpack-dev-server": "2.6.1",
+    "codacy-coverage": "^2.0.2"
   },
   "jest": {
     "moduleNameMapper": {

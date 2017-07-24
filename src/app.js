@@ -1,21 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter } from 'react-router-dom';
 import './style.css';
 
-// loader needed by webpack for loading of assets
-require('./config/fileLoader');
+// scene
+import MainAppScene from './scenes/Main';
 
-const App = () => (
-  <div styleName="container">
-    <a> Hello World</a>
-    <img src="./static/images/sampleImage.jpg" alt="sample" />
-  </div>
-);
+// webpack
+require('./config/fileLoader'); // loader needed by webpack for loading of assets
+
 
 window.onload = () => {
-  ReactDOM.render(
-    <App />
-    , document.getElementById('main'));
+  ReactDOM.render((
+    <BrowserRouter>
+      <MainAppScene />
+    </BrowserRouter>
+  ), document.getElementById('main'));
 };
 
-export default App;
+export default MainAppScene;
