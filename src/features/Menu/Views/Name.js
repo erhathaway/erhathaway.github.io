@@ -10,6 +10,7 @@ const Name = ({ style }) => {
     ...styles,
     ...style,
   };
+  console.log(computed)
   return (
     <div style={computed}>Ethan Hathaway</div>
   );
@@ -17,7 +18,7 @@ const Name = ({ style }) => {
 
 Name.propTypes = {
   style: PropTypes.shape({
-    fontColor: PropTypes.string.isRequired,
+    color: PropTypes.string.isRequired,
   }).isRequired,
 };
 

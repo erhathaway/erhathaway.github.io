@@ -24,8 +24,8 @@ class MenuContainer extends React.Component {
   closeMenuItem = (className, itemName) => this.props.closeMenuItem(className, itemName)
 
   render() {
-    const { fontColor } = this.props;
-    const sharedStyles = { fontColor };
+    const { color } = this.props;
+    const sharedStyles = { color };
 
     return (
       <div style={styles.container}>
@@ -36,7 +36,7 @@ class MenuContainer extends React.Component {
 }
 
 const mapStateToProps = state => ({
-  fontColor: state.styleState.fontColor,
+  color: state.styleState.fontColor,
   activeCategory: state.menuState.activeCategory,
   activeDocument: state.menuState.activeDocument,
   activeProject: state.menuState.activeProject,
@@ -51,7 +51,7 @@ const mapDispatchToProps = dispatch => ({
 MenuContainer.propTypes = {
   openMenuItem: PropTypes.func.isRequired,
   closeMenuItem: PropTypes.func.isRequired,
-  fontColor: PropTypes.string.isRequired,
+  color: PropTypes.string.isRequired,
 };
 
 const Menu = connect(
