@@ -44,9 +44,9 @@ class MainContainer extends React.Component {
         <Item name={'Woodworking'} tabIndex={0} onClick={() => this.handleCategoryClick('woodworking')} selected={activeCategory === 'woodworking'} />
         <Item name={'Hardware'} tabIndex={0} onClick={() => this.handleCategoryClick('hardware')} selected={activeCategory === 'hardware'} />
         <Item name={'Software'} tabIndex={0} onClick={() => this.handleCategoryClick('software')} selected={activeCategory === 'software'} />
-        <Divider width={160} tabIndex={0} marginBottom={17} />
+        <Divider width={160} tabIndex={0} marginBottom={10} marginTop={10} />
         <Item name={'Writings'} tabIndex={0} onClick={() => this.handleDocumentClick('writings')} selected={activeDocument === 'writings'} />
-        <Divider width={160} tabIndex={0} marginBottom={17} />
+        <Divider width={160} tabIndex={0} marginBottom={10} marginTop={10} />
         <Item name={'Terminal'} tabIndex={0} onClick={() => this.handleAppClick('terminal')} selected={activeApps.includes('terminal')} />
         <Item name={'Contact'} tabIndex={0} onClick={() => this.handleAppClick('contact')} selected={activeApps.includes('contact')} />
         <Item name={'Presence'} tabIndex={0} onClick={() => this.handleAppClick('presence')} selected={activeApps.includes('presence')} />

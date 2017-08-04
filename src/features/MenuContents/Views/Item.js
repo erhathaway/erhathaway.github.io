@@ -4,8 +4,9 @@ import PropTypes from 'prop-types';
 const styles = {
   container: {
     fontSize: '14px',
-    marginBottom: '20px',
-    marginLeft: '20px',
+    paddingBottom: '10px',
+    paddingTop: '10px',
+    paddingLeft: '20px',
   },
   selected: {
     color: '#78A15A',
