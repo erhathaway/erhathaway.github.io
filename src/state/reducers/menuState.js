@@ -3,6 +3,7 @@ const defaultMenuState = {
   activeDocument: undefined,
   activeProject: undefined,
   activeApps: [],
+  showingMenu: false,
 };
 
 export default function (state = defaultMenuState, action) {
@@ -54,6 +55,14 @@ export default function (state = defaultMenuState, action) {
     case 'CLOSE_APP': {
       const lessActiveApps = state.activeApps.filter(a => a !== action.data);
       newState = Object.assign({}, state, { activeApps: lessActiveApps });
+      return newState;
+    }
+    case 'SHOW_MENU': {
+      newState = Object.assign({}, state, { showingMenu: true });
+      return newState;
+    }
+    case 'HIDE_MENU': {
+      newState = Object.assign({}, state, { showingMenu: false });
       return newState;
     }
     default: {

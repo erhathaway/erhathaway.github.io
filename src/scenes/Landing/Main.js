@@ -1,14 +1,30 @@
 import React from 'react';
 import Menu from '../Menu/Main';
+import LandingImages from '../LandingImages/Main';
 
 const styles = {
-  height: '100vh',
-  overflow: 'auto',
+  container: {
+    height: '100vh',
+    overflow: 'auto',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  left: {
+
+  },
+  right: {
+    display: 'flex',
+    alignItems: 'center',
+    marginLeft: '100px',
+  },
 };
 
 const Landing = () => (
-  <div style={styles}>
-    <Menu showFullMenu={false} />
+  <div style={styles.container}>
+    <Menu showFullMenu />
+    <div style={styles.right}>
+      <LandingImages />
+    </div>
   </div>
 );
 
