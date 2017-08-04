@@ -10,7 +10,11 @@ export default function (state = defaultMenuState, action) {
 
   switch (action.type) {
     case 'OPEN_CATEGORY': {
-      newState = Object.assign({}, state, { activeCategory: action.data });
+      const openCatState = {
+        activeCategory: action.data,
+        activeDocument: undefined,
+      };
+      newState = Object.assign({}, state, openCatState);
       return newState;
     }
     case 'CLOSE_CATEGORY': {
@@ -18,7 +22,12 @@ export default function (state = defaultMenuState, action) {
       return newState;
     }
     case 'OPEN_DOCUMENT': {
-      newState = Object.assign({}, state, { activeDocument: action.data });
+      const openDocState = {
+        activeDocument: action.data,
+        activeCategory: undefined,
+        activeProject: undefined,
+      };
+      newState = Object.assign({}, state, openDocState);
       return newState;
     }
     case 'CLOSE_DOCUMENT': {
@@ -26,7 +35,11 @@ export default function (state = defaultMenuState, action) {
       return newState;
     }
     case 'OPEN_PROJECT': {
-      newState = Object.assign({}, state, { activeProject: action.data });
+      const openProjState = {
+        activeProject: action.data,
+        activeDocument: undefined,
+      };
+      newState = Object.assign({}, state, openProjState);
       return newState;
     }
     case 'CLOSE_PROJECT': {

@@ -1,5 +1,5 @@
 import React from 'react';
-import Menu from '../../features/Menu/Menu';
+import Menu from '../Menu/Main';
 
 const Landing = () => (
   <div>
