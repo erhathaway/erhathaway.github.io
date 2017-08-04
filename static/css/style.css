@@ -1,5 +1,28 @@
 .___style__container___RX7MV {
   background-color: blue;
 }
+.shareables-PopOutMenu-___style__container___2qkuT {
+  position: relative;
+  margin: 3em;
+  padding: 1em;
+  box-sizing: border-box;
+  box-shadow: 0px 18px 30px 0px rgba(0,0,0,0.12);
+  border: 1px solid #efefef;
+  border-radius: 3px;
+}
+
+.shareables-PopOutMenu-___style__container___2qkuT::after{
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  top: -1em;
+  left: calc(50% - 1em);
+  box-sizing: border-box;
+  border: 1em solid #efefef;
+  border-color: transparent white white transparent;
+  transform: rotate(225deg);
+  box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.06);
+}
 
 /*# sourceMappingURL=style.css.map*/

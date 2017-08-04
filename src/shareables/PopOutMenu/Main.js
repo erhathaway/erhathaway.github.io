@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Radium from 'radium';
-import './style.css'
+import './style.css';
 
 const styles = {
   container: {
@@ -12,15 +12,13 @@ const styles = {
   },
 };
 
-const PopOutMenu = ({ children }) => {
-  return (
-    <div style={styles.container}>
-      <div styleName="container">
-        { children }
-      </div>
+const PopOutMenu = ({ children }) => (
+  <div style={styles.container}>
+    <div styleName="container">
+      { children }
     </div>
-  );
-};
+  </div>
+);
 
 PopOutMenu.propTypes = {
   children: PropTypes.node.isRequired,

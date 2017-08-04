@@ -31,7 +31,7 @@ const Menu = ({ showFullMenu }) => (
     <Header showLinks={false} />
     <Expander />
     <PopOutMenu>
-      <Contents />
+      <Contents leftJustifyDivider={false} />
     </PopOutMenu>
   </div>)
 );
