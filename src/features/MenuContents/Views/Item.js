@@ -1,7 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Radium from 'radium';
-import color from 'color';
+// add relative path to skip eslint's
+// import/no-extraneous-dependencies error caused by this library being
+// installed as part of Radium
+import color from '../../../../node_modules/color';
 
 const styles = {
   container: {

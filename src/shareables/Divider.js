@@ -18,7 +18,7 @@ Divider.propTypes = {
   width: PropTypes.number.isRequired,
   marginTop: PropTypes.number,
   marginBottom: PropTypes.number,
-  marginBottom: PropTypes.number,
+  marginLeft: PropTypes.number,
 };
 
 Divider.defaultProps = {

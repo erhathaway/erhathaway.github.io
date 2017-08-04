@@ -1,6 +1,5 @@
 import React from 'react';
 import Radium from 'radium';
-import color from 'color';
 
 const styles = {
   container: {
@@ -15,17 +14,58 @@ const styles = {
     padding: '15px',
     borderRadius: '2px',
     ':hover': {
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center',
+      color: 'transparent',
       cursor: 'alias',
-      background: color('#78A15A').lighten(0.9).hexString(),
+    },
+  },
+  linkedin: {
+    ':hover': {
+      backgroundImage: 'url("../static/images/linkedin.png")',
+    },
+  },
+  twitter: {
+    ':hover': {
+      backgroundImage: 'url("../static/images/twitter.png")',
+    },
+  },
+  github: {
+    ':hover': {
+      backgroundImage: 'url("../static/images/github.png")',
     },
   },
 };
 
 const Links = () => (
   <div style={styles.container}>
-    <a href="https://www.linkedin.com/in/erhathaway" target="_blank" key={1} style={styles.link}>Linkedin</a>
-    <a href="https://twitter.com/erhathaway" target="_blank" key={2} style={styles.link}>Twitter</a>
-    <a href="https://github.com/erhathaway" target="_blank" key={3} style={styles.link}>Github</a>
+    <a
+      href="https://www.linkedin.com/in/erhathaway"
+      target="_blank"
+      rel="noopener noreferrer"
+      key={1}
+      style={[styles.link, styles.linkedin]}
+    >
+      Linkedin
+    </a>
+    <a
+      href="https://twitter.com/erhathaway"
+      target="_blank"
+      rel="noopener noreferrer"
+      key={2}
+      style={[styles.link, styles.twitter]}
+    >
+      Twitter
+    </a>
+    <a
+      href="https://github.com/erhathaway"
+      target="_blank"
+      rel="noopener noreferrer"
+      key={3}
+      style={[styles.link, styles.github]}
+    >
+      Github
+    </a>
   </div>
 );
 
