@@ -11,18 +11,21 @@ import Links from './Views/Links';
 
 const styles = {
   container: {
-    width: '226px',
+    width: '220px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
   },
 };
 
-const MainContainer = ({ color }) => (
+const renderDivider = () => (<Divider width={215} marginLeft={15} />);
+const renderLinks = () => (<Links />);
+
+const MainContainer = ({ color, showLinks }) => (
   <div style={styles.container}>
     <Name style={{ color }} />
-    <Divider width={215} marginLeft={15} />
-    <Links />
+    { showLinks && renderDivider() }
+    { showLinks && renderLinks() }
   </div>
 );
 
@@ -32,6 +35,7 @@ const mapStateToProps = state => ({
 
 MainContainer.propTypes = {
   color: PropTypes.string.isRequired,
+  showLinks: PropTypes.bool.isRequired,
 };
 
 const Main = connect(

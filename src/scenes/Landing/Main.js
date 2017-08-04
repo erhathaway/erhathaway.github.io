@@ -8,7 +8,7 @@ const styles = {
 
 const Landing = () => (
   <div style={styles}>
-    <Menu />
+    <Menu showFullMenu={false} />
   </div>
 );
 
