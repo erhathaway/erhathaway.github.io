@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 // features
-import Header from '../../features/MenuHeader/Main';
+import Header from '../../features/MenuName/Main';
 import Contents from '../../features/MenuContents/Main';
 import Expander from '../../features/MenuExpandButton/Main';
 
@@ -11,7 +11,7 @@ import PopOutMenu from '../../shareables/PopOutMenu/Main';
 
 const styles = {
   container: {
-    marginTop: '105px',
+    marginTop: '-40px',
     width: '220px',
   },
   spacer: {

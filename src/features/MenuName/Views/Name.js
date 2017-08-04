@@ -5,6 +5,7 @@ const styles = {
   fontSize: '24px',
   marginBottom: '11px',
   padding: '15px',
+  textDecoration: 'none',
 };
 
 const Name = ({ style }) => {

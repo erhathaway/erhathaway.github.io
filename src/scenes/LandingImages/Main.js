@@ -2,12 +2,14 @@ import React from 'react';
 
 const styles = {
   height: '600px',
-  width: '800px',
   backgroundColor: 'blue',
+  flexGrow: 1,
 };
 
 const Main = () => (
-  <div style={styles} />
+  <div style={styles}>
+
+  </div>
 );
 
 export default Main;

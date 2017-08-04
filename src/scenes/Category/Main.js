@@ -8,10 +8,11 @@ const styles = {
     height: '100vh',
     overflow: 'auto',
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'spaceBetween',
   },
   left: {
-
+    display: 'flex',
+    alignItems: 'center',
   },
   right: {
     display: 'flex',
@@ -25,8 +26,11 @@ const Category = (props) => {
 
   return (
     <div style={styles.container}>
-      { id }
-      <Menu showFullMenu={false} />
+
+      <div style={styles.left}>
+        <Menu showFullMenu={false} />
+              { id }
+      </div>
       <div style={styles.right}>
         <LandingImages />
       </div>
