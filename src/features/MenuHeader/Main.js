@@ -11,7 +11,7 @@ import Links from './Views/Links';
 
 const styles = {
   container: {
-    width: '216px',
+    width: '226px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -21,7 +21,7 @@ const styles = {
 const MainContainer = ({ color }) => (
   <div style={styles.container}>
     <Name style={{ color }} />
-    <Divider width={215} />
+    <Divider width={215} marginLeft={15} />
     <Links />
   </div>
 );

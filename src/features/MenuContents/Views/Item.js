@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Radium from 'radium';
+import color from 'color';
 
 const styles = {
   container: {
@@ -7,12 +9,20 @@ const styles = {
     paddingBottom: '10px',
     paddingTop: '10px',
     paddingLeft: '20px',
+    borderRadius: '2px',
+    cursor: 'pointer',
   },
   selected: {
     color: '#78A15A',
+    ':hover': {
+      background: color('#78A15A').lighten(0.9).hexString(),
+    },
   },
   unselected: {
     color: 'black',
+    ':hover': {
+      background: color('#78A15A').lighten(0.7).hexString(),
+    },
   },
 };
 
@@ -37,4 +47,4 @@ Item.defaultProps = {
   selected: false,
 };
 
-export default Item;
+export default Radium(Item);

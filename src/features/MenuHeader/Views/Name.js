@@ -3,9 +3,8 @@ import PropTypes from 'prop-types';
 
 const styles = {
   fontSize: '24px',
-  marginBottom: '26px',
-  width: '100%',
-
+  marginBottom: '11px',
+  padding: '15px',
 };
 
 const Name = ({ style }) => {
