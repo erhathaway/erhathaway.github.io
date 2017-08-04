@@ -6,7 +6,7 @@ import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
 
 // routing
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 
 // actions
 import { openMenuItem, closeMenuItem } from '../../actions/menu';
@@ -47,15 +47,15 @@ class MainContainer extends React.Component {
     const dividerMarginLeft = leftJustifyDivider ? 15 : 0;
     return (
       <div style={styles.container}>
-      <Link to="/category/woodworking">
-        <Item name={'Woodworking'} tabIndex={0} onClick={() => this.handleCategoryClick('woodworking')} selected={activeCategory === 'woodworking'} />
-      </Link>
-      <Link to="/category/hardware">
-        <Item name={'Hardware'} tabIndex={0} onClick={() => this.handleCategoryClick('hardware')} selected={activeCategory === 'hardware'} />
-      </Link>
-      <Link to="/category/software">
-        <Item name={'Software'} tabIndex={0} onClick={() => this.handleCategoryClick('software')} selected={activeCategory === 'software'} />
-      </Link>
+        <Link to="/category/woodworking">
+          <Item name={'Woodworking'} tabIndex={0} onClick={() => this.handleCategoryClick('woodworking')} selected={activeCategory === 'woodworking'} />
+        </Link>
+        <Link to="/category/hardware">
+          <Item name={'Hardware'} tabIndex={0} onClick={() => this.handleCategoryClick('hardware')} selected={activeCategory === 'hardware'} />
+        </Link>
+        <Link to="/category/software">
+          <Item name={'Software'} tabIndex={0} onClick={() => this.handleCategoryClick('software')} selected={activeCategory === 'software'} />
+        </Link>
         <Divider width={160} tabIndex={0} marginBottom={10} marginTop={10} marginLeft={dividerMarginLeft} />
         <Item name={'Writings'} tabIndex={0} onClick={() => this.handleDocumentClick('writings')} selected={activeDocument === 'writings'} />
         <Divider width={160} tabIndex={0} marginBottom={10} marginTop={10} marginLeft={dividerMarginLeft} />

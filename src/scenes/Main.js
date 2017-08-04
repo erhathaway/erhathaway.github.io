@@ -34,8 +34,8 @@ const styles = {
     '@media (max-width: 400px)': {
       width: '300px',
     },
-  }
-}
+  },
+};
 const Main = () => (
   <div style={styles.container}>
     <div style={styles.mainScene}>

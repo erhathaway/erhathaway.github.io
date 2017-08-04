@@ -27,7 +27,7 @@ const styles = {
 const Landing = () => (
   <div style={styles.container}>
     <div style={styles.left}>
-      <Menu showFullMenu={true} />
+      <Menu showFullMenu />
     </div>
     <div style={styles.right}>
       <LandingImages />

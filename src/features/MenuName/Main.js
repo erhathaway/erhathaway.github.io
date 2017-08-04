@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 // routing
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 
 // reusable components
 import Divider from '../../shareables/Divider';
@@ -26,9 +26,9 @@ const renderLinks = () => (<Links />);
 
 const MainContainer = ({ color, showLinks }) => (
   <div style={styles.container}>
-  <Link to="/">
-    <Name style={{ color }} />
-  </Link>
+    <Link to="/">
+      <Name style={{ color }} />
+    </Link>
     { showLinks && renderDivider() }
     { showLinks && renderLinks() }
   </div>

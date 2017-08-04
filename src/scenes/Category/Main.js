@@ -29,7 +29,7 @@ const Category = (props) => {
 
       <div style={styles.left}>
         <Menu showFullMenu={false} />
-              { id }
+        { id }
       </div>
       <div style={styles.right}>
         <LandingImages />
