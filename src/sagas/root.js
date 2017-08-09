@@ -1,6 +1,6 @@
 import { all } from 'redux-saga/effects';
 import store from '../state/store';
-import { logError } from '../state/actions/logger';
+import { logError } from '../actions/logger';
 
 export default function* rootSaga() {
   try {

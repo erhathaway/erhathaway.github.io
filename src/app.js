@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
+import { StyleRoot } from 'radium';
 
 import './style.css';
 
@@ -17,9 +18,11 @@ require('./config/fileLoader'); // loader needed by webpack for loading of asset
 window.onload = () => {
   ReactDOM.render((
     <Provider store={store}>
-      <BrowserRouter>
-        <MainAppScene />
-      </BrowserRouter>
+      <StyleRoot>
+        <BrowserRouter>
+          <MainAppScene />
+        </BrowserRouter>
+      </StyleRoot>
     </Provider>
   ), document.getElementById('main'));
 };

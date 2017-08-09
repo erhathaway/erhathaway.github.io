@@ -34,7 +34,7 @@ const modules = {
       {
         cacheDirectory: 'babel_cache',
         presets: [
-          ['react'], ['es2015', { modules: false }],
+          ['react'], ['es2015', { modules: false }], ['stage-1'],
         ],
         plugins: [
           ['react-css-modules', { context }],

@@ -3,6 +3,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import configureStore from 'redux-mock-store';
+import { StyleRoot } from 'radium';
 
 import App from './app';
 
@@ -19,7 +20,9 @@ const store = storeCreator(initialState);
 it('renders without crashing', () => {
   const context = { router: { hi: 'hello' } };
   const component = shallow(
-    <App store={store} />,
+    <StyleRoot>
+      <App store={store} />
+    </StyleRoot>,
     { context },
   );
   expect(component.exists()).toBeTruthy();
