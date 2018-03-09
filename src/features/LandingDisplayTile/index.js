@@ -6,7 +6,6 @@ const Main = ({ widthPriority, overlaycolor, backgroundImage, onClick }) => {
   const calcStyle = { flexGrow: widthPriority, height: 'calc(100%-3px)', margin: '1.5px', backgroundColor: overlaycolor };
   const style = Object.assign({}, calcStyle, backgroundStyle);
 
-
   return (
     <div role="menuItem" tabIndex={0} style={style} onClick={onClick} />
   );

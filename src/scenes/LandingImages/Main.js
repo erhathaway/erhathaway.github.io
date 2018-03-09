@@ -1,5 +1,5 @@
 import React from 'react';
-import Tile from '../../features/LandingDisplayTile/Main';
+import Tile from '../../features/LandingDisplayTile';
 
 const styles = {
   container: {

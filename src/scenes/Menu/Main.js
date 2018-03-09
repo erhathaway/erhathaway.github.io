@@ -2,9 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 // features
-import Header from '../../features/MenuName/Main';
-import Contents from '../../features/MenuContents/Main';
-import Expander from '../../features/MenuExpandButton/Main';
+import Name from '../../features/MenuName';
+import Contents from '../../features/MenuContents';
+import ExpandButton from '../../features/MenuExpandButton';
 
 // reusable components
 import PopOutMenu from '../../shareables/PopOutMenu/Main';
@@ -22,13 +22,13 @@ const styles = {
 const Menu = ({ showFullMenu }) => (
   showFullMenu
   ? (<div style={styles.container}>
-    <Header showLinks />
+    <Name showLinks />
     <div style={styles.spacer} />
     <Contents />
   </div>)
   : (<div style={styles.container}>
-    <Header showLinks={false} />
-    <Expander />
+    <Name showLinks={false} />
+    <ExpandButton />
     <PopOutMenu>
       <Contents leftJustifyDivider={false} />
     </PopOutMenu>
