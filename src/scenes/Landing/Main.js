@@ -8,7 +8,7 @@ import LandingImages from '../LandingImages/Main';
 const styles = {
   container: {
     height: '100vh',
-    overflow: 'auto',
+    overflow: 'hidden',
     display: 'flex',
     justifyContent: 'spaceBetween',
   },

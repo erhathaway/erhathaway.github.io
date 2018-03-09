@@ -14,6 +14,9 @@ const styles = {
     paddingLeft: '20px',
     borderRadius: '2px',
     cursor: 'pointer',
+    WebkitUserSelect: 'none',
+    MozUserSelect: 'none',
+    userSelect: 'none',
   },
   selected: {
     color: '#78A15A',
