@@ -1,7 +1,9 @@
 .___style__container___RX7MV {
   background-color: blue;
 }
-.shareables-PopOutMenu-___style__container___2qkuT {
+.shareables-PopOutMenu-___style__open-container___3zna8 {
+  height: auto;
+  width: 90%;
   position: relative;
   margin: 3em;
   padding: 1em;
@@ -9,9 +11,10 @@
   box-shadow: 0px 18px 30px 0px rgba(0,0,0,0.12);
   border: 1px solid #efefef;
   border-radius: 3px;
+  transition: height 200ms 20ms, width 50ms 0ms, opacity 150ms 0ms;
 }
 
-.shareables-PopOutMenu-___style__container___2qkuT::after{
+.shareables-PopOutMenu-___style__open-container___3zna8::after {
   content: "";
   position: absolute;
   width: 0;
@@ -23,6 +26,13 @@
   border-color: transparent white white transparent;
   transform: rotate(225deg);
   box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+.shareables-PopOutMenu-___style__closed-container___3ybYr {
+  transition: height 500ms 000ms, opacity 500ms 0ms;
+  opacity: 0.0;
+  height: 0px;
+  width: 0px;
 }
 
 /*# sourceMappingURL=style.css.map*/
