@@ -15,6 +15,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     width: '100vw',
+    overflow: 'none',
   },
   mainScene: {
     marginLeft: '50px',

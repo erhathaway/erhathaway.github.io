@@ -12,16 +12,17 @@ const styles = {
   },
 };
 
-const PopOutMenu = ({ children }) => (
+const PopOutMenu = ({ children, hide }) => (
   <div style={styles.container}>
-    <div styleName="container">
-      { children }
+    <div styleName={hide ? 'closed-container' : 'open-container'} >
+      { hide ? null : children }
     </div>
   </div>
 );
 
 PopOutMenu.propTypes = {
   children: PropTypes.node.isRequired,
+  hide: PropTypes.bool.isRequired,
 };
 
 export default Radium(PopOutMenu);
