@@ -12,14 +12,33 @@ const duration = 300;
 //   opacity: 0,
 // }
 
+var slideInKeyFrames = Radium.keyframes({
+  '100%': { transform: 'translate(0%)' },
+}, 'slideIn');
+
 const transitionStyles = {
-  entering: { opacity: 0 },
-  entered: { opacity: 1 },
+  entering: {
+    opacity: 0,
+    transform: 'translate(100%)',
+  },
+  entered: {
+    opacity: 1,
+  },
+  exiting: {
+    opacity: 0,
+    transform: 'translate(0%)',
+    backgroundColor: 'red',
+  },
+  exited: {
+    opacity: 1,
+    backgroundColor: 'yellow',
+    transform: 'translate(-100%)',
+  }
 };
 
 const styles = {
   container: {
-    transition: `opacity ${duration}ms ease-in-out`,
+    transition: `opacity ${duration*1.4}ms ease-in-out, transform ${duration}ms ease-in-out`,
     opacity: 0,
     marginLeft: '100px',
     paddingTop: '80px',
