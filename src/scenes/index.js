@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Radium from 'radium';
-import { TransitionGroup, Transition } from "react-transition-group";
 
 // routing
 import { Switch, Route } from 'react-router-dom';
@@ -63,16 +62,12 @@ const Scenes = () => (
       </div>
       {/* Main */}
       <div style={styles.mainScene}>
-        <TransitionGroup>
-          <Transition>
-            <Switch>
-              <Route exact path="/" component={Landing} />
-              <Route exact path="/category/:id" component={Category} />
-              <Route path="/project/:id" component={Project} />
-              <Route path="*" component={Landing} />
-            </Switch>
-          </Transition>
-        </TransitionGroup>
+        <Switch>
+          <Route exact path="/" component={Landing} />
+          <Route exact path="/category/:id" component={Category} />
+          <Route path="/project/:id" component={Project} />
+          <Route path="*" component={Landing} />
+        </Switch>
       </div>
     </div>
   </div>
