@@ -69,7 +69,6 @@ const Scenes = withRouter( ({ location }) => (
         <TransitionGroup>
           <Transition
             key={location.key}
-            classNames='fade'
             timeout={300}
           >
           { (inState) => (
