@@ -9,8 +9,8 @@ const styles = {
     overflow: 'hidden',
     display: 'flex',
     flexGrow: 1,
-    alignItems: 'center',
     marginLeft: '100px',
+    paddingTop: '85px',
   },
 };
 

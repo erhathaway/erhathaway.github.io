@@ -13,9 +13,8 @@ import PopOutMenu from '../../shareables/PopOutMenu/Main';
 
 const styles = {
   container: {
-    marginTop: '140px',
     width: '220px',
-    height: '100vh',
+    paddingLeft: '20px',
   },
   spacer: {
     marginTop: '100px',
