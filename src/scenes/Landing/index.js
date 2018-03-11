@@ -2,8 +2,7 @@ import React from 'react';
 import Radium from 'radium';
 
 // subscenes
-import Menu from '../Menu';
-import LandingImages from '../LandingImages/Main';
+import LandingImages from '../LandingImages';
 
 const styles = {
   container: {

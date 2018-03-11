@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import LandingImages from '../LandingImages/Main';
+import LandingImages from '../LandingImages';
 
 const styles = {
   container: {
