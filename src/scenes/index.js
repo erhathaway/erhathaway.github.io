@@ -37,7 +37,7 @@ const styles = {
     },
   },
 };
-const Main = () => (
+const Scenes = () => (
   <div style={styles.container}>
     <div style={styles.mainScene}>
       <Switch>
@@ -50,8 +50,8 @@ const Main = () => (
   </div>
 );
 
-Main.contextTypes = {
+Scenes.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
-export default Radium(Main);
+export default Radium(Scenes);
