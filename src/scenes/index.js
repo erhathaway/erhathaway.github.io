@@ -4,6 +4,8 @@ import Radium from 'radium';
 
 // routing
 import { Switch, Route } from 'react-router-dom';
+import { withRouter } from 'react-router'
+import { TransitionGroup, CSSTransition, Transition } from "react-transition-group";
 
 // scenes
 import Landing from './Landing';
@@ -25,6 +27,8 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     width: '1200px',
+    overflow: 'hidden',
+
     /* TODO: renable media queries for scenes */
     // '@media (max-width: 1200px)': {
     //   width: '1100px',
@@ -47,10 +51,10 @@ const styles = {
     display: 'flex',
     width: '100%',
     height: '100vh',
-    overflowX: 'hidden',
+    overflow: 'hidden',
   },
 };
-const Scenes = () => (
+const Scenes = withRouter( ({ location }) => (
   <div style={styles.container}>
     <div style={styles.scenes}>
       {/* Menu */}
@@ -62,16 +66,27 @@ const Scenes = () => (
       </div>
       {/* Main */}
       <div style={styles.mainScene}>
-        <Switch>
-          <Route exact path="/" component={Landing} />
-          <Route exact path="/category/:id" component={Category} />
-          <Route path="/project/:id" component={Project} />
-          <Route path="*" component={Landing} />
-        </Switch>
+        <TransitionGroup>
+          <Transition
+            key={location.key}
+            classNames='fade'
+            timeout={300}
+          >
+          { (inState) => (
+            <Switch location={location}>
+              <Route exact path="/" render={(props) => <Landing inState={inState} {...props} />} />
+              <Route exact path="/category/:id" component={Category} />
+              <Route path="/project/:id" component={Project} />
+              <Route path="*" component={Landing} />
+            </Switch>
+
+          )}
+          </Transition>
+        </TransitionGroup>
       </div>
     </div>
   </div>
-);
+));
 
 Scenes.contextTypes = {
   router: PropTypes.object.isRequired,
