@@ -6,18 +6,20 @@ import Radium from 'radium';
 import { Switch, Route } from 'react-router-dom';
 
 // scenes
-import Landing from './Landing/Main';
-import Category from './Category/Main';
-import Project from './Project/Main';
+import Landing from './Landing';
+import Category from './Category';
+import Project from './Project';
+import Menu from './Menu';
 
 const styles = {
   container: {
     display: 'flex',
     justifyContent: 'center',
     width: '100vw',
-    overflow: 'none',
+    overflow: 'hidden',
   },
   mainScene: {
+    display: 'flex',
     marginLeft: '50px',
     marginRight: '50px',
     width: '1200px',
@@ -40,6 +42,7 @@ const styles = {
 const Scenes = () => (
   <div style={styles.container}>
     <div style={styles.mainScene}>
+      <Menu showFullMenu />
       <Switch>
         <Route exact path="/" component={Landing} />
         <Route exact path="/category/:id" component={Category} />
