@@ -6,11 +6,9 @@ import LandingImages from '../LandingImages';
 
 const styles = {
   container: {
-    overflow: 'hidden',
-    display: 'flex',
-    flexGrow: 1,
     marginLeft: '100px',
-    paddingTop: '85px',
+    paddingTop: '80px',
+    width: '65vw',
   },
 };
 
