@@ -5,38 +5,28 @@ import { Transition } from "react-transition-group";
 // subscenes
 import LandingImages from '../LandingImages';
 
-const duration = 300;
-
-// const defaultStyle = {
-//   transition: `opacity ${duration}ms ease-in-out`,
-//   opacity: 0,
-// }
-
-var slideInKeyFrames = Radium.keyframes({
-  '100%': { transform: 'translate(0%)' },
-}, 'slideIn');
+// var slideInKeyFrames = Radium.keyframes({
+//   '100%': { transform: 'translate(0%)' },
+// }, 'slideIn');
 
 const transitionStyles = {
   entering: {
     opacity: 0,
-    transform: 'translateY(100%)',
+    transform: 'translateX(100%)',
   },
   entered: {
     opacity: 1,
   },
   exiting: {
     opacity: 1,
-    // transform: 'translate(0%)',
-    // backgroundColor: 'red',
-    transform: 'translateY(-100%)',
+    transform: 'translateX(100%)',
   },
   exited: {
     opacity: 0,
-    // backgroundColor: 'yellow',
   }
 };
 
-const styles = {
+const styles = (duration) => ({
   container: {
     position: 'absolute',
     transition: `opacity ${duration}ms ease-in-out, transform ${duration}ms ease-in-out`,
@@ -47,27 +37,13 @@ const styles = {
     overflow: 'hidden',
 
   },
-};
+});
 
 const logState = (state) => { console.log(state) }
 
-// const Landing = ({ location, match }) => (
-//   <Transition appear in={location.pathname === match.url} timeout={duration} >
-//     {(state) => (
-//       <div key={location.pathname} style={{
-//         ...styles.container,
-//         ...transitionStyles[state],
-//       }}>
-//       { logState(state) }
-//         <LandingImages />
-//       </div>
-//     )}
-//   </Transition>
-// );
-
-const Landing = ({ inState }) => (
+const Landing = ({ inState, transitionDuration }) => (
     <div style={{
-      ...styles.container,
+      ...styles(transitionDuration).container,
       ...transitionStyles[inState],
     }}>
     { logState(inState) }

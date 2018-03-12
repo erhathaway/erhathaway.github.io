@@ -54,6 +54,9 @@ const styles = {
     overflow: 'hidden',
   },
 };
+
+const duration = 300;
+
 const Scenes = withRouter( ({ location }) => (
   <div style={styles.container}>
     <div style={styles.scenes}>
@@ -68,15 +71,15 @@ const Scenes = withRouter( ({ location }) => (
       <div style={styles.mainScene}>
         <TransitionGroup>
           <Transition
-            key={location.key}
-            timeout={300}
+            key={location.pathname}
+            timeout={duration}
           >
           { (inState) => (
             <Switch location={location}>
-              <Route exact path="/" render={(props) => <Landing inState={inState} {...props} />} />
-              <Route exact path="/category/:id" component={Category} />
+              <Route exact path="/" render={(props) => <Landing inState={inState} transitionDuration={duration} {...props} />} />
+              <Route exact path="/category/:id" render={(props) => <Category inState={inState} transitionDuration={duration} {...props} />} />
               <Route path="/project/:id" component={Project} />
-              <Route path="*" component={Landing} />
+              <Route path="*" render={(props) => <Landing inState={inState} transitionDuration={duration} {...props} />} />
             </Switch>
 
           )}
