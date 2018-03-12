@@ -70,7 +70,7 @@ const Scenes = withRouter( ({ location }) => (
         <TransitionGroup>
           <Transition
             key={location.pathname.split('/').slice(0,2).join('/')} /*only look at primary path*/
-            timeout={{enter: duration, exit: 0, }}
+            timeout={{enter: duration, exit: 100, }}
           >
             {(inState) => (
             <Switch location={location}>

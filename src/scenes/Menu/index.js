@@ -49,7 +49,7 @@ const Menu = ({ inState, transitionDuration, showFullMenu, showExpandedMenu }) =
     <Name showLinks />
     <div style={{...styles(transitionDuration).spacer}} />
     <div style={{...styles(transitionDuration).opacity, ...transitionStyles[inState]}} >
-      <Contents />
+      <Contents inState={inState}/>
     </div>
   </div>)
   : (<div style={{...styles(transitionDuration).container}}>
