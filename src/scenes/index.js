@@ -44,6 +44,7 @@ const styles = {
     // },
   },
   menuScene: {
+    width: '220px',
     alignSelf: 'flex-start',
     paddingTop: '70px',
   },
@@ -57,15 +58,28 @@ const styles = {
 
 const duration = 300;
 
+const routeTransition = (Scene, initialProps) => (props) => (
+  <Scene {...initialProps} {...props} />
+);
+
 const Scenes = withRouter( ({ location }) => (
   <div style={styles.container}>
     <div style={styles.scenes}>
       {/* Menu */}
       <div style={styles.menuScene}>
-        <Switch>
-          <Route exact path="/category/hardware" render={() => <Menu showFullMenu={false} />} />
-          <Route exact path="*" render={() => <Menu showFullMenu />} />
-        </Switch>
+        <TransitionGroup>
+          <Transition
+            key={location.pathname}
+            timeout={duration}
+          >
+            {(inState) => (
+            <Switch>
+              <Route exact path="/category/hardware" render={routeTransition(Menu, {inState, transitionDuration: duration, showFullMenu: false})} />
+              <Route exact path="*" render={routeTransition(Menu, {inState, transitionDuration: duration, showFullMenu: true})} />
+            </Switch>
+            )}
+          </Transition>
+        </TransitionGroup>
       </div>
       {/* Main */}
       <div style={styles.mainScene}>
@@ -74,15 +88,15 @@ const Scenes = withRouter( ({ location }) => (
             key={location.pathname}
             timeout={duration}
           >
-          { (inState) => (
-            <Switch location={location}>
-              <Route exact path="/" render={(props) => <Landing inState={inState} transitionDuration={duration} {...props} />} />
-              <Route exact path="/category/:id" render={(props) => <Category inState={inState} transitionDuration={duration} {...props} />} />
-              <Route path="/project/:id" component={Project} />
-              <Route path="*" render={(props) => <Landing inState={inState} transitionDuration={duration} {...props} />} />
-            </Switch>
+            {(inState) => (
+              <Switch location={location}>
+                <Route exact path="/" render={routeTransition(Landing, {inState, transitionDuration: duration})} />
+                <Route exact path="/category/:id" render={routeTransition(Category, {inState, transitionDuration: duration})} />
+                <Route path="/project/:id" component={Project} />
+                <Route path="*" render={routeTransition(Landing, {inState, transitionDuration: duration})} />
+              </Switch>
 
-          )}
+            )}
           </Transition>
         </TransitionGroup>
       </div>
