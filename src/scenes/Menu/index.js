@@ -11,25 +11,48 @@ import ExpandButton from '../../features/MenuExpandButton';
 // reusable components
 import PopOutMenu from '../../shareables/PopOutMenu/Main';
 
-const styles = {
+const transitionStyles = {
+  entering: {
+    opacity: 0,
+    // transform: 'translateX(100%)',
+  },
+  entered: {
+    opacity: 1,
+  },
+  // exiting: {
+  //   opacity: 1,
+  //   // transform: 'translateX(100%)',
+  // },
+  // exited: {
+  //   opacity: 0,
+  // }
+};
+
+const styles = (duration) => ({
   container: {
     position: 'absolute',
     width: '220px',
     paddingLeft: '20px',
   },
   spacer: {
+    transition: `opacity ${duration}ms ease-in-out, transform ${duration}ms ease-in-out`,
     marginTop: '100px',
   },
-};
+  opacity: {
+    transition: `opacity ${duration}ms ease-in`,
+  }
+});
 
-const Menu = ({ showFullMenu, showExpandedMenu }) => (
+const Menu = ({ inState, transitionDuration, showFullMenu, showExpandedMenu }) => (
   showFullMenu
-  ? (<div style={styles.container}>
+  ? (<div style={{...styles(transitionDuration).container}}>
     <Name showLinks />
-    <div style={styles.spacer} />
-    <Contents />
+    <div style={{...styles(transitionDuration).spacer}} />
+    <div style={{...styles(transitionDuration).opacity, ...transitionStyles[inState]}} >
+      <Contents />
+    </div>
   </div>)
-  : (<div style={styles.container}>
+  : (<div style={{...styles(transitionDuration).container}}>
     <Name showLinks={false} />
     <ExpandButton />
     <PopOutMenu hide={showExpandedMenu}>

@@ -69,12 +69,12 @@ const Scenes = withRouter( ({ location }) => (
       <div style={styles.menuScene}>
         <TransitionGroup>
           <Transition
-            key={location.pathname}
-            timeout={duration}
+            key={location.pathname.split('/').slice(0,2).join('/')} /*only look at primary path*/
+            timeout={{enter: duration, exit: 0, }}
           >
             {(inState) => (
-            <Switch>
-              <Route exact path="/category/hardware" render={routeTransition(Menu, {inState, transitionDuration: duration, showFullMenu: false})} />
+            <Switch location={location}>
+              <Route path="/category/software" render={routeTransition(Menu, {inState, transitionDuration: duration, showFullMenu: false})} />
               <Route exact path="*" render={routeTransition(Menu, {inState, transitionDuration: duration, showFullMenu: true})} />
             </Switch>
             )}
