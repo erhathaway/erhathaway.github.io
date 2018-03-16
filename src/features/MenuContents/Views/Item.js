@@ -32,13 +32,13 @@ const styles = {
   },
 };
 
-const Item = ({ name, selected, onClick, tabIndex }) => {
+const Item = ({ name, selected, onClick, tabIndex, style: propsStyle }) => {
   const computed = selected
     ? Object.assign({}, styles.container, styles.selected)
     : Object.assign({}, styles.container, styles.unselected);
 
   return (
-    <div role="menuItem" tabIndex={tabIndex} style={computed} onClick={onClick}>{ name }</div>
+    <div role="menuItem" tabIndex={tabIndex} style={{ ...computed, ...propsStyle }} onClick={onClick}>{ name }</div>
   );
 };
 

@@ -22,15 +22,15 @@ const styles = {
 };
 
 const renderDivider = () => (<Divider width={215} marginLeft={15} />);
-const renderLinks = () => (<Links />);
+const renderLinks = (inState) => (<Links inState={inState} />);
 
-const MainContainer = ({ color, showLinks }) => (
+const MainContainer = ({ inState, color, showLinks }) => (
   <div style={styles.container}>
     <Link to="/">
       <Name style={{ color }} />
     </Link>
     { showLinks && renderDivider() }
-    { showLinks && renderLinks() }
+    { showLinks && renderLinks(inState) }
   </div>
 );
 

@@ -39,14 +39,13 @@ const styles = (duration) => ({
   },
 });
 
-const logState = (state) => { console.log(state) }
+// const logState = (state) => { console.log(state) }
 
 const Landing = ({ inState, transitionDuration }) => (
     <div style={{
       ...styles(transitionDuration).container,
       ...transitionStyles[inState],
     }}>
-    { logState(inState) }
       <LandingImages />
     </div>
 );
