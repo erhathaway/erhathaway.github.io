@@ -8,7 +8,7 @@ import color from '../../../../node_modules/color';
 
 const styles = {
   container: {
-    fontSize: '14px',
+    fontSize: '13px',
     paddingBottom: '10px',
     paddingTop: '10px',
     paddingLeft: '20px',
@@ -17,6 +17,8 @@ const styles = {
     WebkitUserSelect: 'none',
     MozUserSelect: 'none',
     userSelect: 'none',
+    letterSpacing: '1.4px',
+    opacity: 0.8,
   },
   selected: {
     color: '#78A15A',

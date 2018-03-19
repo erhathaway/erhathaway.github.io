@@ -74,8 +74,8 @@ const Scenes = withRouter( ({ location }) => (
           >
             {(inState) => (
             <Switch location={location}>
-              <Route path="/category/software" render={routeTransition(Menu, {inState, transitionDuration: duration, showFullMenu: false})} />
-              <Route exact path="*" render={routeTransition(Menu, {inState, transitionDuration: duration, showFullMenu: true})} />
+              <Route path="/category/software" render={routeTransition(Menu, { inState, transitionDuration: duration, showFullMenu: false })} />
+              <Route exact path="*" render={routeTransition(Menu, { inState, transitionDuration: duration, showFullMenu: true })} />
             </Switch>
             )}
           </Transition>
@@ -90,10 +90,10 @@ const Scenes = withRouter( ({ location }) => (
           >
             {(inState) => (
               <Switch location={location}>
-                <Route exact path="/" render={routeTransition(Landing, {inState, transitionDuration: duration})} />
-                <Route exact path="/category/:id" render={routeTransition(Category, {inState, transitionDuration: duration})} />
+                <Route exact path="/" render={routeTransition(Landing, { inState, transitionDuration: duration })} />
+                <Route exact path="/category/:id" render={routeTransition(Category, { inState, transitionDuration: duration })} />
                 <Route path="/project/:id" component={Project} />
-                <Route path="*" render={routeTransition(Landing, {inState, transitionDuration: duration})} />
+                <Route path="*" render={routeTransition(Landing, { inState, transitionDuration: duration })} />
               </Switch>
 
             )}

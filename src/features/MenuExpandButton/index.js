@@ -56,9 +56,21 @@ class MainContainer extends React.Component {
         duration: (_, i) => (i * 900)
       });
     }
+
+    if (oldInState !== newInState && newInState === 'exiting') {
+      const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+      // targets.each(el => el.style.marginLeft = "100px")
+      var nodeList = anime({
+        targets,
+        // translateX: 20,
+        opacity: 0,
+        duration: (_, i) => (i * 900)
+      });
+    }
   }
 
   toggleMenu = () => {
+    const { showingMenu, hideMenuAction, showMenuAction } = this.props;
     if (showingMenu) hideMenuAction();
     else showMenuAction();
   };
@@ -66,7 +78,6 @@ class MainContainer extends React.Component {
   addRef = index => el => this.childRefs[index] = el;
 
   render() {
-    const { showingMenu, showMenuAction, hideMenuAction } = this.props;
     return (
       <div role="menuItem" tabIndex={0} onClick={this.toggleMenu} style={styles.container}>
         <div ref={this.addRef(1)} style={[styles.button, styles.one]} />
