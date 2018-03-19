@@ -54,7 +54,7 @@ const Menu = ({ inState, transitionDuration, showFullMenu, showExpandedMenu }) =
   </div>)
   : (<div style={{...styles(transitionDuration).container}}>
     <Name showLinks={false} />
-    <ExpandButton />
+    <ExpandButton inState={inState}/>
     <PopOutMenu hide={showExpandedMenu}>
       <Contents leftJustifyDivider={false} />
     </PopOutMenu>

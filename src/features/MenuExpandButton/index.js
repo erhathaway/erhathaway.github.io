@@ -3,6 +3,8 @@ import Radium from 'radium';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
+import anime from 'animejs';
+import ReactDOM from 'react-dom';
 
 // actions
 import { showMenu, hideMenu } from '../../actions/menu';
@@ -14,8 +16,8 @@ const styles = {
     justifyContent: 'center',
   },
   button: {
-    height: '6px',
-    width: '6px',
+    height: '0px',
+    width: '0px',
     borderRadius: '3px',
     margin: '3px',
   },
@@ -31,19 +33,48 @@ const styles = {
 };
 
 
-const MainContainer = ({ showingMenu, showMenuAction, hideMenuAction }) => {
-  const toggleMenu = () => {
+// const MainContainer = ({ showingMenu, showMenuAction, hideMenuAction }) => {
+class MainContainer extends React.Component {
+  constructor(props) {
+    super(props);
+    this.childRefs = {};
+    console.log(this.props.newInState)
+  }
+
+  componentDidUpdate({ inState: oldInState }) {
+    const { inState: newInState } = this.props;
+
+    if (oldInState !== newInState && newInState === 'entered') {
+      const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+      // targets.each(el => el.style.marginLeft = "100px")
+      var nodeList = anime({
+        targets,
+        // translateX: 20,
+        height: 6,
+        width: 6,
+        elasticity: 750,
+        duration: (_, i) => (i * 900)
+      });
+    }
+  }
+
+  toggleMenu = () => {
     if (showingMenu) hideMenuAction();
     else showMenuAction();
   };
 
-  return (
-    <div role="menuItem" tabIndex={0} onClick={toggleMenu} style={styles.container}>
-      <div style={[styles.button, styles.one]} />
-      <div style={[styles.button, styles.two]} />
-      <div style={[styles.button, styles.three]} />
-    </div>
-  );
+  addRef = index => el => this.childRefs[index] = el;
+
+  render() {
+    const { showingMenu, showMenuAction, hideMenuAction } = this.props;
+    return (
+      <div role="menuItem" tabIndex={0} onClick={this.toggleMenu} style={styles.container}>
+        <div ref={this.addRef(1)} style={[styles.button, styles.one]} />
+        <div ref={this.addRef(2)} style={[styles.button, styles.two]} />
+        <div ref={this.addRef(3)} style={[styles.button, styles.three]} />
+      </div>
+    );
+  }
 };
 
 const mapStateToProps = state => ({

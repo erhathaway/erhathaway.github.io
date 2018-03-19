@@ -12,25 +12,64 @@ import Divider from '../../shareables/Divider';
 import Name from './Views/Name';
 import Links from './Views/Links';
 
-const styles = {
+const linkTransitionStyles = {
+  entering: {
+    opacity: 0,
+  },
+  entered: {
+    opacity: 1,
+  },
+  exiting: {
+    opacity: 1,
+  },
+  exited: {
+    opacity: 0,
+  }
+};
+
+const dividerTransitionStyles = {
+  // entering: {
+  //   width: '0px',
+  // },
+  // entered: {
+  //   width: '300px',
+  // },
+  // exiting: {
+  //   opacity: '300px',
+  // },
+  // exited: {
+  //   opacity: '0px',
+  // }
+};
+
+const styles = (duration) => ({
   container: {
     width: '220px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
   },
-};
+  linkContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  }
+});
 
 const renderDivider = () => (<Divider width={215} marginLeft={15} />);
 const renderLinks = (inState) => (<Links inState={inState} />);
 
-const MainContainer = ({ inState, color, showLinks }) => (
-  <div style={styles.container}>
+const MainContainer = ({ inState, transitionDuration, color, showLinks }) => (
+  <div style={styles(transitionDuration).container}>
     <Link to="/">
       <Name style={{ color }} />
     </Link>
-    { showLinks && renderDivider() }
+    <div style={{ ...styles(transitionDuration).linkContainer, ...linkTransitionStyles[inState] }}>
+      <div style={{ ...styles(transitionDuration).dividerContainer, ...dividerTransitionStyles[inState]}}>
+        { showLinks && renderDivider() }
+      </div>
     { showLinks && renderLinks(inState) }
+    </div>
   </div>
 );
 
