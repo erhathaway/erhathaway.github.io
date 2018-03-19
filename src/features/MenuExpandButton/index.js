@@ -38,13 +38,13 @@ class MainContainer extends React.Component {
   constructor(props) {
     super(props);
     this.childRefs = {};
-    console.log(this.props.newInState)
+    // console.log(this.props.newInState)
   }
 
   componentDidUpdate({ inState: oldInState }) {
     const { inState: newInState } = this.props;
 
-    if (oldInState !== newInState && newInState === 'entered') {
+    if (oldInState !== newInState && newInState === 'entering') {
       const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
       // targets.each(el => el.style.marginLeft = "100px")
       var nodeList = anime({
@@ -57,7 +57,7 @@ class MainContainer extends React.Component {
       });
     }
 
-    if (oldInState !== newInState && newInState === 'exiting') {
+    else if (oldInState !== newInState && newInState === 'exiting') {
       const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
       // targets.each(el => el.style.marginLeft = "100px")
       var nodeList = anime({
@@ -65,6 +65,18 @@ class MainContainer extends React.Component {
         // translateX: 20,
         opacity: 0,
         duration: (_, i) => (i * 900)
+      });
+    }
+
+    else {
+      const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+      // targets.each(el => el.style.marginLeft = "100px")
+      var nodeList = anime({
+        targets,
+        height: 6,
+        width: 6,
+        opacity: 1,
+        duration: (_, i) => (1)
       });
     }
   }
