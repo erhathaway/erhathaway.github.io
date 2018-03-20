@@ -9,7 +9,7 @@ import Contents from '../../features/MenuContents';
 import ExpandButton from '../../features/MenuExpandButton';
 
 // reusable components
-import PopOutMenu from '../../shareables/PopOutMenu/Main';
+import PopOutMenu from '../../shareables/PopOutMenu';
 
 const transitionStyles = {
   entering: {

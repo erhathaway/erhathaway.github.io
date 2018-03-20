@@ -42,11 +42,10 @@ const styles = {
 };
 
 class MainContainer extends React.Component {
-  constructor(props) {
-  super(props);
-  this.childRefs = {};
-
-}
+    constructor(props) {
+    super(props);
+    this.childRefs = {};
+  }
 
   componentDidUpdate({ inState: oldInState }) {
     const { inState: newInState } = this.props;

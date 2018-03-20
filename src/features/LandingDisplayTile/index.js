@@ -12,7 +12,7 @@ class Component extends React.Component {
   animate = () => {
     const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
     // targets.each(el => el.style.marginLeft = "100px")
-    const duration = Math.floor(Math.random() * 1500) + 200;
+    const duration = Math.floor(Math.random() * 1200) + 200;
     var nodeList = anime({
       targets,
       height: '90%',
@@ -25,8 +25,8 @@ class Component extends React.Component {
 
   componentDidMount() {
     this.animate();
-
   }
+
   componentDidUpdate({ inState: oldInState }) {
     const { inState: newInState } = this.props;
 
