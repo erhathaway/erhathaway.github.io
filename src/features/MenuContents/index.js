@@ -47,18 +47,40 @@ class MainContainer extends React.Component {
     this.childRefs = {};
   }
 
+  animateEnter = () => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+
+    var nodeList = anime({
+      targets,
+      translateX: 20,
+      elasticity: 250,
+      duration: (_, i) => 1000 + (i * 600)
+    });
+  }
+
+  animateButtonClick = (indexOfClick) => {
+    console.log('animating button click', indexOfClick)
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+
+    const indexDif = (i) => Math.abs(indexOfClick - i);
+
+    var nodeList = anime({
+      targets,
+      scale: [0, 1],
+      elasticity: 250,
+      duration: (_, i) => 1000 + (indexDif(i) * 600)
+    });
+  }
+
+  componentDidMount() {
+    this.animateEnter();
+  }
+
   componentDidUpdate({ inState: oldInState }) {
     const { inState: newInState } = this.props;
 
-    if (oldInState !== newInState && newInState === 'entering' ||  newInState === 'entered') {
-      const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-      // targets.each(el => el.style.marginLeft = "100px")
-      var nodeList = anime({
-        targets,
-        translateX: 20,
-        elasticity: 250,
-        duration: (_, i) => 1000 + (i * 600)
-      });
+    if (oldInState !== newInState && newInState === 'entering') {
+      this.animateEnter();
     }
   }
 
@@ -85,20 +107,20 @@ class MainContainer extends React.Component {
     return (
       <div style={styles.container}>
         <Link to="/category/woodworking" ref={this.addRef(1)} style={transitionStyles[inState]}>
-          <Item name={'Woodworking'} tabIndex={0} onClick={() => this.handleCategoryClick('woodworking')} selected={activeCategory === 'woodworking'} />
+          <Item name={'Woodworking'} tabIndex={0} onClick={() => this.handleCategoryClick('woodworking') && this.animateButtonClick(1)} selected={activeCategory === 'woodworking'} />
         </Link>
         <Link to="/category/hardware" ref={this.addRef(2)} style={transitionStyles[inState]}>
-          <Item name={'Hardware'} tabIndex={0} onClick={() => this.handleCategoryClick('hardware')} selected={activeCategory === 'hardware'} />
+          <Item name={'Hardware'} tabIndex={0} onClick={() => this.handleCategoryClick('hardware') && this.animateButtonClick(2)} selected={activeCategory === 'hardware'} />
         </Link>
         <Link to="/category/software" ref={this.addRef(3)} style={transitionStyles[inState]}>
-          <Item name={'Software'} tabIndex={0} onClick={() => this.handleCategoryClick('software')} selected={activeCategory === 'software'} />
+          <Item name={'Software'} tabIndex={0} onClick={() => this.handleCategoryClick('software') && this.animateButtonClick(3)} selected={activeCategory === 'software'} />
         </Link>
         <Divider width={160} tabIndex={0} marginBottom={10} marginTop={10} marginLeft={dividerMarginLeft} />
-        <Item ref={this.addRef(5)} style={transitionStyles[inState]} name={'Writings'} tabIndex={0} onClick={() => this.handleDocumentClick('writings')} selected={activeDocument === 'writings'} />
+        <Item ref={this.addRef(5)} style={transitionStyles[inState]} name={'Writings'} tabIndex={0} onClick={() => this.handleDocumentClick('writings') && this.animateButtonClick(4)} selected={activeDocument === 'writings'} />
         <Divider width={160} tabIndex={0} marginBottom={10} marginTop={10} marginLeft={dividerMarginLeft} />
-        <Item ref={this.addRef(7)} style={transitionStyles[inState]} name={'Terminal'} tabIndex={0} onClick={() => this.handleAppClick('terminal')} selected={activeApps.includes('terminal')} />
-        <Item ref={this.addRef(8)} style={transitionStyles[inState]} name={'Contact'} tabIndex={0} onClick={() => this.handleAppClick('contact')} selected={activeApps.includes('contact')} />
-        <Item ref={this.addRef(9)} style={transitionStyles[inState]} name={'Presence'} tabIndex={0} onClick={() => this.handleAppClick('presence')} selected={activeApps.includes('presence')} />
+        <Item ref={this.addRef(7)} style={transitionStyles[inState]} name={'Terminal'} tabIndex={0} onClick={() => this.handleAppClick('terminal') && this.animateButtonClick(5)} selected={activeApps.includes('terminal')} />
+        <Item ref={this.addRef(8)} style={transitionStyles[inState]} name={'Contact'} tabIndex={0} onClick={() => this.handleAppClick('contact') && this.animateButtonClick(6)} selected={activeApps.includes('contact')} />
+        <Item ref={this.addRef(9)} style={transitionStyles[inState]} name={'Presence'} tabIndex={0} onClick={() => this.handleAppClick('presence') && this.animateButtonClick(7)} selected={activeApps.includes('presence')} />
       </div>
     );
   }
