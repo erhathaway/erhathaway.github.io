@@ -17,8 +17,9 @@ const styles = {
     WebkitUserSelect: 'none',
     MozUserSelect: 'none',
     userSelect: 'none',
-    letterSpacing: '1.4px',
+    letterSpacing: '1.7px',
     opacity: 0.8,
+    marginLeft: '-20px',
   },
   selected: {
     color: '#78A15A',
