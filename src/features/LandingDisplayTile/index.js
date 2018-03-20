@@ -17,7 +17,7 @@ class Component extends React.Component {
       targets,
       height: '90%',
       width: '90%',
-      elasticity: 1,
+      elasticity: 0,
       opacity: 0.7,
       duration,
     });

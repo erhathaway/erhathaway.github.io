@@ -37,6 +37,7 @@ const styles = {
     display: 'flex',
     // marginLeft: '20px',
     flexDirection: 'column',
+    marginLeft: '20px',
   },
 };
 
