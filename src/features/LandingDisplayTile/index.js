@@ -12,11 +12,11 @@ class Component extends React.Component {
   animate = () => {
     const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
     // targets.each(el => el.style.marginLeft = "100px")
-    const duration = Math.floor(Math.random() * 1200) + 200;
+    const duration = Math.floor(Math.random() * 600) + 1200;
     var nodeList = anime({
       targets,
-      height: '90%',
-      width: '90%',
+      height: ['0%','90%'],
+      width: ['0%','90%'],
       elasticity: 0,
       opacity: 0.7,
       duration,
@@ -54,7 +54,7 @@ class Component extends React.Component {
         <div
           ref={this.addRef(1)}
           style={{
-            backgroundColor: overlaycolor, height: '80%', width: '80%',
+            backgroundColor: overlaycolor, height: '0%', width: '0%',
             boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
               opacity: 0.5
           }}

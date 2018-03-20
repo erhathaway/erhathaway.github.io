@@ -69,12 +69,12 @@ class MainContainer extends React.Component {
       targets,
       // scale: [0.9, 1],
       // marginLeft: ['40px', '20px'],
-      translateX: [0, 25, 0],
+      translateX: [0, 6, 0],
 
-      elasticity: 200,
+      elasticity: 400,
       round: 1,
       // delay: (_, i) => indexDif(i) * 20,
-      duration: (_, i) => indexDif(i) * 30,
+      duration: (_, i) => indexDif(i) * 60,
     });
   }
 
