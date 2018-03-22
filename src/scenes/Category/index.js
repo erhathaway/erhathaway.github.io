@@ -16,7 +16,7 @@ const transitionStyles = {
   },
   exited: {
     opacity: 0,
-  }
+  },
 };
 
 const styles = (duration) => ({
@@ -27,22 +27,11 @@ const styles = (duration) => ({
     height: '100vh',
     overflow: 'hidden',
     display: 'flex',
-    // alignItems: 'center',
     paddingTop: '80px',
     marginLeft: '100px',
     width: '50vw',
   },
 });
-
-// const Category = (props) => {
-//   const { id } = props.match.params;
-//
-//   return (
-//     <div style={styles.container}>
-//       <LandingImages />
-//     </div>
-//   );
-// };
 
 const Category = ({ inState, transitionDuration }) => (
     <div style={{

@@ -14,21 +14,13 @@ import PopOutMenu from '../../shareables/PopOutMenu';
 const transitionStyles = {
   entering: {
     opacity: 0,
-    // transform: 'translateX(100%)',
   },
   entered: {
     opacity: 1,
   },
-  // exiting: {
-  //   opacity: 1,
-  //   // transform: 'translateX(100%)',
-  // },
-  // exited: {
-  //   opacity: 0,
-  // }
 };
 
-const styles = (duration) => ({
+const styles = duration => ({
   container: {
     position: 'absolute',
     width: '220px',
@@ -40,7 +32,7 @@ const styles = (duration) => ({
   },
   opacity: {
     transition: `opacity ${duration}ms ease-in`,
-  }
+  },
 });
 
 const Menu = ({ inState, transitionDuration, showFullMenu, showExpandedMenu }) => (

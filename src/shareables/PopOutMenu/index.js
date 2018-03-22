@@ -22,40 +22,7 @@ class Component extends React.Component {
     this.childRefs = {};
   }
 
-  animateEnter = () => {
-    console.log('animating enter dropdown')
-    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-    // targets.each(el => el.style.marginLeft = "100px")
-    // const duration = Math.floor(Math.random() * 1500) + 200;
-    var nodeList = anime({
-      targets,
-      height: '50%',
-      // width: '90%',
-      scale: [0, 1],
-      elasticity: 0,
-      opacity: 1,
-      duration: 600,
-    });
-  }
-
-  animateExit = () => {
-    console.log('animating exit dropdown')
-    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-    // targets.each(el => el.style.marginLeft = "100px")
-    // const duration = Math.floor(Math.random() * 1500) + 200;
-    var nodeList = anime({
-      targets,
-      // height: '0%',
-      // width: '90%',
-      scale: [1, 2],
-      elasticity: 0,
-      // opacity: 1,
-      duration: 200,
-    });
-  }
-
   componentDidMount() {
-    console.log('mounting dropdown')
     this.animateEnter();
   }
 
@@ -73,23 +40,46 @@ class Component extends React.Component {
     if (oldHide !== newHide && newHide === true) this.animateExit();
   }
 
+  animateEnter = () => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+
+    anime({
+      targets,
+      height: '50%',
+      scale: [0, 1],
+      elasticity: 0,
+      opacity: 1,
+      duration: 600,
+    });
+  }
+
+  animateExit = () => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+
+    anime({
+      targets,
+      scale: [1, 2],
+      elasticity: 0,
+      duration: 200,
+    });
+  }
+
   addRef = index => el => this.childRefs[index] = el;
 
   render() {
-    const { children, hide } = this.props;
+    const { children, hide, ...otherProps } = this.props;
     return (
       <div ref={this.addRef(1)} style={styles.container}>
         <div styleName={hide ? 'closed-container' : 'open-container'} >
-          { hide ? null : children }
+          { hide
+            ? null
+            : React.Children.map(children, child => React.cloneElement(child, { animationContext: 'popOutMenu', ...otherProps }))
+          }
         </div>
       </div>
-    )
+    );
   }
 }
-
-// const PopOutMenu = ({ children, hide }) => (
-//
-// );
 
 Component.propTypes = {
   children: PropTypes.node.isRequired,

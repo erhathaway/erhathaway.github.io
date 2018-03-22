@@ -1,6 +1,5 @@
 import React from 'react';
 import Radium from 'radium';
-import { Transition } from "react-transition-group";
 
 // subscenes
 import LandingImages from '../LandingImages';
@@ -35,19 +34,16 @@ const styles = (duration) => ({
     paddingTop: '80px',
     width: '65vw',
     overflow: 'hidden',
-
   },
 });
 
-// const logState = (state) => { console.log(state) }
-
 const Landing = ({ inState, transitionDuration }) => (
-    <div style={{
-      ...styles(transitionDuration).container,
-      ...transitionStyles[inState],
-    }}>
-      <LandingImages inState={inState} />
-    </div>
+  <div style={{
+    ...styles(transitionDuration).container,
+    ...transitionStyles[inState],
+  }}>
+    <LandingImages inState={inState} />
+  </div>
 );
 
 export default Radium(Landing);
