@@ -9,28 +9,47 @@ class Component extends React.Component {
     this.childRefs = {};
   }
 
-  animate = () => {
+  animateEnter = () => {
     const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
     // targets.each(el => el.style.marginLeft = "100px")
-    const duration = Math.floor(Math.random() * 600) + 1200;
+    const duration = Math.floor(Math.random() * 600) + 200;
     var nodeList = anime({
       targets,
-      height: ['0%','90%'],
-      width: ['0%','90%'],
+      height: ['0%', '90%'],
+      width: ['0%', '90%'],
       elasticity: 0,
       opacity: 0.7,
       duration,
     });
   }
 
+  animateExit = () => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+    // targets.each(el => el.style.marginLeft = "100px")
+    // const duration = Math.floor(Math.random() * 600) + 200;
+    var nodeList = anime({
+      targets,
+      height: ['90%', '0%'],
+      width: ['90%', '0%'],
+      elasticity: 0,
+      // opacity: 0,
+      duration: 100,
+    });
+  }
+
   componentDidMount() {
-    this.animate();
+    this.animateEnter();
+  }
+
+  componentWillUnmount() {
+    this.animateExit();
   }
 
   componentDidUpdate({ inState: oldInState }) {
     const { inState: newInState } = this.props;
 
-    if (oldInState !== newInState && newInState === 'entering') this.animate();
+    if (oldInState !== newInState && newInState === 'entered') this.animateEnter();
+    if (oldInState !== newInState && newInState === 'exited') this.animateExit();
   }
 
   addRef = index => el => this.childRefs[index] = el;

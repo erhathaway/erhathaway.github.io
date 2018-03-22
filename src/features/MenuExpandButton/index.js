@@ -32,53 +32,40 @@ const styles = {
   },
 };
 
-
-// const MainContainer = ({ showingMenu, showMenuAction, hideMenuAction }) => {
 class MainContainer extends React.Component {
   constructor(props) {
     super(props);
     this.childRefs = {};
-    // console.log(this.props.newInState)
+  }
+
+  componentDidMount() {
+    this.animateEnter();
   }
 
   componentDidUpdate({ inState: oldInState }) {
     const { inState: newInState } = this.props;
+    if (oldInState !== newInState && newInState === 'exiting') this.animateExit();
+  }
 
-    if (oldInState !== newInState && newInState === 'entering') {
-      const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-      // targets.each(el => el.style.marginLeft = "100px")
-      var nodeList = anime({
-        targets,
-        // translateX: 20,
-        height: 6,
-        width: 6,
-        elasticity: 750,
-        duration: (_, i) => (i * 900)
-      });
-    }
+  animateEnter = (instant = false) => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+    anime({
+      targets,
+      height: [0, 6],
+      width: [0, 6],
+      opacity: 1,
+      elasticity: 750,
+      duration: instant ? 1 : (_, i) => (i * 900)
+    });
+  }
 
-    else if (oldInState !== newInState && newInState === 'exiting') {
-      const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-      // targets.each(el => el.style.marginLeft = "100px")
-      var nodeList = anime({
+  animateExit = () => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+      anime({
         targets,
-        // translateX: 20,
         opacity: 0,
         duration: (_, i) => (i * 900)
       });
-    }
-
-    else {
-      const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-      // targets.each(el => el.style.marginLeft = "100px")
-      var nodeList = anime({
-        targets,
-        height: 6,
-        width: 6,
-        opacity: 1,
-        duration: (_, i) => (1)
-      });
-    }
   }
 
   toggleMenu = () => {
