@@ -49,7 +49,7 @@ const Category = ({ inState, transitionDuration }) => (
       ...styles(transitionDuration).container,
       ...transitionStyles[inState],
     }}>
-      <LandingImages />
+      <LandingImages inState={inState} />
     </div>
 );
 

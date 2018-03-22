@@ -55,17 +55,17 @@ class MainContainer extends React.Component {
       width: [0, 6],
       opacity: 1,
       elasticity: 750,
-      duration: instant ? 1 : (_, i) => (i * 900)
+      duration: instant ? 1 : (_, i) => (i * 900),
     });
   }
 
   animateExit = () => {
-    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-      anime({
-        targets,
-        opacity: 0,
-        duration: (_, i) => (i * 900)
-      });
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el)).reverse();
+    anime({
+      targets,
+      opacity: 0,
+      duration: (_, i) => (i * 900),
+    });
   }
 
   toggleMenu = () => {
@@ -85,7 +85,7 @@ class MainContainer extends React.Component {
       </div>
     );
   }
-};
+}
 
 const mapStateToProps = state => ({
   showingMenu: state.menuState.showingMenu,

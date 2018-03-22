@@ -21,7 +21,9 @@ const styles = {
 
 };
 
-const Main = ({ inState }) => (
+const Main = ({ inState }) => {
+  // console.log('landingImages', inState)
+  return (
   <div style={styles.container}>
     <div style={styles.row}>
       <Tile inState={inState} widthPriority={1} flexBasis={'20%'} overlaycolor={'rgba(91, 192, 235, 0.6)'} onClick={() => {}} />
@@ -41,6 +43,6 @@ const Main = ({ inState }) => (
       <Tile inState={inState} widthPriority={1} flexBasis={'25%'} overlaycolor={'rgba(155, 197, 61, 0.6)'} onClick={() => {}} />
     </div>
   </div>
-);
+)};
 
 export default Main;

@@ -9,47 +9,27 @@ class Component extends React.Component {
     this.childRefs = {};
   }
 
-  animateEnter = () => {
-    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-    // targets.each(el => el.style.marginLeft = "100px")
-    const duration = Math.floor(Math.random() * 600) + 200;
-    var nodeList = anime({
-      targets,
-      height: ['0%', '90%'],
-      width: ['0%', '90%'],
-      elasticity: 0,
-      opacity: 0.7,
-      duration,
-    });
-  }
-
-  animateExit = () => {
-    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-    // targets.each(el => el.style.marginLeft = "100px")
-    // const duration = Math.floor(Math.random() * 600) + 200;
-    var nodeList = anime({
-      targets,
-      height: ['90%', '0%'],
-      width: ['90%', '0%'],
-      elasticity: 0,
-      // opacity: 0,
-      duration: 100,
-    });
-  }
-
   componentDidMount() {
     this.animateEnter();
   }
 
-  componentWillUnmount() {
-    this.animateExit();
-  }
-
   componentDidUpdate({ inState: oldInState }) {
     const { inState: newInState } = this.props;
+    if (oldInState !== newInState && (newInState === 'entered')) this.animateEnter(200);
+  }
 
-    if (oldInState !== newInState && newInState === 'entered') this.animateEnter();
-    if (oldInState !== newInState && newInState === 'exited') this.animateExit();
+
+  animateEnter = (delay = 0) => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+    const duration = Math.floor(Math.random() * 600) + 200;
+    anime({
+      targets,
+      scale: [0, 1],
+      elasticity: 0,
+      opacity: [0, 0.7],
+      duration,
+      delay,
+    });
   }
 
   addRef = index => el => this.childRefs[index] = el;
@@ -73,16 +53,17 @@ class Component extends React.Component {
         <div
           ref={this.addRef(1)}
           style={{
-            backgroundColor: overlaycolor, height: '0%', width: '0%',
+            backgroundColor: overlaycolor,
+            height: '90%',
+            width: '90%',
             boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
-              opacity: 0.5
+            opacity: 0.5,
           }}
-        >
-        </div>
+        />
       </div>
     );
   }
-};
+}
 
 Component.propTypes = {
   widthPriority: PropTypes.number.isRequired,
