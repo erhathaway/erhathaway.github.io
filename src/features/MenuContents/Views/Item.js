@@ -19,7 +19,6 @@ const styles = {
     userSelect: 'none',
     letterSpacing: '1.7px',
     opacity: 0.8,
-    // marginLeft: '-20px',
   },
   selected: {
     color: '#78A15A',

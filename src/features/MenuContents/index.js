@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -35,47 +33,14 @@ const styles = {
   container: {
     width: '160px',
     display: 'flex',
-    // marginLeft: '20px',
     flexDirection: 'column',
-    // marginLeft: '20px',
   },
 };
 
 class MainContainer extends React.Component {
-    constructor(props) {
+  constructor(props) {
     super(props);
     this.childRefs = {};
-  }
-
-  animateEnter = () => {
-    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-
-    var nodeList = anime({
-      targets,
-      translateX: [20, 0],
-      elasticity: 250,
-      duration: (_, i) => 1000 + (i * 600)
-    });
-  }
-
-  animateButtonClick = (indexOfClick) => {
-    console.log('here')
-    console.log('animating button click', indexOfClick)
-    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
-
-    const indexDif = (i) => Math.abs(indexOfClick - i) + 1;
-
-    var nodeList = anime({
-      targets,
-      // scale: [0.9, 1],
-      // marginLeft: ['40px', '20px'],
-      translateX: [0, 6, 0],
-
-      elasticity: 400,
-      round: 1,
-      // delay: (_, i) => indexDif(i) * 20,
-      duration: (_, i) => indexDif(i) * 60,
-    });
   }
 
   componentDidMount() {
@@ -90,6 +55,30 @@ class MainContainer extends React.Component {
     }
   }
 
+  animateEnter = () => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+
+    anime({
+      targets,
+      translateX: [20, 0],
+      elasticity: 250,
+      duration: (_, i) => 1000 + (i * 600)
+    });
+  }
+
+  animateButtonClick = (indexOfClick) => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+    const indexDif = i => Math.abs(indexOfClick - i) + 1;
+
+    anime({
+      targets,
+      translateX: [0, 6, 0],
+      elasticity: 400,
+      round: 1,
+      duration: (_, i) => indexDif(i) * 60,
+    });
+  }
+
   handleCategoryClick = (categoryName) => {
     if (this.props.activeCategory === categoryName) this.props.closeMenuItem('category', categoryName);
     else this.props.openMenuItem('category', categoryName);
@@ -101,7 +90,6 @@ class MainContainer extends React.Component {
   }
 
   handleAppClick = (appName) => {
-    console.log('handling app click')
     if (this.props.activeApps.includes(appName)) this.props.closeMenuItem('app', appName);
     else this.props.openMenuItem('app', appName);
   }
