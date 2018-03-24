@@ -3,6 +3,8 @@ import Radium from 'radium';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
+import anime from 'animejs';
+import ReactDOM from 'react-dom';
 
 // actions
 import { showMenu, hideMenu } from '../../actions/menu';
@@ -14,8 +16,8 @@ const styles = {
     justifyContent: 'center',
   },
   button: {
-    height: '6px',
-    width: '6px',
+    height: '0px',
+    width: '0px',
     borderRadius: '3px',
     margin: '3px',
   },
@@ -30,21 +32,60 @@ const styles = {
   },
 };
 
+class Component extends React.Component {
+  constructor(props) {
+    super(props);
+    this.childRefs = {};
+  }
 
-const MainContainer = ({ showingMenu, showMenuAction, hideMenuAction }) => {
-  const toggleMenu = () => {
+  componentDidMount() {
+    this.animateEnter();
+  }
+
+  componentDidUpdate({ inState: oldInState }) {
+    const { inState: newInState } = this.props;
+    if (oldInState !== newInState && newInState === 'exiting') this.animateExit();
+  }
+
+  animateEnter = (instant = false) => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
+    anime({
+      targets,
+      height: [0, 6],
+      width: [0, 6],
+      opacity: 1,
+      elasticity: 750,
+      duration: instant ? 1 : (_, i) => (i * 900),
+    });
+  }
+
+  animateExit = () => {
+    const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el)).reverse();
+    anime({
+      targets,
+      opacity: 0,
+      duration: (_, i) => (i * 900),
+    });
+  }
+
+  toggleMenu = () => {
+    const { showingMenu, hideMenuAction, showMenuAction } = this.props;
     if (showingMenu) hideMenuAction();
     else showMenuAction();
   };
 
-  return (
-    <div role="menuItem" tabIndex={0} onClick={toggleMenu} style={styles.container}>
-      <div style={[styles.button, styles.one]} />
-      <div style={[styles.button, styles.two]} />
-      <div style={[styles.button, styles.three]} />
-    </div>
-  );
-};
+  addRef = index => (el) => { this.childRefs[index] = el; }
+
+  render() {
+    return (
+      <div role="menuItem" tabIndex={0} onClick={this.toggleMenu} style={styles.container}>
+        <div ref={this.addRef(1)} style={[styles.button, styles.one]} />
+        <div ref={this.addRef(2)} style={[styles.button, styles.two]} />
+        <div ref={this.addRef(3)} style={[styles.button, styles.three]} />
+      </div>
+    );
+  }
+}
 
 const mapStateToProps = state => ({
   showingMenu: state.menuState.showingMenu,
@@ -55,15 +96,15 @@ const mapDispatchToProps = dispatch => ({
   hideMenuAction: bindActionCreators(hideMenu, dispatch),
 });
 
-MainContainer.propTypes = {
+Component.propTypes = {
   showMenuAction: PropTypes.func.isRequired,
   hideMenuAction: PropTypes.func.isRequired,
   showingMenu: PropTypes.bool.isRequired,
+  inState: PropTypes.string,
 };
 
-const Main = connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(Radium(MainContainer));
+Component.defaultProps = {
+  inState: undefined,
+};
 
-export default Main;
+export default connect(mapStateToProps, mapDispatchToProps)(Radium(Component));

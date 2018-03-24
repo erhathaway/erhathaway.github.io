@@ -12,25 +12,56 @@ import Divider from '../../shareables/Divider';
 import Name from './Views/Name';
 import Links from './Views/Links';
 
-const styles = {
+const linkTransitionStyles = {
+  entering: {
+    opacity: 0,
+  },
+  entered: {
+    opacity: 1,
+  },
+  exiting: {
+    opacity: 1,
+  },
+  exited: {
+    opacity: 0,
+  },
+};
+
+const dividerTransitionStyles = {};
+
+const styles = () => ({
   container: {
     width: '220px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
   },
-};
+  linkContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+});
 
 const renderDivider = () => (<Divider width={215} marginLeft={15} />);
-const renderLinks = () => (<Links />);
+const renderLinks = inState => (<Links inState={inState} />);
 
-const MainContainer = ({ color, showLinks }) => (
-  <div style={styles.container}>
+const Component = ({ inState, transitionDuration, color, showLinks }) => (
+  <div style={styles(transitionDuration).container}>
     <Link to="/">
       <Name style={{ color }} />
     </Link>
-    { showLinks && renderDivider() }
-    { showLinks && renderLinks() }
+    <div style={{ ...styles(transitionDuration).linkContainer, ...linkTransitionStyles[inState] }}>
+      <div
+        style={{
+          ...styles(transitionDuration).dividerContainer,
+          ...dividerTransitionStyles[inState],
+        }}
+      >
+        { showLinks && renderDivider() }
+      </div>
+      { showLinks && renderLinks(inState) }
+    </div>
   </div>
 );
 
@@ -38,13 +69,16 @@ const mapStateToProps = state => ({
   color: state.styleState.fontColor,
 });
 
-MainContainer.propTypes = {
+Component.propTypes = {
   color: PropTypes.string.isRequired,
   showLinks: PropTypes.bool.isRequired,
+  inState: PropTypes.string,
+  transitionDuration: PropTypes.number,
 };
 
-const Main = connect(
-  mapStateToProps,
-)(MainContainer);
+Component.defaultProps = {
+  inState: undefined,
+  transitionDuration: 300,
+};
 
-export default Main;
+export default connect(mapStateToProps)(Component);

@@ -6,6 +6,8 @@ const styles = {
   marginBottom: '11px',
   padding: '15px',
   textDecoration: 'none',
+  letterSpacing: '1.8px',
+  opacity: 0.8,
 };
 
 const Name = ({ style }) => {

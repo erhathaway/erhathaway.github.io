@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Radium from 'radium';
+import stylePropType from 'react-style-proptype';
+
 // add relative path to skip eslint's
 // import/no-extraneous-dependencies error caused by this library being
 // installed as part of Radium
@@ -8,7 +10,7 @@ import color from '../../../../node_modules/color';
 
 const styles = {
   container: {
-    fontSize: '14px',
+    fontSize: '13px',
     paddingBottom: '10px',
     paddingTop: '10px',
     paddingLeft: '20px',
@@ -17,6 +19,8 @@ const styles = {
     WebkitUserSelect: 'none',
     MozUserSelect: 'none',
     userSelect: 'none',
+    letterSpacing: '1.7px',
+    opacity: 0.8,
   },
   selected: {
     color: '#78A15A',
@@ -32,25 +36,27 @@ const styles = {
   },
 };
 
-const Item = ({ name, selected, onClick, tabIndex }) => {
+const Component = ({ name, selected, onClick, tabIndex, style: propsStyle }) => {
   const computed = selected
     ? Object.assign({}, styles.container, styles.selected)
     : Object.assign({}, styles.container, styles.unselected);
 
   return (
-    <div role="menuItem" tabIndex={tabIndex} style={computed} onClick={onClick}>{ name }</div>
+    <div role="menuItem" tabIndex={tabIndex} style={{ ...computed, ...propsStyle }} onClick={onClick}>{ name }</div>
   );
 };
 
-Item.propTypes = {
+Component.propTypes = {
   name: PropTypes.string.isRequired,
   selected: PropTypes.bool.isRequired,
   onClick: PropTypes.func.isRequired,
   tabIndex: PropTypes.number.isRequired,
+  style: stylePropType,
 };
 
-Item.defaultProps = {
+Component.defaultProps = {
   selected: false,
+  style: undefined,
 };
 
-export default Radium(Item);
+export default Radium(Component);

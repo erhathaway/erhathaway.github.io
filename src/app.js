@@ -10,7 +10,7 @@ import './style.css';
 import store from './state/store';
 
 // scene
-import MainAppScene from './scenes/Main';
+import Scenes from './scenes';
 
 // webpack
 require('./config/fileLoader'); // loader needed by webpack for loading of assets
@@ -20,11 +20,11 @@ window.onload = () => {
     <Provider store={store}>
       <StyleRoot>
         <BrowserRouter>
-          <MainAppScene />
+          <Scenes />
         </BrowserRouter>
       </StyleRoot>
     </Provider>
   ), document.getElementById('main'));
 };
 
-export default MainAppScene;
+export default Scenes;
