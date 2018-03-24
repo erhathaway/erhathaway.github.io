@@ -7,24 +7,24 @@ const styles = {
   backgroundColor: '#DFDFDF',
 };
 
-const Divider = ({ width, marginTop, marginBottom, marginLeft }) => {
+const Component = ({ width, marginTop, marginBottom, marginLeft }) => {
   const computed = Object.assign({}, styles, { width, marginTop, marginBottom, marginLeft });
   return (
     <div style={computed} />
   );
 };
 
-Divider.propTypes = {
+Component.propTypes = {
   width: PropTypes.number.isRequired,
   marginTop: PropTypes.number,
   marginBottom: PropTypes.number,
   marginLeft: PropTypes.number,
 };
 
-Divider.defaultProps = {
+Component.defaultProps = {
   marginTop: 0,
   marginBottom: 0,
   marginLeft: 0,
 };
 
-export default Divider;
+export default Component;

@@ -26,18 +26,18 @@ class Component extends React.Component {
     this.animateEnter();
   }
 
-  componentDidUpdate({ inState: oldInState, hide: oldHide }) {
-    const { inState: newInState, hide: newHide } = this.props;
-
-    if (oldInState !== newInState && newInState === 'entering') this.animateEnter();
-    if (oldHide !== newHide && newHide === false) this.animateEnter();
-  }
-
   componentWillUpdate({ inState: newInState, hide: newHide }) {
     const { inState: oldInState, hide: oldHide } = this.props;
 
     if (oldInState !== newInState && newInState === 'exiting') this.animateExit();
     if (oldHide !== newHide && newHide === true) this.animateExit();
+  }
+
+  componentDidUpdate({ inState: oldInState, hide: oldHide }) {
+    const { inState: newInState, hide: newHide } = this.props;
+
+    if (oldInState !== newInState && newInState === 'entering') this.animateEnter();
+    if (oldHide !== newHide && newHide === false) this.animateEnter();
   }
 
   animateEnter = () => {
@@ -64,7 +64,7 @@ class Component extends React.Component {
     });
   }
 
-  addRef = index => el => this.childRefs[index] = el;
+  addRef = index => (el) => { this.childRefs[index] = el; }
 
   render() {
     const { children, hide, ...otherProps } = this.props;
@@ -84,6 +84,12 @@ class Component extends React.Component {
 Component.propTypes = {
   children: PropTypes.node.isRequired,
   hide: PropTypes.bool.isRequired,
+  inState: PropTypes.string,
 };
+
+Component.defaultProps = {
+  inState: undefined,
+};
+
 
 export default Radium(Component);
