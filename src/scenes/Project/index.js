@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const Project = (props) => {
+const Component = (props) => {
   const { id } = props.match.params;
 
   return (
@@ -12,10 +12,10 @@ const Project = (props) => {
   );
 };
 
-Project.propTypes = {
+Component.propTypes = {
   match: PropTypes.shape({
     params: PropTypes.shape({ id: PropTypes.string }),
   }).isRequired,
 };
 
-export default Project;
+export default Component;

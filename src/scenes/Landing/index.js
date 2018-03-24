@@ -1,5 +1,6 @@
 import React from 'react';
 import Radium from 'radium';
+import PropTypes from 'prop-types';
 
 // subscenes
 import LandingImages from '../LandingImages';
@@ -22,10 +23,10 @@ const transitionStyles = {
   },
   exited: {
     opacity: 0,
-  }
+  },
 };
 
-const styles = (duration) => ({
+const styles = duration => ({
   container: {
     position: 'absolute',
     transition: `opacity ${duration}ms ease-in-out, transform ${duration}ms ease-in-out`,
@@ -37,13 +38,24 @@ const styles = (duration) => ({
   },
 });
 
-const Landing = ({ inState, transitionDuration }) => (
+const Component = ({ inState, transitionDuration }) => (
   <div style={{
     ...styles(transitionDuration).container,
     ...transitionStyles[inState],
-  }}>
+  }}
+  >
     <LandingImages inState={inState} />
   </div>
 );
 
-export default Radium(Landing);
+Component.propTypes = {
+  inState: PropTypes.string,
+  transitionDuration: PropTypes.number,
+};
+
+Component.defaultProps = {
+  inState: undefined,
+  transitionDuration: 300,
+};
+
+export default Radium(Component);

@@ -1,4 +1,6 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
 import Tile from '../../features/LandingDisplayTile';
 
 const styles = {
@@ -17,7 +19,7 @@ const styles = {
   },
 };
 
-const Main = ({ inState }) => (
+const Component = ({ inState }) => (
   <div style={styles.container}>
     <div style={styles.row}>
       <Tile inState={inState} widthPriority={1} flexBasis={'20%'} overlaycolor={'rgba(91, 192, 235, 0.6)'} onClick={() => {}} />
@@ -39,4 +41,12 @@ const Main = ({ inState }) => (
   </div>
 );
 
-export default Main;
+Component.propTypes = {
+  inState: PropTypes.string,
+};
+
+Component.defaultProps = {
+  inState: undefined,
+};
+
+export default Component;

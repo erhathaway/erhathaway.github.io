@@ -4,8 +4,8 @@ import Radium from 'radium';
 
 // routing
 import { Switch, Route } from 'react-router-dom';
-import { withRouter } from 'react-router'
-import { TransitionGroup, CSSTransition, Transition } from "react-transition-group";
+import { withRouter } from 'react-router';
+import { TransitionGroup, Transition } from 'react-transition-group';
 
 // scenes
 import Landing from './Landing';
@@ -58,25 +58,25 @@ const styles = {
 
 const duration = 300;
 
-const routeTransition = (Scene, initialProps) => (props) => (
+const routeTransition = (Scene, initialProps) => props => (
   <Scene {...initialProps} {...props} />
 );
 
-const Scenes = withRouter( ({ location }) => (
+const Scenes = withRouter(({ location }) => (
   <div style={styles.container}>
     <div style={styles.scenes}>
       {/* Menu */}
       <div style={styles.menuScene}>
         <TransitionGroup>
           <Transition
-            key={location.pathname.split('/').slice(0,2).join('/')} /*only look at primary path*/
-            timeout={{enter: duration, exit: 100, }}
+            key={location.pathname.split('/').slice(0, 2).join('/')} /* only look at primary path */
+            timeout={{ enter: duration, exit: 100 }}
           >
-            {(inState) => (
-            <Switch location={location}>
-              <Route path="/category/software" render={routeTransition(Menu, { inState, transitionDuration: duration, showFullMenu: false })} />
-              <Route exact path="*" render={routeTransition(Menu, { inState, transitionDuration: duration, showFullMenu: true })} />
-            </Switch>
+            {inState => (
+              <Switch location={location}>
+                <Route path="/category/software" render={routeTransition(Menu, { inState, transitionDuration: duration, showFullMenu: false })} />
+                <Route exact path="*" render={routeTransition(Menu, { inState, transitionDuration: duration, showFullMenu: true })} />
+              </Switch>
             )}
           </Transition>
         </TransitionGroup>
@@ -88,7 +88,7 @@ const Scenes = withRouter( ({ location }) => (
             key={location.pathname}
             timeout={duration}
           >
-            {(inState) => (
+            {inState => (
               <Switch location={location}>
                 <Route exact path="/" render={routeTransition(Landing, { inState, transitionDuration: duration })} />
                 <Route exact path="/category/:id" render={routeTransition(Category, { inState, transitionDuration: duration })} />

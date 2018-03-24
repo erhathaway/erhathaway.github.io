@@ -35,33 +35,38 @@ const styles = duration => ({
   },
 });
 
-const Menu = ({ inState, transitionDuration, showFullMenu, showExpandedMenu }) => (
+const Component = ({ inState, transitionDuration, showFullMenu, showExpandedMenu }) => (
   showFullMenu
-  ? (<div style={{...styles(transitionDuration).container}}>
+  ? (<div style={{ ...styles(transitionDuration).container }}>
     <Name showLinks inState={inState} />
-    <div style={{...styles(transitionDuration).spacer}} />
-    <div style={{...styles(transitionDuration).opacity, ...transitionStyles[inState]}} >
-      <Contents inState={inState}/>
+    <div style={{ ...styles(transitionDuration).spacer }} />
+    <div style={{ ...styles(transitionDuration).opacity, ...transitionStyles[inState] }}>
+      <Contents inState={inState} />
     </div>
   </div>)
-  : (<div style={{...styles(transitionDuration).container}}>
+  : (<div style={{ ...styles(transitionDuration).container }}>
     <Name showLinks={false} />
-    <ExpandButton inState={inState}/>
+    <ExpandButton inState={inState} />
     <PopOutMenu hide={showExpandedMenu}>
       <Contents leftJustifyDivider={false} />
     </PopOutMenu>
   </div>)
 );
 
-Menu.propTypes = {
+Component.propTypes = {
   showFullMenu: PropTypes.bool.isRequired,
   showExpandedMenu: PropTypes.bool.isRequired,
+  inState: PropTypes.string,
+  transitionDuration: PropTypes.number,
+};
+
+Component.defaultProps = {
+  inState: undefined,
+  transitionDuration: 300,
 };
 
 const mapStateToProps = state => ({
   showExpandedMenu: state.menuState.showingMenu,
 });
 
-export default connect(
-  mapStateToProps,
-)(Radium(Menu));
+export default connect(mapStateToProps)(Radium(Component));

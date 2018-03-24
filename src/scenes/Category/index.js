@@ -19,7 +19,7 @@ const transitionStyles = {
   },
 };
 
-const styles = (duration) => ({
+const styles = duration => ({
   container: {
     position: 'absolute',
     transition: `opacity ${duration}ms ease-in-out, transform ${duration}ms ease-in-out`,
@@ -33,19 +33,24 @@ const styles = (duration) => ({
   },
 });
 
-const Category = ({ inState, transitionDuration }) => (
-    <div style={{
-      ...styles(transitionDuration).container,
-      ...transitionStyles[inState],
-    }}>
-      <LandingImages inState={inState} />
-    </div>
+const Component = ({ inState, transitionDuration }) => (
+  <div style={{
+    ...styles(transitionDuration).container,
+    ...transitionStyles[inState],
+  }}
+  >
+    <LandingImages inState={inState} />
+  </div>
 );
 
-Category.propTypes = {
-  match: PropTypes.shape({
-    params: PropTypes.shape({ id: PropTypes.string }),
-  }).isRequired,
+Component.propTypes = {
+  inState: PropTypes.string,
+  transitionDuration: PropTypes.number,
 };
 
-export default Category;
+Component.defaultProps = {
+  inState: undefined,
+  transitionDuration: 300,
+};
+
+export default Component;
