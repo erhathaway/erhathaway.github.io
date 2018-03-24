@@ -25,7 +25,7 @@ const styles = {
   },
 };
 
-class MainContainer extends React.Component {
+class Component extends React.Component {
   constructor(props) {
     super(props);
     this.childRefs = {};
@@ -54,7 +54,7 @@ class MainContainer extends React.Component {
       targets,
       translateX: [20, 0],
       elasticity: 250,
-      duration: (_, i) => 1000 + (i * 600)
+      duration: (_, i) => 1000 + (i * 600),
     });
   }
 
@@ -69,7 +69,7 @@ class MainContainer extends React.Component {
   }
 
   animateButtonClick = (indexOfClick) => {
-    if (this.props.animationContext === 'popOutMenu') return
+    if (this.props.animationContext === 'popOutMenu') return;
     const targets = Object.values(this.childRefs).map(el => ReactDOM.findDOMNode(el));
     const indexDif = i => Math.abs(indexOfClick - i) + 1;
 
@@ -97,10 +97,10 @@ class MainContainer extends React.Component {
     else this.props.openMenuItem('app', appName);
   }
 
-  addRef = index => el => this.childRefs[index] = el;
+  addRef = index => (el) => { this.childRefs[index] = el; }
 
   render() {
-    const { activeCategory, activeDocument, activeApps, leftJustifyDivider, inState } = this.props;
+    const { activeCategory, activeDocument, activeApps, leftJustifyDivider } = this.props;
     const dividerMarginLeft = leftJustifyDivider ? 15 : 0;
     return (
       <div style={styles.container}>
@@ -135,7 +135,7 @@ const mapDispatchToProps = dispatch => ({
   closeMenuItem: bindActionCreators(closeMenuItem, dispatch),
 });
 
-MainContainer.propTypes = {
+Component.propTypes = {
   openMenuItem: PropTypes.func.isRequired,
   closeMenuItem: PropTypes.func.isRequired,
   activeCategory: PropTypes.string,
@@ -143,19 +143,16 @@ MainContainer.propTypes = {
   activeApps: PropTypes.arrayOf(PropTypes.string),
   leftJustifyDivider: PropTypes.bool,
   inState: PropTypes.string,
+  animationContext: PropTypes.string,
 };
 
-MainContainer.defaultProps = {
+Component.defaultProps = {
   activeCategory: '',
   activeDocument: '',
   activeApps: [],
   leftJustifyDivider: true,
-  inState: null,
+  inState: undefined,
+  animationContext: undefined,
 };
 
-const Main = connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(MainContainer);
-
-export default Main;
+export default connect(mapStateToProps, mapDispatchToProps)(Component);

@@ -32,7 +32,7 @@ class Component extends React.Component {
     });
   }
 
-  addRef = index => el => this.childRefs[index] = el;
+  addRef = index => (el) => { this.childRefs[index] = el; }
 
   render() {
     const { widthPriority, overlaycolor, backgroundImage, onClick } = this.props;
@@ -70,10 +70,12 @@ Component.propTypes = {
   overlaycolor: PropTypes.string.isRequired,
   backgroundImage: PropTypes.string,
   onClick: PropTypes.func.isRequired,
+  inState: PropTypes.string,
 };
 
 Component.defaultProps = {
   backgroundImage: undefined,
+  inState: undefined,
 };
 
 export default Component;

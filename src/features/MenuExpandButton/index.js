@@ -32,7 +32,7 @@ const styles = {
   },
 };
 
-class MainContainer extends React.Component {
+class Component extends React.Component {
   constructor(props) {
     super(props);
     this.childRefs = {};
@@ -74,7 +74,7 @@ class MainContainer extends React.Component {
     else showMenuAction();
   };
 
-  addRef = index => el => this.childRefs[index] = el;
+  addRef = index => (el) => { this.childRefs[index] = el; }
 
   render() {
     return (
@@ -96,15 +96,15 @@ const mapDispatchToProps = dispatch => ({
   hideMenuAction: bindActionCreators(hideMenu, dispatch),
 });
 
-MainContainer.propTypes = {
+Component.propTypes = {
   showMenuAction: PropTypes.func.isRequired,
   hideMenuAction: PropTypes.func.isRequired,
   showingMenu: PropTypes.bool.isRequired,
+  inState: PropTypes.string,
 };
 
-const Main = connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(Radium(MainContainer));
+Component.defaultProps = {
+  inState: undefined,
+};
 
-export default Main;
+export default connect(mapStateToProps, mapDispatchToProps)(Radium(Component));

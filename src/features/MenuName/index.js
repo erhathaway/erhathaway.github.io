@@ -24,25 +24,12 @@ const linkTransitionStyles = {
   },
   exited: {
     opacity: 0,
-  }
+  },
 };
 
-const dividerTransitionStyles = {
-  // entering: {
-  //   width: '0px',
-  // },
-  // entered: {
-  //   width: '300px',
-  // },
-  // exiting: {
-  //   opacity: '300px',
-  // },
-  // exited: {
-  //   opacity: '0px',
-  // }
-};
+const dividerTransitionStyles = {};
 
-const styles = (duration) => ({
+const styles = () => ({
   container: {
     width: '220px',
     display: 'flex',
@@ -53,22 +40,27 @@ const styles = (duration) => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-  }
+  },
 });
 
 const renderDivider = () => (<Divider width={215} marginLeft={15} />);
-const renderLinks = (inState) => (<Links inState={inState} />);
+const renderLinks = inState => (<Links inState={inState} />);
 
-const MainContainer = ({ inState, transitionDuration, color, showLinks }) => (
+const Component = ({ inState, transitionDuration, color, showLinks }) => (
   <div style={styles(transitionDuration).container}>
     <Link to="/">
       <Name style={{ color }} />
     </Link>
     <div style={{ ...styles(transitionDuration).linkContainer, ...linkTransitionStyles[inState] }}>
-      <div style={{ ...styles(transitionDuration).dividerContainer, ...dividerTransitionStyles[inState]}}>
+      <div
+        style={{
+          ...styles(transitionDuration).dividerContainer,
+          ...dividerTransitionStyles[inState],
+        }}
+      >
         { showLinks && renderDivider() }
       </div>
-    { showLinks && renderLinks(inState) }
+      { showLinks && renderLinks(inState) }
     </div>
   </div>
 );
@@ -77,13 +69,16 @@ const mapStateToProps = state => ({
   color: state.styleState.fontColor,
 });
 
-MainContainer.propTypes = {
+Component.propTypes = {
   color: PropTypes.string.isRequired,
   showLinks: PropTypes.bool.isRequired,
+  inState: PropTypes.string,
+  transitionDuration: PropTypes.number,
 };
 
-const Main = connect(
-  mapStateToProps,
-)(MainContainer);
+Component.defaultProps = {
+  inState: undefined,
+  transitionDuration: 300,
+};
 
-export default Main;
+export default connect(mapStateToProps)(Component);
