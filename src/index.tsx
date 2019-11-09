@@ -1,7 +1,20 @@
 // index.tsx
-import React from "react";
-import ReactDOM from "react-dom";
+import React, { useContext } from 'react';
+import ReactDOM from 'react-dom';
+import styled from 'styled-components';
+import context from './context';
+import { observer } from 'mobx-react';
+import { Terminal } from './features';
 
-console.log("Hello from tsx!");
+const Name = styled.a`
+    font-size: 205px;
+`;
+const App = observer(() => {
+    const { positionX } = useContext(context.mouseTracker)
+    return (<>
+        <Terminal />
+        <Name>ETHAN HATHAWAY{positionX}A</Name>
+    </>)
+});
 
-ReactDOM.render(<p>Hello</p>, document.getElementById("root"));
+ReactDOM.render(<App />, document.getElementById('root'));
