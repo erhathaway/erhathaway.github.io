@@ -19,6 +19,7 @@
     },
     "homepage": "https://github.com/erhathaway/erhathaway.github.io#readme",
     "devDependencies": {
+        "@types/animejs": "^3.1.0",
         "@types/react": "^16.8.23",
         "@types/react-dom": "^16.8.5",
         "@types/styled-components": "^4.1.18",
@@ -33,6 +34,7 @@
     "dependencies": {
         "@react-hook/mouse-position": "^1.0.3",
         "@render-props/mouse-position": "^0.1.18",
+        "animejs": "^3.1.0",
         "mobx": "^5.15.0",
         "mobx-react": "^6.1.4",
         "react": "^16.11.0",

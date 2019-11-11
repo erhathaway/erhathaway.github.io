@@ -1,8 +1,9 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { Rnd } from 'react-rnd';
 import context from '../context';
 import { observer } from 'mobx-react';
+import anime from 'animejs';
 
 const Terminal = styled(Rnd)`
     height: 600px;
@@ -12,6 +13,7 @@ const Terminal = styled(Rnd)`
     background-color: white;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 5px 40px;
     border: 1px solid #dedede;
+    border: 1px solid black;
 `
 
 const Inner = styled.div`
@@ -54,17 +56,29 @@ const Content = styled.div`
 `;
 
 export default observer(() => {
+    useEffect(() => {
+        anime({
+            targets: ".terminal-animation",
+            translateX: [1000, 0],
+            opacity: [0, 1],
+            duration: 12000
+          });
+    },[])
+    
     const { shownPrompt } = useContext(context.terminalPromptIntro)
     console.log('shown prompt', shownPrompt)
     return (<Terminal
+        className="terminal-animation"
         default={{
-            x: 0,
-            y: 0,
+            right: 0,
+            // x: -0,
+            y: -0,
             width: 600,
             height: 600,
         }}
     >
         <Inner>
+            
             <NavBar >
                 <Button>
                     -
