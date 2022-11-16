@@ -52,7 +52,7 @@
     "babel-eslint": "^7.2.3",
     "babel-jest": "^20.0.3",
     "babel-loader": "^7.1.1",
-    "babel-plugin-react-css-modules": "^3.1.0",
+    "babel-plugin-react-css-modules": "^5.2.6",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-polyfill": "^6.23.0",
@@ -76,7 +76,7 @@
     "redux-mock-store": "^1.2.3",
     "regenerator-runtime": "^0.10.5",
     "style-loader": "^0.18.2",
-    "webpack": "^2.6.1",
+    "webpack": "^5.75.0",
     "webpack-dev-server": "2.6.1"
   },
   "jest": {
