@@ -10,7 +10,7 @@ interface Project {
 	isPublic: boolean;
 }
 
-const API_BASE = 'https://portfolio-api.ambleim.workers.dev/api';
+const API_BASE = 'https://erhathaway.com/api';
 
 export class ProjectsAPI {
 	static async getAll(token?: string): Promise<Project[]> {

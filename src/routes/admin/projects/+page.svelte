@@ -29,7 +29,7 @@
 		isPublic: false
 	});
 
-	const API_BASE = 'https://portfolio-api.ambleim.workers.dev/api';
+	const API_BASE = 'https://erhathaway.com/api';
 
 	async function fetchProjects() {
 		try {

@@ -92,25 +92,16 @@
   .hover-inline-card {
     display: block;
     position: relative;
-    width: 100%;
-    box-sizing: border-box;
     background-color: #F5F1EB;
+    width: calc(100% + (var(--nav-pad, 2rem) * 2));
+    margin-left: calc(-1 * var(--nav-pad, 2rem));
+    margin-right: calc(-1 * var(--nav-pad, 2rem));
+    box-sizing: border-box;
   }
 
   .hover-inline-inner {
     padding-left: var(--nav-pad, 2rem);
     padding-right: var(--nav-pad, 2rem);
-  }
-
-  .hover-inline-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: calc(-1 * var(--nav-pad, 2rem));
-    right: calc(-1 * var(--nav-pad, 2rem));
-    background-color: #F5F1EB;
-    z-index: -1;
   }
 
 }

@@ -35,7 +35,7 @@
     </div>
 
     <!-- Scrollable Navigation Area -->
-    <nav class="flex-1 overflow-y-auto animate-slide-up min-h-0 scrollbar-hide pb-[50%]" style="animation-delay: 0.4s" {@attach storeNav}>
+    <nav class="flex-1 overflow-y-auto overflow-x-visible animate-slide-up min-h-0 scrollbar-hide pb-[50%]" style="animation-delay: 0.4s" {@attach storeNav}>
       <ItemList scrollContainer={navEl} />
 
       <!-- Admin Link (scrolls with content) -->
