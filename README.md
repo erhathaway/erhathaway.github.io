@@ -1,64 +1,38 @@
-# erhathaway.github.io
+# sv
 
-A work in progress personal site and portfolio.
+Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
-## Status
+## Creating a project
 
-![Travis Build](https://travis-ci.org/erhathaway/erhathaway.github.io.svg?branch=master)
+If you're seeing this, you've probably already done this step. Congrats!
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/acc567a798904dabbd501316973541ed)](https://www.codacy.com/app/erhathaway/erhathaway.github.io?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=erhathaway/erhathaway.github.io&amp;utm_campaign=Badge_Grade)
+```sh
+# create a new project in the current directory
+npx sv create
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/acc567a798904dabbd501316973541ed)](https://www.codacy.com/app/erhathaway/erhathaway.github.io?utm_source=github.com&utm_medium=referral&utm_content=erhathaway/erhathaway.github.io&utm_campaign=Badge_Coverage)
-
-## Dev Notes
-
-Built using React, Redux, Redux Sagas, Radium, GraphQL, Jest, ESLint, and Webpack
-
-Patterns embraced:
-
-  - GraphQL for API calls
-  - Redux for state management
-  - Inline styles with help from Radium
-  - Sagas (async and generator functions) for all transactional async logic
-
-Future directions:
-
-- Make app universal:
-  - render mockups using `React sketch app`
-  - switch over to `React Primitives` for JSX
-  - add React Native support using `React Primitives`
-
-## Run
-
-1. Install `npm` ~v4 and `node` ~v7
-2. Install dependencies: `npm install`
-3. (1) Run dev server or (2) build and deploy:
-  - (1) Run dev server: `npm run start`
-
-  - (2) Build and deploy
-    1. Build source into static content: `npm run build`
-    2. Deploy `/index.html` and `/static` folder to a site
-
-## Development
-
-- Run tests: `npm run test`
-- Run linter: `npm run lint`
-- Build development content `npm run build-dev`
-
-## Design
-
-### Mockups
-
-Current design mockups can be found in [/design/Portfolio.sketch](/design/Portfolio.sketch)
-
-### Colors
-
-Current color scheme: https://coolors.co/5bc0eb-fde74c-9bc53d-e55934-fa7921
-
+# create a new project in my-app
+npx sv create my-app
 ```
-rgba(91, 192, 235, 1);
-rgba(253, 231, 76, 1);
-rgba(155, 197, 61, 1);
-rgba(229, 89, 52, 1);
-rgba(250, 121, 33, 1);
+
+## Developing
+
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+
+```sh
+npm run dev
+
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
 ```
+
+## Building
+
+To create a production version of your app:
+
+```sh
+npm run build
+```
+
+You can preview the production build with `npm run preview`.
+
+> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
