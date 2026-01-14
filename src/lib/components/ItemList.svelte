@@ -32,14 +32,14 @@
   });
 </script>
 
-<ul class="space-y-2.5">
+<ul class="space-y-2.5 w-full">
   {#each portfolio.filteredItems as item (item.id)}
     {@const isActive = activeProjectId === item.id}
     {@const isHovered = hoveredItem?.id === item.id}
-    <li {@attach storeEl(item.id)}>
+    <li class="w-full" {@attach storeEl(item.id)}>
       <a
         href="/project/{item.id}"
-        class="item-link text-sm hover:text-copper transition-colors view-transition-item {isActive ? 'text-copper font-medium' : 'text-walnut'} {isHovered ? 'block' : 'inline-block pb-0.5'}"
+        class="item-link text-sm hover:text-copper transition-colors view-transition-item w-full block {isActive ? 'text-copper font-medium' : 'text-walnut'} {isHovered ? '' : 'pb-0.5'}"
         class:active={isActive || isHovered}
         aria-current={isActive ? 'page' : undefined}
       >

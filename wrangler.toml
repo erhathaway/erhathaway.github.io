@@ -1,0 +1,10 @@
+name = "erhathaway-portfolio"
+main = ".svelte-kit/output/server/index.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Custom domain route
+route = "erhathaway.com/*"
+
+[vars]
+ENVIRONMENT = "production"

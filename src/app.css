@@ -89,6 +89,19 @@
     left: 2rem;
   }
 
+  .hover-inline-card {
+    display: block;
+    width: calc(100% + 4rem);
+    margin-left: -2rem;
+    margin-right: -2rem;
+    box-sizing: border-box;
+  }
+
+  .hover-inline-inner {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
 }
 
 @layer utilities {
