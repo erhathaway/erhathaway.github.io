@@ -22,6 +22,6 @@ binding = "ASSETS"
 
 [build]
 command = "bun run build"
-upload = {
-  format = "modules"
-}
+
+[build.upload]
+format = "modules"

@@ -29,7 +29,7 @@
           <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3" style="view-transition-name: hover-info-category;">
             {data.item.category === 'food' ? 'Food' : data.item.category === 'wood' ? 'Wood' : 'Other'} · {data.item.subcategory}
           </p>
-          <h1 class="font-display text-4xl font-medium text-walnut leading-tight mb-4" style="view-transition-name: hover-info-title;">
+          <h1 class="font-display text-3xl font-semibold text-walnut leading-tight mb-4" style="view-transition-name: hover-info-title;">
             {data.item.name}
           </h1>
           <p class="text-base text-ash leading-relaxed mb-6" style="view-transition-name: hover-info-description;">
