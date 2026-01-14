@@ -13,7 +13,7 @@
 <div class="flex flex-wrap gap-2">
   {#each categories as category (category.value)}
     <button
-      class="pill px-3 py-1.5 text-sm tracking-[0.2em] uppercase border border-walnut/2 rounded-full transition-all duration-300 bg-white/50 backdrop-blur-md hover:bg-walnut hover:text-cream"
+      class="pill px-3 py-1.5 text-sm tracking-[0.2em] uppercase border border-walnut/2 rounded-full transition-all duration-300 bg-white/50 text-ash/70 backdrop-blur-md hover:bg-walnut hover:text-cream"
       style="font-family: 'Times New Roman', Times, serif;"
       class:active={portfolio.selectedCategory === category.value}
       onclick={() => portfolio.setCategory(category.value)}
