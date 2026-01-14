@@ -12,11 +12,10 @@ export default defineConfig({
 
 		projects: [
 			{
-				extends: './vite.config.ts',
+				name: 'client',
+				plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
 
 				test: {
-					name: 'client',
-
 					browser: {
 						enabled: true,
 						provider: playwright(),
@@ -29,10 +28,10 @@ export default defineConfig({
 			},
 
 			{
-				extends: './vite.config.ts',
+				name: 'server',
+				plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
 
 				test: {
-					name: 'server',
 					environment: 'node',
 					include: ['src/**/*.{test,spec}.{js,ts}'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
