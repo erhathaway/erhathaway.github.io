@@ -72,6 +72,11 @@
     width: 100%;
   }
 
+  .project-header-block {
+    width: 320px;
+    max-width: 320px;
+  }
+
 }
 
 @layer utilities {

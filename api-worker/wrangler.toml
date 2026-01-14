@@ -9,4 +9,4 @@ ENVIRONMENT = "development"
 [[d1_databases]]
 binding = "DB"
 database_name = "portfolio-db"
-database_id = "your-database-id-here"
+database_id = "4878e4eb-3391-4401-93cd-9c6f91897a14"

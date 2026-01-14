@@ -1,19 +1,41 @@
 import { items, type Category, type PortfolioItem } from '$lib/data/items';
+import { ProjectsAPI, type Project } from '$lib/api/projects';
 
 class PortfolioStore {
   selectedCategory = $state<Category | 'all'>('all');
   hoveredItemId = $state<number | null>(null);
+  projects = $state<Project[]>([]);
+  loading = $state(false);
+
+  // Convert API projects to portfolio items format
+  apiItems = $derived.by(() => {
+    return this.projects.map(project => ({
+      id: project.id || 0,
+      name: project.name,
+      category: project.category,
+      subcategory: project.subcategory,
+      description: project.description,
+      metadata: project.metadata,
+      image: project.image,
+      gridSize: project.gridSize || 'regular'
+    } as PortfolioItem));
+  });
+
+  // Combine static items with API items
+  allItems = $derived.by(() => {
+    return [...items, ...this.apiItems];
+  });
 
   filteredItems = $derived.by(() => {
     if (this.selectedCategory === 'all') {
-      return items;
+      return this.allItems;
     }
-    return items.filter(item => item.category === this.selectedCategory);
+    return this.allItems.filter(item => item.category === this.selectedCategory);
   });
 
   hoveredItem = $derived.by(() => {
     if (!this.hoveredItemId) return null;
-    return items.find(item => item.id === this.hoveredItemId);
+    return this.allItems.find(item => item.id === this.hoveredItemId);
   });
 
   setCategory(category: Category | 'all') {
@@ -24,13 +46,24 @@ class PortfolioStore {
     this.hoveredItemId = id;
   }
 
+  async loadProjects() {
+    this.loading = true;
+    try {
+      this.projects = await ProjectsAPI.getAll();
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+    } finally {
+      this.loading = false;
+    }
+  }
+
   async uploadImage(itemId: number, file: File): Promise<void> {
     try {
       // Create a local URL for the uploaded image
       const imageUrl = URL.createObjectURL(file);
 
       // Find the item and update its image property
-      const item = items.find(item => item.id === itemId);
+      const item = this.allItems.find(item => item.id === itemId);
       if (item) {
         item.image = imageUrl;
       }

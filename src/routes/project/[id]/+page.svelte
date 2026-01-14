@@ -25,25 +25,27 @@
           Back to gallery
         </a>
 
-        <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3" style="view-transition-name: hover-info-category;">
-          {data.item.category === 'food' ? 'Food' : data.item.category === 'wood' ? 'Wood' : 'Other'} · {data.item.subcategory}
-        </p>
-        <h1 class="font-display text-4xl font-normal text-walnut mb-4" style="view-transition-name: hover-info-title;">
-          {data.item.name}
-        </h1>
-        <p class="text-base text-ash leading-relaxed max-w-3xl mb-6" style="view-transition-name: hover-info-description;">
-          {data.item.description}
-        </p>
-        {#if data.item.metadata}
-          <div class="flex gap-8" style="view-transition-name: hover-info-meta;">
-            {#each Object.entries(data.item.metadata) as [key, value] (key)}
-              <div class="flex flex-col gap-1">
-                <span class="text-[10px] tracking-wider uppercase text-ash">{key}</span>
-                <span class="font-display text-base text-walnut">{value}</span>
-              </div>
-            {/each}
-          </div>
-        {/if}
+        <div class="project-header-block">
+          <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3" style="view-transition-name: hover-info-category;">
+            {data.item.category === 'food' ? 'Food' : data.item.category === 'wood' ? 'Wood' : 'Other'} · {data.item.subcategory}
+          </p>
+          <h1 class="font-display text-4xl font-normal text-walnut mb-4" style="view-transition-name: hover-info-title;">
+            {data.item.name}
+          </h1>
+          <p class="text-base text-ash leading-relaxed mb-6" style="view-transition-name: hover-info-description;">
+            {data.item.description}
+          </p>
+          {#if data.item.metadata}
+            <div class="flex gap-8" style="view-transition-name: hover-info-meta;">
+              {#each Object.entries(data.item.metadata) as [key, value] (key)}
+                <div class="flex flex-col gap-1">
+                  <span class="text-[10px] tracking-wider uppercase text-ash">{key}</span>
+                  <span class="font-display text-base text-walnut">{value}</span>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
       </div>
     </div>
 

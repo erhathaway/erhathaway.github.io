@@ -18,9 +18,9 @@
 			<div class="bg-white rounded-lg p-6 shadow-sm border border-walnut/10">
 				<h2 class="font-display text-xl text-walnut mb-3">Portfolio Items</h2>
 				<p class="text-ash text-sm mb-4">Manage gallery items, descriptions, and metadata</p>
-				<button class="bg-copper text-cream px-4 py-2 rounded text-sm hover:opacity-90 transition-opacity">
+				<a href="/admin/projects" class="inline-block bg-copper text-cream px-4 py-2 rounded text-sm hover:opacity-90 transition-opacity">
 					Manage Items
-				</button>
+				</a>
 			</div>
 
 			<div class="bg-white rounded-lg p-6 shadow-sm border border-walnut/10">
