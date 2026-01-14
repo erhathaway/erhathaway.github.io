@@ -18,8 +18,8 @@
   {#each portfolio.filteredItems as item}
     <li>
       <a
-        href="#{item.id}"
-        class="item-link text-sm text-walnut hover:text-copper transition-colors inline-block pb-0.5"
+        href="/project/{item.id}"
+        class="item-link text-sm text-walnut hover:text-copper transition-colors inline-block pb-0.5 view-transition-item"
         class:active={hoveredId === item.id}
         onmouseenter={() => handleMouseEnter(item.id)}
         onmouseleave={handleMouseLeave}

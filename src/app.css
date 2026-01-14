@@ -89,3 +89,107 @@
 .right-panel::-webkit-scrollbar { width: 6px; }
 .right-panel::-webkit-scrollbar-track { background: transparent; }
 .right-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+/* View Transitions API */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root) {
+    animation: 0.4s cubic-bezier(0.4, 0, 0.2, 1) both fade-out,
+               0.4s cubic-bezier(0.4, 0, 0.2, 1) both scale-down;
+  }
+
+  ::view-transition-new(root) {
+    animation: 0.4s cubic-bezier(0.4, 0, 0.2, 1) both fade-in,
+               0.4s cubic-bezier(0.4, 0, 0.2, 1) both scale-up;
+  }
+
+  ::view-transition-old(gallery-grid) {
+    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) both slide-out-left;
+  }
+
+  ::view-transition-new(gallery-grid) {
+    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) both slide-in-right;
+  }
+
+  ::view-transition-old(left-panel-content) {
+    animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both fade-out;
+  }
+
+  ::view-transition-new(left-panel-content) {
+    animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both fade-in;
+    animation-delay: 0.1s;
+  }
+
+  ::view-transition-old(project-image),
+  ::view-transition-new(project-image) {
+    animation: none;
+    mix-blend-mode: normal;
+    height: 100%;
+    overflow: clip;
+  }
+
+  ::view-transition-group(project-image) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @keyframes scale-down {
+    from { transform: scale(1); }
+    to { transform: scale(0.95); }
+  }
+
+  @keyframes scale-up {
+    from { transform: scale(0.95); }
+    to { transform: scale(1); }
+  }
+
+  @keyframes slide-out-left {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(-50px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+}

@@ -9,8 +9,8 @@
 
 <aside class="w-80 min-w-[320px] h-screen bg-cream text-walnut flex flex-col relative">
   <!-- Fixed Header - Always on top -->
-  <div class="p-8 pb-0 z-30 relative bg-cream">
-    <a href="/" class="font-display text-2xl font-normal text-walnut no-underline leading-tight mb-1 block animate-slide-up" style="animation-delay: 0.1s">
+  <div class="p-8 pb-0 z-30 relative bg-cream" style="view-transition-name: header-name">
+    <a href="/" class="font-display text-2xl font-normal text-walnut no-underline leading-tight mb-1 block animate-slide-up" style="animation-delay: 0.1s; view-transition-name: site-name">
       Ethan<br>Hathaway
     </a>
   </div>
