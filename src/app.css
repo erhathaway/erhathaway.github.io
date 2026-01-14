@@ -91,15 +91,26 @@
 
   .hover-inline-card {
     display: block;
-    width: calc(100% + 4rem);
-    margin-left: -2rem;
-    margin-right: -2rem;
+    position: relative;
+    width: 100%;
     box-sizing: border-box;
+    background-color: #F5F1EB;
   }
 
   .hover-inline-inner {
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: var(--nav-pad, 2rem);
+    padding-right: var(--nav-pad, 2rem);
+  }
+
+  .hover-inline-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(-1 * var(--nav-pad, 2rem));
+    right: calc(-1 * var(--nav-pad, 2rem));
+    background-color: #F5F1EB;
+    z-index: -1;
   }
 
 }

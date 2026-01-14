@@ -24,7 +24,7 @@
   </div>
 
   <!-- Main Content Area -->
-  <div class="flex-1 flex flex-col p-8 pt-4 relative z-0 min-h-0">
+  <div class="flex-1 flex flex-col p-8 pt-4 relative z-0 min-h-0" style="--nav-pad: 2rem;">
     <p class="text-xs tracking-widest uppercase text-ash mb-8 animate-slide-up" style="animation-delay: 0.2s">
       Things I Make
     </p>

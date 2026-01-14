@@ -1,4 +1,4 @@
-name = "erhathaway-portfolio"
+name = "portfolio"
 main = ".svelte-kit/output/server/index.js"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
@@ -8,3 +8,10 @@ route = "erhathaway.com/*"
 
 [vars]
 ENVIRONMENT = "production"
+
+[assets]
+directory = ".svelte-kit/output/client"
+binding = "ASSETS"
+
+[build]
+command = "bun run build"
