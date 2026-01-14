@@ -37,10 +37,13 @@
 
     <!-- Footer -->
     <div class="p-6 border-t border-walnut/10 animate-fade-in z-0" style="animation-delay: 0.7s">
-      <div class="flex gap-6">
+      <div class="flex gap-6 mb-4">
         <a href="https://github.com" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors">GitHub</a>
         <a href="https://instagram.com" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors">Instagram</a>
         <a href="mailto:contact@example.com" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors">Contact</a>
+      </div>
+      <div class="pt-4 border-t border-walnut/5">
+        <a href="/admin" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors opacity-50 hover:opacity-100">Admin</a>
       </div>
     </div>
   {:else}

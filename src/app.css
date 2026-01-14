@@ -93,9 +93,12 @@
 /* View Transitions API - Clean minimal configuration */
 @supports (view-transition-name: none) {
   /* Completely disable root transitions to prevent browser defaults */
+  ::view-transition-group(root),
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none !important;
+    transform: none;
+    opacity: 1;
   }
 
   /* Project image morphing - the star of the show */
@@ -117,20 +120,33 @@
   ::view-transition-new(main-content) {
     animation: none;
     transform: none;
+    opacity: 1;
   }
 
-  /* Hover info panel transition */
-  ::view-transition-old(hover-info-panel) {
-    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) both slide-to-top;
+  /* Instantly hide the outgoing main content to avoid zooming */
+  ::view-transition-old(main-content) {
+    opacity: 0;
   }
 
-  ::view-transition-new(hover-info-panel) {
-    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) both slide-from-left;
+  /* Hover info content transition - move text blocks without scaling a big panel */
+  ::view-transition-old(hover-info-category),
+  ::view-transition-new(hover-info-category),
+  ::view-transition-old(hover-info-title),
+  ::view-transition-new(hover-info-title),
+  ::view-transition-old(hover-info-description),
+  ::view-transition-new(hover-info-description),
+  ::view-transition-old(hover-info-meta),
+  ::view-transition-new(hover-info-meta) {
+    animation: none;
+    mix-blend-mode: normal;
   }
 
-  ::view-transition-group(hover-info-panel) {
-    animation-duration: 0.5s;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  ::view-transition-group(hover-info-category),
+  ::view-transition-group(hover-info-title),
+  ::view-transition-group(hover-info-description),
+  ::view-transition-group(hover-info-meta) {
+    animation-duration: 0.6s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes fade-in {
@@ -182,28 +198,6 @@
     }
     to {
       transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes slide-to-top {
-    from {
-      transform: translateX(0) translateY(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateX(100%) translateY(-100%);
-      opacity: 0.8;
-    }
-  }
-
-  @keyframes slide-from-left {
-    from {
-      transform: translateX(-100%) translateY(100%);
-      opacity: 0.8;
-    }
-    to {
-      transform: translateX(0) translateY(0);
       opacity: 1;
     }
   }

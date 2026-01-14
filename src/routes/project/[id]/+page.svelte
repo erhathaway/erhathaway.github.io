@@ -16,7 +16,7 @@
 
 <main class="h-screen overflow-y-auto bg-charcoal">
     <!-- Project header that matches hover info styling -->
-    <div class="bg-cream text-walnut" style="view-transition-name: hover-info-panel">
+    <div class="bg-cream text-walnut">
       <div class="max-w-6xl mx-auto p-8">
         <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-6">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,18 +25,18 @@
           Back to gallery
         </a>
 
-        <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3">
+        <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3" style="view-transition-name: hover-info-category;">
           {data.item.category === 'food' ? 'Food' : data.item.category === 'wood' ? 'Wood' : 'Other'} · {data.item.subcategory}
         </p>
-        <h1 class="font-display text-4xl font-normal text-walnut mb-4">
+        <h1 class="font-display text-4xl font-normal text-walnut mb-4" style="view-transition-name: hover-info-title;">
           {data.item.name}
         </h1>
-        <p class="text-base text-ash leading-relaxed max-w-3xl mb-6">
+        <p class="text-base text-ash leading-relaxed max-w-3xl mb-6" style="view-transition-name: hover-info-description;">
           {data.item.description}
         </p>
         {#if data.item.metadata}
-          <div class="flex gap-8">
-            {#each Object.entries(data.item.metadata) as [key, value]}
+          <div class="flex gap-8" style="view-transition-name: hover-info-meta;">
+            {#each Object.entries(data.item.metadata) as [key, value] (key)}
               <div class="flex flex-col gap-1">
                 <span class="text-[10px] tracking-wider uppercase text-ash">{key}</span>
                 <span class="font-display text-base text-walnut">{value}</span>
@@ -68,7 +68,7 @@
 
       <!-- Project details -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-        {#each Object.entries(data.item.metadata) as [key, value]}
+        {#each Object.entries(data.item.metadata) as [key, value] (key)}
           <div>
             <p class="text-xs tracking-wider uppercase text-cream/50 mb-2">{key}</p>
             <p class="font-display text-xl text-cream">{value}</p>
@@ -87,4 +87,3 @@
       </div>
     </div>
 </main>
-
