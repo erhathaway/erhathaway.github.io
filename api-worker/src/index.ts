@@ -17,14 +17,26 @@ export interface Project {
   updatedAt?: string;
 }
 
-// CORS headers for all responses
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+// CORS headers for all responses - support multiple origins
+function getCorsHeaders(origin?: string): Record<string, string> {
+  const allowedOrigins = [
+    'https://erhathaway.com',
+    'https://www.erhathaway.com'
+  ];
+
+  const isAllowed = origin && allowedOrigins.includes(origin);
+
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : 'https://erhathaway.com',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
 
 async function handleCORS(request: Request): Promise<Response> {
+  const origin = request.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
@@ -61,7 +73,9 @@ async function verifyClerkAuth(request: Request, env: Env): Promise<string | nul
   return null;
 }
 
-async function handleGetProjects(env: Env, isAuthenticated: boolean): Promise<Response> {
+async function handleGetProjects(env: Env, isAuthenticated: boolean, origin?: string): Promise<Response> {
+  const corsHeaders = getCorsHeaders(origin);
+
   try {
     let query = 'SELECT * FROM projects';
     let params: any[] = [];

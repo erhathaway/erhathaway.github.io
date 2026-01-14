@@ -2,38 +2,51 @@
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { page } from '$app/stores';
 
-  let hoveredId = $state<number | null>(null);
+  let { scrollContainer }: { scrollContainer: HTMLElement | null } = $props();
+
+  const hoveredItem = $derived(portfolio.hoveredItem);
+  let itemEls = $state<Record<number, HTMLElement | null>>({});
 
   // Get the active project ID from the URL
-  const activeProjectId = $derived(() => {
+  const activeProjectId = $derived.by(() => {
     const match = $page.url.pathname.match(/^\/project\/(\d+)/);
     return match ? parseInt(match[1]) : null;
   });
 
-  function handleMouseEnter(id: number) {
-    hoveredId = id;
-    portfolio.setHoveredItem(id);
+  function storeEl(id: number) {
+    return (node: HTMLElement) => {
+      itemEls[id] = node;
+      return () => {
+        itemEls[id] = null;
+      };
+    };
   }
 
-  function handleMouseLeave() {
-    hoveredId = null;
-    portfolio.setHoveredItem(null);
-  }
+  $effect(() => {
+    const id = hoveredItem?.id;
+    if (!id || !scrollContainer) return;
+    const node = itemEls[id];
+    if (!node) return;
+    scrollContainer.scrollTop = node.offsetTop;
+  });
 </script>
 
 <ul class="space-y-2.5">
-  {#each portfolio.filteredItems as item}
-    {@const isActive = activeProjectId() === item.id}
-    <li>
+  {#each portfolio.filteredItems as item (item.id)}
+    {@const isActive = activeProjectId === item.id}
+    {@const isHovered = hoveredItem?.id === item.id}
+    <li {@attach storeEl(item.id)}>
       <a
         href="/project/{item.id}"
-        class="item-link text-sm hover:text-copper transition-colors inline-block pb-0.5 view-transition-item {isActive ? 'text-copper font-medium' : 'text-walnut'}"
-        class:active={hoveredId === item.id || isActive}
-        onmouseenter={() => handleMouseEnter(item.id)}
-        onmouseleave={handleMouseLeave}
+        class="item-link text-sm hover:text-copper transition-colors view-transition-item {isActive ? 'text-copper font-medium' : 'text-walnut'} {isHovered ? 'block' : 'inline-block pb-0.5'}"
+        class:active={isActive || isHovered}
         aria-current={isActive ? 'page' : undefined}
       >
-        {item.name}
+        {#if isHovered}
+          <HoverInfo item={item} />
+        {:else}
+          {item.name}
+        {/if}
       </a>
     </li>
   {/each}
