@@ -6,12 +6,12 @@
   let { item, index = 0 }: { item: PortfolioItem; index?: number } = $props();
 
   // Check if this item is the active project
-  const isActive = $derived(() => {
+  const isActive = $derived.by(() => {
     const match = $page.url.pathname.match(/^\/project\/(\d+)/);
     return match && parseInt(match[1]) === item.id;
   });
 
-  const gridSpan = $derived(() => {
+  const gridSpan = $derived.by(() => {
     switch (item.gridSize) {
       case 'wide':
         return 'col-span-2';
@@ -32,6 +32,10 @@
     portfolio.setHoveredItem(null);
   }
 
+  function handleClick() {
+    portfolio.setTransitionItem(item.id);
+  }
+
   async function handleImageUpload(event: Event) {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
@@ -47,6 +51,7 @@
   class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {gridSpan()} block animate-fade-in {isActive() ? 'ring-2 ring-copper' : ''}"
   onmouseenter={handleMouseEnter}
   onmouseleave={handleMouseLeave}
+  onclick={handleClick}
   aria-label="{item.name} - {item.subcategory}"
   aria-current={isActive() ? 'page' : undefined}
   style="view-transition-name: project-image-{item.id}; animation-delay: {index * 0.05}s"
