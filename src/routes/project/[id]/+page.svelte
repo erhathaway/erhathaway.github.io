@@ -17,8 +17,8 @@
 <main class="h-screen overflow-y-auto bg-charcoal">
     <!-- Project header that matches hover info styling -->
     <div class="bg-cream text-walnut">
-      <div class="max-w-6xl mx-auto p-8">
-        <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-6">
+      <div class="max-w-6xl mx-auto project-header-wrap">
+        <a href="/" class="project-header-back inline-flex items-center gap-2 text-ash hover:text-copper transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
