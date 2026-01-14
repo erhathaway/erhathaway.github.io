@@ -11,9 +11,9 @@
 </script>
 
 <div class="flex flex-wrap gap-2">
-  {#each categories as category}
+  {#each categories as category (category.value)}
     <button
-      class="pill px-3 py-1.5 text-xs tracking-wide uppercase border border-walnut/20 rounded-full transition-all duration-300 hover:bg-walnut hover:text-cream"
+      class="pill px-3 py-1.5 text-xs tracking-wide uppercase border border-walnut/20 rounded-full transition-all duration-300 bg-cream/40 backdrop-blur-md hover:bg-walnut hover:text-cream"
       class:active={portfolio.selectedCategory === category.value}
       onclick={() => portfolio.setCategory(category.value)}
     >

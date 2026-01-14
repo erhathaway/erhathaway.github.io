@@ -2,6 +2,7 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import LeftPanel from '$lib/components/LeftPanel.svelte';
+	import CategoryPills from '$lib/components/CategoryPills.svelte';
 	import { onNavigate } from '$app/navigation';
 	import { ClerkProvider } from 'svelte-clerk';
 
@@ -32,11 +33,16 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<ClerkProvider>
-	<div class="font-body bg-charcoal text-cream flex h-screen">
-		<LeftPanel />
-		<div class="flex-1" style="view-transition-name: main-content">
-			{@render children()}
+	<ClerkProvider>
+		<div class="font-body bg-charcoal text-cream flex h-screen">
+			<LeftPanel />
+			<div class="flex-1" style="view-transition-name: main-content">
+				{@render children()}
+			</div>
 		</div>
-	</div>
-</ClerkProvider>
+		<div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 pointer-events-none">
+			<div class="pointer-events-auto animate-slide-up" style="animation-delay: 0.3s">
+				<CategoryPills />
+			</div>
+		</div>
+	</ClerkProvider>
