@@ -41,12 +41,13 @@
         href="/project/{item.id}"
         class="item-link text-sm hover:text-copper transition-colors view-transition-item w-full block {isActive ? 'text-copper font-medium' : 'text-walnut'} {isHovered ? '' : 'pb-0.5'}"
         class:active={isActive || isHovered}
+        class:active-project={isActive}
         aria-current={isActive ? 'page' : undefined}
       >
         {#if isHovered}
           <HoverInfo item={item} />
         {:else}
-          <span class="block px-8">{item.name}</span>
+          <span class="item-label block px-8 {isActive ? 'text-lg' : 'text-sm'}" class:active-project={isActive}>{item.name}</span>
         {/if}
       </a>
     </li>

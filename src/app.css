@@ -50,8 +50,13 @@
   }
 
   .pill.active {
-    background-color: #2C2218;
-    color: #F5F1EB;
+    background-color: #2C2218 !important;
+    color: #F5F1EB !important;
+  }
+
+
+  .pill {
+    border-color: rgba(44, 34, 24, 0.08);
   }
 
   .item-link {

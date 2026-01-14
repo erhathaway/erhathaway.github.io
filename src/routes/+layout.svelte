@@ -44,10 +44,12 @@
 		Admin
 	</a>
 	<div class="fixed bottom-4 right-4 z-50">
-		<div class="flex gap-6 text-[11px] tracking-[0.18em] uppercase text-cream/60">
-			<a href="https://github.com" class="hover:text-copper transition-colors">GitHub</a>
-			<a href="https://instagram.com" class="hover:text-copper transition-colors">Instagram</a>
-			<a href="mailto:contact@example.com" class="hover:text-copper transition-colors">Contact</a>
+		<div class="px-4 py-2 bg-charcoal/40 backdrop-blur-md">
+			<div class="flex gap-6 text-[11px] tracking-[0.18em] uppercase text-cream/60">
+				<a href="https://github.com" class="hover:text-copper transition-colors">GitHub</a>
+				<a href="https://instagram.com" class="hover:text-copper transition-colors">Instagram</a>
+				<a href="mailto:contact@example.com" class="hover:text-copper transition-colors">Contact</a>
+			</div>
 		</div>
 	</div>
 		<div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 pointer-events-none">
