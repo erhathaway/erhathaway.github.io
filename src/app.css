@@ -71,6 +71,22 @@
   .item-link.active::after {
     width: 100%;
   }
+
+  .hover-info-transition-clone {
+    position: fixed;
+    top: 0;
+    left: 320px;
+    right: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 1;
+  }
+
+  .hover-info-transition-inner {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 2rem;
+  }
 }
 
 @layer utilities {
@@ -89,6 +105,15 @@
 .right-panel::-webkit-scrollbar { width: 6px; }
 .right-panel::-webkit-scrollbar-track { background: transparent; }
 .right-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+/* Hide scrollbar for navigation */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
 
 /* View Transitions API - Clean minimal configuration */
 @supports (view-transition-name: none) {
@@ -243,4 +268,8 @@
       animation: none !important;
     }
   }
+}
+
+.vt-home-to-project .hover-info-transition-clone {
+  opacity: 1;
 }

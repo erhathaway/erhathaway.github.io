@@ -10,9 +10,19 @@
 	// Enable View Transitions API
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
+		const fromPath = navigation.from?.url?.pathname;
+		const toPath = navigation.to?.url?.pathname;
+		const isHomeToProject = fromPath === '/' && toPath?.startsWith('/project');
+
+		if (isHomeToProject) {
+			document.documentElement.classList.add('vt-home-to-project');
+		}
 
 		return new Promise((resolve) => {
 			document.startViewTransition(async () => {
+				if (isHomeToProject) {
+					document.documentElement.classList.remove('vt-home-to-project');
+				}
 				resolve();
 				await navigation.complete;
 			});

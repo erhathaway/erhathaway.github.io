@@ -20,7 +20,7 @@
 
   <!-- Main Content Area -->
   {#if !isHovering || isProjectPage || isAdminPage}
-    <div class="flex-1 flex flex-col p-8 pt-4 relative z-0">
+    <div class="flex-1 flex flex-col p-8 pt-4 relative z-0 min-h-0">
       <p class="text-xs tracking-widest uppercase text-ash mb-8 animate-slide-up" style="animation-delay: 0.2s">
         Things I Make
       </p>
@@ -30,22 +30,24 @@
         <CategoryPills />
       </div>
 
-      <!-- Item List -->
-      <nav class="flex-1 overflow-y-auto pr-2 animate-slide-up" style="animation-delay: 0.4s">
+      <!-- Scrollable Navigation Area -->
+      <nav class="flex-1 overflow-y-auto animate-slide-up min-h-0 scrollbar-hide" style="animation-delay: 0.4s">
         <ItemList />
-      </nav>
-    </div>
 
-    <!-- Footer -->
-    <div class="p-6 border-t border-walnut/10 animate-fade-in z-0" style="animation-delay: 0.7s">
-      <div class="flex gap-6 mb-4">
-        <a href="https://github.com" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors">GitHub</a>
-        <a href="https://instagram.com" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors">Instagram</a>
-        <a href="mailto:contact@example.com" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors">Contact</a>
-      </div>
-      <div class="pt-4 border-t border-walnut/5">
-        <a href="/admin" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors opacity-50 hover:opacity-100">Admin</a>
-      </div>
+        <!-- Admin Link (scrolls with content) -->
+        <div class="pt-6 mt-6 border-t border-walnut/5">
+          <a href="/admin" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors opacity-50 hover:opacity-100">Admin</a>
+        </div>
+
+        <!-- Social Links (scrolls with content) -->
+        <div class="pt-6 mt-6 border-t border-walnut/5">
+          <div class="flex gap-6">
+            <a href="https://github.com" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors">GitHub</a>
+            <a href="https://instagram.com" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors">Instagram</a>
+            <a href="mailto:contact@example.com" class="text-xs tracking-wider uppercase text-ash hover:text-copper transition-colors">Contact</a>
+          </div>
+        </div>
+      </nav>
     </div>
   {:else}
     <!-- Empty space when hovering on gallery page -->
