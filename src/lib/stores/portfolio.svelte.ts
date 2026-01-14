@@ -3,7 +3,6 @@ import { items, type Category, type PortfolioItem } from '$lib/data/items';
 class PortfolioStore {
   selectedCategory = $state<Category | 'all'>('all');
   hoveredItemId = $state<number | null>(null);
-  transitionItemId = $state<number | null>(null);
 
   filteredItems = $derived.by(() => {
     if (this.selectedCategory === 'all') {
@@ -13,9 +12,8 @@ class PortfolioStore {
   });
 
   hoveredItem = $derived.by(() => {
-    const activeId = this.transitionItemId ?? this.hoveredItemId;
-    if (!activeId) return null;
-    return items.find(item => item.id === activeId);
+    if (!this.hoveredItemId) return null;
+    return items.find(item => item.id === this.hoveredItemId);
   });
 
   setCategory(category: Category | 'all') {
@@ -24,10 +22,6 @@ class PortfolioStore {
 
   setHoveredItem(id: number | null) {
     this.hoveredItemId = id;
-  }
-
-  setTransitionItem(id: number | null) {
-    this.transitionItemId = id;
   }
 
   async uploadImage(itemId: number, file: File): Promise<void> {

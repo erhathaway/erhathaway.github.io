@@ -8,10 +8,8 @@
   // Clear hover state when on project page
   onMount(() => {
     portfolio.setHoveredItem(null);
-    portfolio.setTransitionItem(null);
     return () => {
       portfolio.setHoveredItem(null);
-      portfolio.setTransitionItem(null);
     };
   });
 </script>

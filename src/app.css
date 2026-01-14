@@ -72,21 +72,6 @@
     width: 100%;
   }
 
-  .hover-info-transition-clone {
-    position: fixed;
-    top: 0;
-    left: 320px;
-    right: 0;
-    pointer-events: none;
-    opacity: 0;
-    z-index: 1;
-  }
-
-  .hover-info-transition-inner {
-    max-width: 72rem;
-    margin: 0 auto;
-    padding: 2rem;
-  }
 }
 
 @layer utilities {
@@ -167,20 +152,6 @@
     transform-origin: top left;
   }
 
-  ::view-transition-old(hover-info-category),
-  ::view-transition-old(hover-info-title),
-  ::view-transition-old(hover-info-description),
-  ::view-transition-old(hover-info-meta) {
-    animation: hover-text-shrink-out 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  ::view-transition-new(hover-info-category),
-  ::view-transition-new(hover-info-title),
-  ::view-transition-new(hover-info-description),
-  ::view-transition-new(hover-info-meta) {
-    animation: hover-text-fade-in 0.2s ease-out 0.25s both;
-  }
-
   ::view-transition-group(hover-info-category),
   ::view-transition-group(hover-info-title),
   ::view-transition-group(hover-info-description),
@@ -242,25 +213,6 @@
     }
   }
 
-  @keyframes hover-text-shrink-out {
-    0% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    40% {
-      opacity: 1;
-    }
-    100% {
-      transform: scale(0.3);
-      opacity: 0;
-    }
-  }
-
-  @keyframes hover-text-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
   @media (prefers-reduced-motion) {
     ::view-transition-group(*),
     ::view-transition-old(*),
@@ -268,8 +220,4 @@
       animation: none !important;
     }
   }
-}
-
-.vt-home-to-project .hover-info-transition-clone {
-  opacity: 1;
 }
