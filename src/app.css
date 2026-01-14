@@ -112,6 +112,13 @@
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Keep main content from sliding off-screen */
+  ::view-transition-old(main-content),
+  ::view-transition-new(main-content) {
+    animation: none;
+    transform: none;
+  }
+
   /* Hover info panel transition */
   ::view-transition-old(hover-info-panel) {
     animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) both slide-to-top;

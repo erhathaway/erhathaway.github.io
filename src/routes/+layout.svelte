@@ -9,6 +9,9 @@
 	// Enable View Transitions API
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
+		const fromPath = navigation.from?.url?.pathname;
+		const toPath = navigation.to?.url?.pathname;
+		if (fromPath === '/' && toPath?.startsWith('/project')) return;
 
 		return new Promise((resolve) => {
 			document.startViewTransition(async () => {
