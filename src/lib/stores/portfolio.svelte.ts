@@ -4,6 +4,7 @@ import { ProjectsAPI, type Project } from '$lib/api/projects';
 class PortfolioStore {
   selectedCategory = $state<Category | 'all'>('all');
   hoveredItemId = $state<number | null>(null);
+  hoverLockId = $state<number | null>(null);
   projects = $state<Project[]>([]);
   loading = $state(false);
 
@@ -43,6 +44,14 @@ class PortfolioStore {
   }
 
   setHoveredItem(id: number | null) {
+    if (this.hoverLockId !== null) {
+      this.hoverLockId = null;
+    }
+    this.hoveredItemId = id;
+  }
+
+  lockHover(id: number) {
+    this.hoverLockId = id;
     this.hoveredItemId = id;
   }
 

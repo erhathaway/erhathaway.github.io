@@ -1,11 +1,12 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import { portfolio } from '$lib/stores/portfolio.svelte';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
   let { data }: { data: PageData } = $props();
 
-  // Clear hover state whenever the project changes
-  $effect(() => {
-    data.item?.id;
+  // Clear hover state when landing on a project page
+  onMount(() => {
     portfolio.hoveredItemId = null;
   });
 </script>
@@ -15,7 +16,10 @@
     <!-- Project header that matches hover info styling -->
     <div class="bg-cream text-walnut">
       <div class="max-w-6xl mx-auto project-header-wrap">
-        <a href="/" class="project-header-back inline-flex items-center gap-2 text-ash hover:text-copper transition-colors">
+        <a href="/" class="project-header-back inline-flex items-center gap-2 text-ash hover:text-copper transition-colors" onclick={(event) => {
+          event.preventDefault();
+          goto('/', { state: { hoverId: data.item.id } });
+        }}>
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>

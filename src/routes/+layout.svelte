@@ -3,12 +3,22 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import LeftPanel from '$lib/components/LeftPanel.svelte';
 	import CategoryPills from '$lib/components/CategoryPills.svelte';
+	import { portfolio } from '$lib/stores/portfolio.svelte';
 	import { onNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { ClerkProvider } from 'svelte-clerk';
 
 	let { children } = $props();
 	const isProjectPage = $derived($page.route.id?.includes('/project/'));
+	const hoverFromState = $derived($page.state?.hoverId as number | undefined);
+
+	let appliedHoverId = $state<number | null>(null);
+	$effect(() => {
+		if (hoverFromState && hoverFromState !== appliedHoverId) {
+			portfolio.lockHover(hoverFromState);
+			appliedHoverId = hoverFromState;
+		}
+	});
 
 	// Enable View Transitions API
 	onNavigate((navigation) => {
@@ -30,6 +40,15 @@
 			document.startViewTransition(async () => {
 				if (isHomeToProject) {
 					document.documentElement.classList.remove('vt-home-to-project');
+				}
+				if (fromPath?.startsWith('/project') && toPath === '/' && portfolio.hoverLockId !== null) {
+					const lockId = portfolio.hoverLockId;
+					setTimeout(() => {
+						if (portfolio.hoverLockId === lockId && portfolio.hoveredItemId === lockId) {
+							portfolio.hoveredItemId = null;
+							portfolio.hoverLockId = null;
+						}
+					}, 650);
 				}
 				resolve();
 				await navigation.complete;
