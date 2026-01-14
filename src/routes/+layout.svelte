@@ -4,9 +4,11 @@
 	import LeftPanel from '$lib/components/LeftPanel.svelte';
 	import CategoryPills from '$lib/components/CategoryPills.svelte';
 	import { onNavigate } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { ClerkProvider } from 'svelte-clerk';
 
 	let { children } = $props();
+	const isProjectPage = $derived($page.route.id?.includes('/project/'));
 
 	// Enable View Transitions API
 	onNavigate((navigation) => {
@@ -52,9 +54,11 @@
 			</div>
 		</div>
 	</div>
+	{#if !isProjectPage}
 		<div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 pointer-events-none">
 			<div class="pointer-events-auto animate-slide-up" style="animation-delay: 0.3s">
 				<CategoryPills />
 			</div>
 		</div>
-	</ClerkProvider>
+	{/if}
+</ClerkProvider>
