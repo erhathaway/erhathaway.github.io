@@ -9,7 +9,7 @@
 </script>
 
 {#if item}
-  <div class="absolute left-0 right-0 bottom-0 bg-cream z-20 flex flex-col transition-all duration-300 ease-out" style="top: 120px; background-color: #F5F1EB;">
+  <div class="absolute left-0 right-0 bottom-0 bg-cream z-20 flex flex-col transition-all duration-300 ease-out" style="top: 120px; background-color: #F5F1EB; view-transition-name: hover-info-panel;">
     <div class="p-8 flex-1 flex flex-col animate-fade-in bg-cream">
       <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3">
         {item.category === 'food' ? 'Food' : item.category === 'wood' ? 'Wood' : 'Other'} · {item.subcategory}

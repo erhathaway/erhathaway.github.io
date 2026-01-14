@@ -132,6 +132,20 @@
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Hover info panel transition */
+  ::view-transition-old(hover-info-panel) {
+    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) both slide-to-top;
+  }
+
+  ::view-transition-new(hover-info-panel) {
+    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) both slide-from-left;
+  }
+
+  ::view-transition-group(hover-info-panel) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
   @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -181,6 +195,28 @@
     }
     to {
       transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-to-top {
+    from {
+      transform: translateX(0) translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%) translateY(-100%);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes slide-from-left {
+    from {
+      transform: translateX(-100%) translateY(100%);
+      opacity: 0.8;
+    }
+    to {
+      transform: translateX(0) translateY(0);
       opacity: 1;
     }
   }

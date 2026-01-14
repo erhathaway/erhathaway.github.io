@@ -1,38 +1,69 @@
 <script lang="ts">
   import type { PageData } from './$types';
+  import { portfolio } from '$lib/stores/portfolio.svelte';
+  import { onMount } from 'svelte';
 
   let { data }: { data: PageData } = $props();
+
+  // Clear hover state when on project page
+  onMount(() => {
+    portfolio.setHoveredItem(null);
+    return () => {
+      portfolio.setHoveredItem(null);
+    };
+  });
 </script>
 
 <main class="h-screen overflow-y-auto bg-charcoal">
-    <div class="max-w-6xl mx-auto p-8">
-      <!-- Back button -->
-      <a href="/" class="inline-flex items-center gap-2 text-cream/60 hover:text-cream transition-colors mb-8">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to gallery
-      </a>
+    <!-- Project header that matches hover info styling -->
+    <div class="bg-cream text-walnut" style="view-transition-name: hover-info-panel">
+      <div class="max-w-6xl mx-auto p-8">
+        <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-6">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to gallery
+        </a>
 
-      <!-- Project header -->
-      <div class="mb-12">
-        <p class="text-sm font-medium tracking-widest uppercase text-copper mb-4">
+        <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3">
           {data.item.category === 'food' ? 'Food' : data.item.category === 'wood' ? 'Wood' : 'Other'} · {data.item.subcategory}
         </p>
-        <h1 class="font-display text-5xl font-normal text-cream mb-6">
+        <h1 class="font-display text-4xl font-normal text-walnut mb-4">
           {data.item.name}
         </h1>
-        <p class="text-lg text-cream/80 leading-relaxed max-w-3xl">
+        <p class="text-base text-ash leading-relaxed max-w-3xl mb-6">
           {data.item.description}
         </p>
+        {#if data.item.metadata}
+          <div class="flex gap-8">
+            {#each Object.entries(data.item.metadata) as [key, value]}
+              <div class="flex flex-col gap-1">
+                <span class="text-[10px] tracking-wider uppercase text-ash">{key}</span>
+                <span class="font-display text-base text-walnut">{value}</span>
+              </div>
+            {/each}
+          </div>
+        {/if}
       </div>
+    </div>
 
-      <!-- Large placeholder image -->
+    <div class="max-w-6xl mx-auto p-8">
+
+      <!-- Large image -->
       <div
         class="relative aspect-[16/9] overflow-hidden rounded-lg mb-12"
         style="view-transition-name: project-image-{data.item.id}"
       >
-        <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {data.item.gradientColors}"></div>
+        {#if data.item.image}
+          <img
+            src={data.item.image}
+            alt={data.item.name}
+            class="w-full h-full object-cover"
+            loading="lazy"
+          />
+        {:else}
+          <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {data.item.gradientColors}"></div>
+        {/if}
       </div>
 
       <!-- Project details -->
@@ -57,28 +88,3 @@
     </div>
 </main>
 
-<style>
-  /* View Transitions API styles */
-  :global(::view-transition-old(root),
-  ::view-transition-new(root)) {
-    animation-duration: 0.3s;
-  }
-
-  :global(::view-transition-old(root)) {
-    animation-name: fade-out;
-  }
-
-  :global(::view-transition-new(root)) {
-    animation-name: fade-in;
-  }
-
-  @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-</style>

@@ -3,8 +3,10 @@
   import ItemList from './ItemList.svelte';
   import HoverInfo from './HoverInfo.svelte';
   import { portfolio } from '$lib/stores/portfolio.svelte';
+  import { page } from '$app/stores';
 
   const isHovering = $derived(!!portfolio.hoveredItem);
+  const isProjectPage = $derived($page.route.id?.includes('/project/'));
 </script>
 
 <aside class="w-80 min-w-[320px] h-screen bg-cream text-walnut flex flex-col relative">
@@ -16,7 +18,7 @@
   </div>
 
   <!-- Main Content Area -->
-  {#if !isHovering}
+  {#if !isHovering || isProjectPage}
     <div class="flex-1 flex flex-col p-8 pt-4 relative z-0">
       <p class="text-xs tracking-widest uppercase text-ash mb-8 animate-slide-up" style="animation-delay: 0.2s">
         Things I Make
@@ -42,10 +44,12 @@
       </div>
     </div>
   {:else}
-    <!-- Empty space when hovering -->
+    <!-- Empty space when hovering on gallery page -->
     <div class="flex-1"></div>
   {/if}
 
-  <!-- Hover Info Overlay -->
-  <HoverInfo />
+  <!-- Hover Info Overlay (only on gallery page) -->
+  {#if !isProjectPage}
+    <HoverInfo />
+  {/if}
 </aside>
