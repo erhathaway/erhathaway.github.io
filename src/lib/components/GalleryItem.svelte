@@ -28,10 +28,6 @@
     portfolio.setHoveredItem(item.id);
   }
 
-  function handleMouseLeave() {
-    portfolio.setHoveredItem(null);
-  }
-
   async function handleImageUpload(event: Event) {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
@@ -46,7 +42,6 @@
   href="/project/{item.id}"
   class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {gridSpan} block animate-fade-in {isActive ? 'ring-2 ring-copper' : ''}"
   onmouseenter={handleMouseEnter}
-  onmouseleave={handleMouseLeave}
   aria-label="{item.name} - {item.subcategory}"
   aria-current={isActive ? 'page' : undefined}
   style="view-transition-name: project-image-{item.id}; animation-delay: {index * 0.05}s"

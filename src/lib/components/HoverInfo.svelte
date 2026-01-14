@@ -9,7 +9,7 @@
 </script>
 
 {#if item}
-  <div class="bg-cream text-walnut py-4">
+  <div class="bg-cream text-walnut w-full py-4 -mx-8 px-8">
     <div class="project-header-block">
       <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3" style="view-transition-name: hover-info-category;">
         {item.category === 'food' ? 'Food' : item.category === 'wood' ? 'Wood' : 'Other'} · {item.subcategory}

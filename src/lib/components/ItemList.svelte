@@ -1,6 +1,7 @@
 <script lang="ts">
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { page } from '$app/stores';
+  import HoverInfo from './HoverInfo.svelte';
 
   let { scrollContainer }: { scrollContainer: HTMLElement | null } = $props();
 
