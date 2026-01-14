@@ -1,11 +1,6 @@
 <script lang="ts">
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import GalleryItem from './GalleryItem.svelte';
-
-  // Debug log
-  $effect(() => {
-    console.log('Gallery filtered items:', portfolio.filteredItems);
-  });
 </script>
 
 <main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-thin">

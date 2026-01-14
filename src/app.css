@@ -9,22 +9,7 @@
 }
 
 @layer components {
-  .hover-info-content {
-    opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: none;
-  }
-  .hover-info-content.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .hover-info-default {
-    transition: opacity 0.3s ease;
-  }
-  .hover-info-default.hidden {
-    opacity: 0;
-  }
+  /* Remove old hover info styles since we're using a different approach */
 
   .gallery-item::after {
     content: '';
