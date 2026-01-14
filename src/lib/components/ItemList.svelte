@@ -3,6 +3,11 @@
 
   let hoveredId = $state<number | null>(null);
 
+  // Debug log
+  $effect(() => {
+    console.log('Filtered items:', portfolio.filteredItems);
+  });
+
   function handleMouseEnter(id: number) {
     hoveredId = id;
     portfolio.setHoveredItem(id);

@@ -4,14 +4,14 @@ class PortfolioStore {
   selectedCategory = $state<Category | 'all'>('all');
   hoveredItemId = $state<number | null>(null);
 
-  filteredItems = $derived(() => {
+  filteredItems = $derived.by(() => {
     if (this.selectedCategory === 'all') {
       return items;
     }
     return items.filter(item => item.category === this.selectedCategory);
   });
 
-  hoveredItem = $derived(() => {
+  hoveredItem = $derived.by(() => {
     if (!this.hoveredItemId) return null;
     return items.find(item => item.id === this.hoveredItemId);
   });
