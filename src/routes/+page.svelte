@@ -1,2 +1,9 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script lang="ts">
+  import LeftPanel from '$lib/components/LeftPanel.svelte';
+  import GalleryGrid from '$lib/components/GalleryGrid.svelte';
+</script>
+
+<div class="font-body bg-charcoal text-cream flex">
+  <LeftPanel />
+  <GalleryGrid />
+</div>

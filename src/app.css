@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+@import 'tailwindcss';
+
+@layer base {
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+@layer components {
+  .hover-info-content {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .hover-info-content.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .hover-info-default {
+    transition: opacity 0.3s ease;
+  }
+  .hover-info-default.hidden {
+    opacity: 0;
+  }
+
+  .gallery-item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(26, 23, 20, 0);
+    transition: background 0.4s ease;
+    pointer-events: none;
+  }
+  .gallery-item:hover::after {
+    background: rgba(26, 23, 20, 0.25);
+  }
+  .gallery-item:hover .placeholder-bg {
+    transform: scale(1.05);
+  }
+  .gallery-item:hover .item-number {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .placeholder-bg {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .placeholder-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(90deg, transparent 0px, transparent 3px, rgba(255,255,255,0.02) 3px, rgba(255,255,255,0.02) 4px),
+      repeating-linear-gradient(85deg, transparent 0px, transparent 8px, rgba(0,0,0,0.03) 8px, rgba(0,0,0,0.03) 9px);
+    pointer-events: none;
+  }
+
+  .item-number {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+  }
+
+  .pill.active {
+    background-color: #2C2218;
+    color: #F5F1EB;
+  }
+
+  .item-link {
+    position: relative;
+  }
+  .item-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #B87333;
+    transition: width 0.3s ease;
+  }
+  .item-link:hover::after,
+  .item-link.active::after {
+    width: 100%;
+  }
+}
+
+@layer utilities {
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-slide-up { animation: fadeSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .animate-fade-in { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+}
+
+.right-panel::-webkit-scrollbar { width: 6px; }
+.right-panel::-webkit-scrollbar-track { background: transparent; }
+.right-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
