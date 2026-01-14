@@ -3,11 +3,15 @@ main = ".svelte-kit/cloudflare/_worker.js"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Custom domain route
+# Enable workers.dev subdomain
+workers_dev = true
+
+# Custom domain route (commented out until domain is configured)
 route = "erhathaway.com/*"
 
 [vars]
 ENVIRONMENT = "production"
+PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_cG9zaXRpdmUtd29tYmF0LTUyLmNsZXJrLmFjY291bnRzLmRldiQ"
 
 # Add CLERK_SECRET_KEY as a secret (use: wrangler secret put CLERK_SECRET_KEY)
 
