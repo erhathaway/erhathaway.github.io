@@ -93,15 +93,13 @@
     display: block;
     position: relative;
     background-color: #F5F1EB;
-    width: calc(100% + (var(--nav-pad, 2rem) * 2));
-    margin-left: calc(-1 * var(--nav-pad, 2rem));
-    margin-right: calc(-1 * var(--nav-pad, 2rem));
+    width: 100%;
     box-sizing: border-box;
   }
 
   .hover-inline-inner {
-    padding-left: var(--nav-pad, 2rem);
-    padding-right: var(--nav-pad, 2rem);
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 
 }

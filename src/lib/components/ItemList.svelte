@@ -46,7 +46,7 @@
         {#if isHovered}
           <HoverInfo item={item} />
         {:else}
-          {item.name}
+          <span class="block px-8">{item.name}</span>
         {/if}
       </a>
     </li>
