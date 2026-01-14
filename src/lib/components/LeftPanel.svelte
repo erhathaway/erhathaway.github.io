@@ -30,12 +30,12 @@
     </p>
 
     <!-- Scrollable Navigation Area -->
-    <nav class="flex-1 overflow-y-auto animate-slide-up min-h-0 scrollbar-hide pb-[50%] pt-4 -mx-8" style="animation-delay: 0.4s" {@attach storeNav}>
+    <nav class="flex-1 overflow-y-auto animate-slide-up min-h-0 scrollbar-hide pt-4 -mx-8" style="animation-delay: 0.4s" {@attach storeNav}>
       <ItemList scrollContainer={navEl} />
 
       <!-- Admin Link (scrolls with content) -->
       <!-- Social Links (scrolls with content) -->
-      <div class="pt-6 mt-6 px-8">
+      <div class="pt-6 mt-[50%] px-8 sticky bottom-0 bg-cream">
         <div class="h-px bg-walnut/5 mb-6"></div>
         <div class="flex gap-6 text-[11px] tracking-[0.18em] uppercase text-walnut/60">
           <a href="https://github.com" class="hover:text-copper transition-colors">GitHub</a>
