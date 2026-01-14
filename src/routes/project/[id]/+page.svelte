@@ -1,19 +1,16 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import { portfolio } from '$lib/stores/portfolio.svelte';
-  import { onMount } from 'svelte';
-
   let { data }: { data: PageData } = $props();
 
-  // Clear hover state when on project page
-  onMount(() => {
-    portfolio.setHoveredItem(null);
-    return () => {
-      portfolio.setHoveredItem(null);
-    };
+  // Clear hover state whenever the project changes
+  $effect(() => {
+    data.item?.id;
+    portfolio.hoveredItemId = null;
   });
 </script>
 
+{#key data.item.id}
 <main class="h-screen overflow-y-auto bg-charcoal">
     <!-- Project header that matches hover info styling -->
     <div class="bg-cream text-walnut">
@@ -89,3 +86,4 @@
       </div>
     </div>
 </main>
+{/key}

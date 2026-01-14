@@ -16,6 +16,11 @@
 		const fromPath = navigation.from?.url?.pathname;
 		const toPath = navigation.to?.url?.pathname;
 		const isHomeToProject = fromPath === '/' && toPath?.startsWith('/project');
+		const isProjectToProject = fromPath?.startsWith('/project') && toPath?.startsWith('/project');
+
+		if (isProjectToProject) {
+			return;
+		}
 
 		if (isHomeToProject) {
 			document.documentElement.classList.add('vt-home-to-project');

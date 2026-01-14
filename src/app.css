@@ -173,6 +173,8 @@
     opacity: 0;
   }
 
+  /* Disable hover-text transitions when switching between projects */
+
   /* Hover info content transition - move text blocks without scaling a big panel */
   ::view-transition-old(hover-info-category),
   ::view-transition-new(hover-info-category),
