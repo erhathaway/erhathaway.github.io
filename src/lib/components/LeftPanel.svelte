@@ -7,6 +7,7 @@
 
   const isHovering = $derived(!!portfolio.hoveredItem);
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
+  const isAdminPage = $derived($page.route.id?.includes('/admin'));
 </script>
 
 <aside class="w-80 min-w-[320px] h-screen bg-cream text-walnut flex flex-col relative">
@@ -18,7 +19,7 @@
   </div>
 
   <!-- Main Content Area -->
-  {#if !isHovering || isProjectPage}
+  {#if !isHovering || isProjectPage || isAdminPage}
     <div class="flex-1 flex flex-col p-8 pt-4 relative z-0">
       <p class="text-xs tracking-widest uppercase text-ash mb-8 animate-slide-up" style="animation-delay: 0.2s">
         Things I Make
@@ -52,7 +53,7 @@
   {/if}
 
   <!-- Hover Info Overlay (only on gallery page) -->
-  {#if !isProjectPage}
+  {#if !isProjectPage && !isAdminPage}
     <HoverInfo />
   {/if}
 </aside>
