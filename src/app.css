@@ -20,7 +20,7 @@
     pointer-events: none;
   }
   .gallery-item:hover::after {
-    background: rgba(26, 23, 20, 0.25);
+    background: rgba(26, 23, 20, 0.18);
   }
   .gallery-item:hover .placeholder-bg {
     transform: scale(1.05);

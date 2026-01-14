@@ -15,7 +15,7 @@
         <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3" style="view-transition-name: hover-info-category;">
           {item.category === 'food' ? 'Food' : item.category === 'wood' ? 'Wood' : 'Other'} · {item.subcategory}
         </p>
-        <h3 class="font-display text-4xl font-normal text-walnut leading-tight mb-4" style="view-transition-name: hover-info-title;">
+        <h3 class="font-display text-4xl font-medium text-walnut leading-tight mb-4" style="view-transition-name: hover-info-title;">
           {item.name}
         </h3>
         <p class="text-base text-ash leading-relaxed mb-6" style="view-transition-name: hover-info-description;">
