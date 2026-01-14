@@ -34,13 +34,6 @@
       <ItemList scrollContainer={navEl} />
 
       <!-- Admin Link (scrolls with content) -->
-      {#if !isProjectPage && !isAdminPage}
-        <div class="pt-6 mt-6 px-8">
-          <div class="h-px bg-walnut/5 mb-6"></div>
-          <a href="/admin" class="text-[11px] tracking-[0.22em] uppercase text-ash/60 hover:text-copper transition-colors">Admin</a>
-        </div>
-      {/if}
-
       <!-- Social Links (scrolls with content) -->
       <div class="pt-6 mt-6 px-8">
         <div class="h-px bg-walnut/5 mb-6"></div>

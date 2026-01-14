@@ -40,6 +40,9 @@
 				{@render children()}
 			</div>
 		</div>
+		<a href="/admin" class="fixed top-4 right-4 text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors z-50">
+			Admin
+		</a>
 		<div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 pointer-events-none">
 			<div class="pointer-events-auto animate-slide-up" style="animation-delay: 0.3s">
 				<CategoryPills />
