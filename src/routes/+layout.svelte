@@ -86,9 +86,13 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 	<ClerkProvider>
-		<div class="font-body bg-charcoal text-cream h-screen">
-			<!-- Main Content - always full width -->
-			<div class="w-full h-full overflow-auto" style="view-transition-name: main-content">
+		<div class="font-body bg-charcoal text-cream h-screen flex">
+			<!-- Left spacer only on project pages on larger screens -->
+			{#if isProjectPage}
+				<div class="hidden sm:block w-80 shrink-0"></div>
+			{/if}
+			<!-- Main Content - full width for home/gallery, adjusted for project pages -->
+			<div class="{isProjectPage ? 'flex-1' : 'w-full'} h-full overflow-auto" style="view-transition-name: main-content">
 				{@render children()}
 			</div>
 		</div>
@@ -98,7 +102,12 @@
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
 		<div class="fixed inset-y-0 left-0 w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0">
-			<LeftPanel isMobile={isMobileScreen} />
+			<LeftPanel isMobile={isMobileScreen} onItemClick={() => {
+				// Only close menu on mobile when clicking an item
+				if (isMobileScreen) {
+					mobileMenuOpen = false;
+				}
+			}} />
 		</div>
 	<AuthButton onOpenModal={() => showLoginModal = true} />
 	{#if !isAdminPage}

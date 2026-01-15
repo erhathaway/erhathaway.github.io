@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import HoverInfo from './HoverInfo.svelte';
 
-  let { scrollContainer }: { scrollContainer: HTMLElement | null } = $props();
+  let { scrollContainer, onItemClick }: { scrollContainer: HTMLElement | null, onItemClick?: () => void } = $props();
 
   const hoveredItem = $derived(portfolio.hoveredItem);
   let itemEls = $state<Record<number, HTMLElement | null>>({});
@@ -235,6 +235,7 @@
         class:active={isActive || isHovered}
         class:active-project={isActive}
         aria-current={isActive ? 'page' : undefined}
+        onclick={() => onItemClick?.()}
       >
         <div class="item-content-wrapper">
           {#if isHovered}

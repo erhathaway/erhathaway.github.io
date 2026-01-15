@@ -3,7 +3,7 @@
   import ItemList from './ItemList.svelte';
   import { page } from '$app/stores';
 
-  let { isMobile = false }: { isMobile?: boolean } = $props();
+  let { isMobile = false, onItemClick }: { isMobile?: boolean, onItemClick?: () => void } = $props();
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
   const isAdminPage = $derived($page.route.id?.includes('/admin'));
@@ -36,7 +36,7 @@
 
     <!-- Scrollable Navigation Area -->
     <nav class="flex-1 overflow-y-auto animate-slide-up min-h-0 max-h-full scrollbar-hide pt-12 pb-[50%] -mx-8 mt-10" style="animation-delay: 0.4s" {@attach storeNav}>
-      <ItemList scrollContainer={navEl} />
+      <ItemList scrollContainer={navEl} onItemClick={onItemClick} />
 
       <!-- Admin Link (scrolls with content) -->
     </nav>
