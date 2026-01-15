@@ -35,3 +35,14 @@ export const projectArtifacts = sqliteTable('project_artifacts', {
 	dataBlob: text('data_blob', { mode: 'json' }).notNull(),
 	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
 });
+
+export const projectAttributes = sqliteTable('project_attributes', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	projectId: integer('project_id')
+		.notNull()
+		.references(() => projects.id, { onDelete: 'cascade' }),
+	name: text('name').notNull(),
+	value: text('value').notNull(),
+	showInNav: integer('show_in_nav', { mode: 'boolean' }).notNull().default(false),
+	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
+});
