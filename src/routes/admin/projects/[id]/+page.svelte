@@ -343,8 +343,8 @@
 	onMount(loadAll);
 </script>
 
-<div class="min-h-screen bg-cream text-walnut p-8 pb-16">
-	<div class="max-w-5xl mx-auto">
+<div class="h-screen bg-cream text-walnut p-8 pb-16">
+	<div class="max-w-5xl mx-auto h-full overflow-y-auto pr-2">
 		<header class="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-walnut/10">
 			<div>
 				<p class="text-xs uppercase tracking-[0.25em] text-ash">Project editor</p>
