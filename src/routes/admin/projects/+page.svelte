@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 
 	interface Project {
 		id?: number;
@@ -29,7 +28,7 @@
 		isPublic: false
 	});
 
-	const API_BASE = 'https://erhathaway.com/api';
+	const API_BASE = '/api';
 
 	async function fetchProjects() {
 		try {
@@ -143,7 +142,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#each projects as project}
+							{#each projects as project (project.id)}
 								<tr class="border-t border-walnut/5">
 									<td class="p-4">
 										<div>
@@ -283,7 +282,7 @@
 							<div class="mb-6">
 								<h3 class="text-sm font-medium text-walnut mb-3">Metadata</h3>
 								<div class="space-y-2">
-									{#each Object.entries(formData.metadata) as [key, value]}
+									{#each Object.entries(formData.metadata) as [key, value] (key)}
 										<div class="flex gap-2">
 											<input
 												value={key}

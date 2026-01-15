@@ -14,7 +14,20 @@ export async function verifyClerkAuth(
 	}
 
 	try {
-		const response = await fetch('https://api.clerk.com/v1/sessions/verify', {
+		const tokenResponse = await fetch('https://api.clerk.com/v1/tokens/verify', {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${secret}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ token })
+		});
+
+		if (tokenResponse.ok) {
+			return token;
+		}
+
+		const sessionResponse = await fetch('https://api.clerk.com/v1/sessions/verify', {
 			method: 'POST',
 			headers: {
 				Authorization: `Bearer ${secret}`,
@@ -23,11 +36,11 @@ export async function verifyClerkAuth(
 			body: JSON.stringify({ session_token: token })
 		});
 
-		if (!response.ok) {
+		if (!sessionResponse.ok) {
 			return null;
 		}
 
-		const session = await response.json();
+		const session = await sessionResponse.json();
 		return session?.user_id ?? null;
 	} catch (err) {
 		console.error('Auth verification error:', err);
