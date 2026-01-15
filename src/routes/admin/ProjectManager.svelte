@@ -684,12 +684,18 @@
 							{/if}
 						</div>
 						<div class="flex items-center gap-2">
+							<a
+								href={`/admin/projects/${project.id}`}
+								class="px-3 py-2 rounded-full border border-walnut/20 text-sm text-walnut hover:border-copper hover:text-copper transition-colors"
+							>
+								Edit
+							</a>
 							<button
 								type="button"
 								onclick={() => startProjectEdit(project)}
 								class="px-3 py-2 rounded-full border border-walnut/20 text-sm text-walnut hover:border-copper hover:text-copper transition-colors"
 							>
-								Edit
+								Quick edit
 							</button>
 							<button
 								type="button"
