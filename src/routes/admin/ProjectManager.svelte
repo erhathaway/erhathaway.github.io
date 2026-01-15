@@ -347,31 +347,36 @@
 				<p class="mt-2 text-xs text-ash">Loading categories...</p>
 			{:else if categories.length === 0}
 				<p class="mt-2 text-xs text-ash">Create a category to start tagging projects.</p>
-			{:else}
-				<div class="mt-2 flex flex-wrap gap-2">
-					{#each categories as category (category.id)}
-						<button
-							type="button"
-							onclick={() =>
-								(newProjectCategoryIds = toggleCategory(newProjectCategoryIds, category.id))}
-							class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
-								newProjectCategoryIds.includes(category.id)
-									? 'bg-walnut text-cream border-walnut'
-									: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
-							}`}
-						>
-							<span>{category.displayName}</span>
-							<span
-								class={`text-[10px] uppercase tracking-wide ${
-									category.isPublished ? 'text-emerald-200' : 'text-ash'
+				{:else}
+					<div class="mt-2 flex flex-wrap gap-2">
+						{#each categories as category (category.id)}
+							{@const isSelected = newProjectCategoryIds.includes(category.id)}
+							<button
+								type="button"
+								onclick={() =>
+									(newProjectCategoryIds = toggleCategory(newProjectCategoryIds, category.id))}
+								class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
+									isSelected
+										? 'bg-copper/90 text-cream border-copper ring-2 ring-copper/40'
+										: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
 								}`}
 							>
-								{category.isPublished ? 'Live' : 'Draft'}
-							</span>
-						</button>
-					{/each}
-				</div>
-			{/if}
+								<span class={isSelected ? 'font-semibold' : ''}>{category.displayName}</span>
+								<span
+									class={`text-[10px] uppercase tracking-wide ${
+										isSelected
+											? 'text-cream/80'
+											: category.isPublished
+												? 'text-emerald-200'
+												: 'text-ash'
+									}`}
+								>
+									{isSelected ? 'Selected' : category.isPublished ? 'Live' : 'Draft'}
+								</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
 		</div>
 		<label class="flex items-center gap-2 text-sm text-ash">
 			<input type="checkbox" bind:checked={newProjectIsPublished} class="accent-copper" />
@@ -424,33 +429,38 @@
 							></textarea>
 							<div>
 								<p class="text-sm text-ash">Categories</p>
-								<div class="mt-2 flex flex-wrap gap-2">
-									{#each categories as category (category.id)}
-										<button
-											type="button"
-											onclick={() =>
-												(editProjectCategoryIds = toggleCategory(
-													editProjectCategoryIds,
-													category.id
-												))}
-										class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
-											editProjectCategoryIds.includes(category.id)
-												? 'bg-walnut text-cream border-walnut'
-												: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
-										}`}
-									>
-										<span>{category.displayName}</span>
-										<span
-											class={`text-[10px] uppercase tracking-wide ${
-												category.isPublished ? 'text-emerald-200' : 'text-ash'
-											}`}
-										>
-											{category.isPublished ? 'Live' : 'Draft'}
-										</span>
-									</button>
-								{/each}
+									<div class="mt-2 flex flex-wrap gap-2">
+										{#each categories as category (category.id)}
+											{@const isSelected = editProjectCategoryIds.includes(category.id)}
+											<button
+												type="button"
+												onclick={() =>
+													(editProjectCategoryIds = toggleCategory(
+														editProjectCategoryIds,
+														category.id
+													))}
+												class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
+													isSelected
+														? 'bg-copper/90 text-cream border-copper ring-2 ring-copper/40'
+														: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
+												}`}
+											>
+												<span class={isSelected ? 'font-semibold' : ''}>{category.displayName}</span>
+												<span
+													class={`text-[10px] uppercase tracking-wide ${
+														isSelected
+															? 'text-cream/80'
+															: category.isPublished
+																? 'text-emerald-200'
+																: 'text-ash'
+													}`}
+												>
+													{isSelected ? 'Selected' : category.isPublished ? 'Live' : 'Draft'}
+												</span>
+											</button>
+										{/each}
+									</div>
 								</div>
-							</div>
 							<label class="flex items-center gap-2 text-sm text-ash">
 								<input type="checkbox" bind:checked={editProjectIsPublished} class="accent-copper" />
 								Published
