@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from './ProjectEditor.svelte';
 
 	type Category = {
 		id: number;
@@ -18,14 +19,6 @@
 
 	type ProjectAttribute = {
 		id: number;
-		name: string;
-		value: string;
-		showInNav: boolean;
-		isPublished: boolean;
-	};
-
-	type AttributeDraft = {
-		id?: number;
 		name: string;
 		value: string;
 		showInNav: boolean;
@@ -54,12 +47,6 @@
 	let newProjectAttributes = $state<AttributeDraft[]>([]);
 
 	let editingProjectId = $state<number | null>(null);
-	let editProjectName = $state('');
-	let editProjectDisplayName = $state('');
-	let editProjectDescription = $state('');
-	let editProjectIsPublished = $state(false);
-	let editProjectCategoryIds = $state<number[]>([]);
-	let editProjectAttributes = $state<AttributeDraft[]>([]);
 
 	let projectCategoryIds = $state<Record<number, number[]>>({});
 	let projectAttributes = $state<Record<number, ProjectAttribute[]>>({});
@@ -153,30 +140,18 @@
 
 	function startProjectEdit(project: Project) {
 		editingProjectId = project.id;
-		editProjectName = project.name;
-		editProjectDisplayName = project.displayName;
-		editProjectDescription = project.description ?? '';
-		editProjectIsPublished = project.isPublished;
-		editProjectCategoryIds = [...(projectCategoryIds[project.id] ?? [])];
-		editProjectAttributes = (projectAttributes[project.id] ?? []).map((attribute) => ({
-			...attribute
-		}));
 		projectsSuccess = '';
 		projectsError = '';
 	}
 
 	function cancelProjectEdit() {
 		editingProjectId = null;
-		editProjectName = '';
-		editProjectDisplayName = '';
-		editProjectDescription = '';
-		editProjectIsPublished = false;
-		editProjectCategoryIds = [];
-		editProjectAttributes = [];
 	}
 
-	async function saveProjectEdit() {
-		if (editingProjectId === null) return;
+	async function saveProjectEdit(payload: ProjectEditorPayload) {
+		if (editingProjectId === null) {
+			return;
+		}
 		projectsError = '';
 		projectsSuccess = '';
 
@@ -193,10 +168,10 @@
 				Authorization: `Bearer ${token}`
 			},
 			body: JSON.stringify({
-				name: editProjectName.trim(),
-				displayName: editProjectDisplayName.trim(),
-				description: editProjectDescription.trim(),
-				isPublished: editProjectIsPublished
+				name: payload.name.trim(),
+				displayName: payload.displayName.trim() || payload.name.trim(),
+				description: payload.description.trim(),
+				isPublished: payload.isPublished
 			})
 		});
 
@@ -207,8 +182,8 @@
 
 		const updated = await response.json();
 		projects = projects.map((project) => (project.id === updated.id ? updated : project));
-		await updateProjectCategories(editingProjectId, editProjectCategoryIds);
-		await updateProjectAttributes(editingProjectId, editProjectAttributes);
+		await updateProjectCategories(editingProjectId, payload.categoryIds);
+		await updateProjectAttributes(editingProjectId, payload.attributes);
 		cancelProjectEdit();
 		projectsSuccess = 'Project updated.';
 	}
@@ -638,170 +613,17 @@
 					class="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-walnut/10 bg-white px-4 py-3"
 				>
 					{#if editingProjectId === project.id}
-						<div class="flex flex-col gap-3 flex-1 min-w-[240px]">
-							<div class="flex flex-wrap gap-3">
-								<input
-									bind:value={editProjectName}
-									class="w-40 rounded-md border border-walnut/20 px-3 py-2 text-sm"
-								/>
-								<input
-									bind:value={editProjectDisplayName}
-									class="w-56 rounded-md border border-walnut/20 px-3 py-2 text-sm"
-									placeholder={editProjectName}
-								/>
-							</div>
-							<textarea
-								bind:value={editProjectDescription}
-								rows="3"
-								class="w-full rounded-md border border-walnut/20 px-3 py-2 text-sm"
-							></textarea>
-							<div>
-								<p class="text-sm text-ash">Categories</p>
-									<div class="mt-2 flex flex-wrap gap-2">
-										{#each categories as category (category.id)}
-											{@const isSelected = editProjectCategoryIds.includes(category.id)}
-											<button
-												type="button"
-												onclick={() =>
-													(editProjectCategoryIds = toggleCategory(
-														editProjectCategoryIds,
-														category.id
-													))}
-												class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
-													isSelected
-														? 'bg-copper/90 text-cream border-copper ring-2 ring-copper/40'
-														: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
-												}`}
-											>
-												<span class={isSelected ? 'font-semibold' : ''}>{category.displayName}</span>
-												<span
-													class={`text-[10px] uppercase tracking-wide ${
-														isSelected
-															? 'text-cream/80'
-															: category.isPublished
-																? 'text-emerald-200'
-																: 'text-ash'
-													}`}
-												>
-													{isSelected ? 'Selected' : category.isPublished ? 'Live' : 'Draft'}
-												</span>
-											</button>
-										{/each}
-									</div>
-								</div>
-							<div>
-								<div class="flex items-center justify-between">
-									<p class="text-sm text-ash">Attributes</p>
-									<button
-										type="button"
-										onclick={() =>
-											(editProjectAttributes = addAttributeRow(editProjectAttributes))}
-										class="text-xs text-copper hover:text-walnut"
-									>
-										Add attribute
-									</button>
-								</div>
-								{#if editProjectAttributes.length === 0}
-									<p class="mt-2 text-xs text-ash">No attributes yet.</p>
-								{:else}
-									<div class="mt-2 grid gap-2">
-										{#each editProjectAttributes as attribute, index (attribute.id ?? index)}
-											<div class="flex flex-wrap items-center gap-2 rounded-lg border border-walnut/10 bg-cream/60 p-2">
-												<input
-													class="flex-1 min-w-[160px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
-													placeholder="Name"
-													value={attribute.name}
-													oninput={(event) =>
-														(editProjectAttributes = updateAttributeRow(
-															editProjectAttributes,
-															index,
-															{
-																name: (event.target as HTMLInputElement).value
-															}
-														))}
-												/>
-												<input
-													class="flex-1 min-w-[200px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
-													placeholder="Value"
-													value={attribute.value}
-													oninput={(event) =>
-														(editProjectAttributes = updateAttributeRow(
-															editProjectAttributes,
-															index,
-															{
-																value: (event.target as HTMLInputElement).value
-															}
-														))}
-												/>
-												<label class="flex items-center gap-1 text-[11px] text-ash">
-													<input
-														type="checkbox"
-														checked={attribute.showInNav}
-														onchange={(event) =>
-															(editProjectAttributes = updateAttributeRow(
-																editProjectAttributes,
-																index,
-																{
-																	showInNav: (event.target as HTMLInputElement).checked
-																}
-															))}
-														class="accent-copper"
-													/>
-													Show in nav
-												</label>
-												<label class="flex items-center gap-1 text-[11px] text-ash">
-													<input
-														type="checkbox"
-														checked={attribute.isPublished}
-														onchange={(event) =>
-															(editProjectAttributes = updateAttributeRow(
-																editProjectAttributes,
-																index,
-																{
-																	isPublished: (event.target as HTMLInputElement).checked
-																}
-															))}
-														class="accent-copper"
-													/>
-													Published
-												</label>
-												<button
-													type="button"
-													onclick={() =>
-														(editProjectAttributes = removeAttributeRow(
-															editProjectAttributes,
-															index
-														))}
-													class="text-xs text-red-600 hover:text-red-700"
-												>
-													Remove
-												</button>
-											</div>
-										{/each}
-									</div>
-								{/if}
-							</div>
-							<label class="flex items-center gap-2 text-sm text-ash">
-								<input type="checkbox" bind:checked={editProjectIsPublished} class="accent-copper" />
-								Published
-							</label>
-						</div>
-						<div class="flex items-center gap-2">
-							<button
-								type="button"
-								onclick={saveProjectEdit}
-								class="px-3 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
-							>
-								Save
-							</button>
-							<button
-								type="button"
-								onclick={cancelProjectEdit}
-								class="px-3 py-2 rounded-full border border-walnut/20 text-sm text-walnut hover:border-copper hover:text-copper transition-colors"
-							>
-								Cancel
-							</button>
-						</div>
+						{#key project.id}
+							<ProjectEditor
+								project={project}
+								{categories}
+								{categoriesLoaded}
+								categoryIds={projectCategoryIds[project.id] ?? []}
+								attributes={projectAttributes[project.id] ?? []}
+								onSave={saveProjectEdit}
+								onCancel={cancelProjectEdit}
+							/>
+						{/key}
 					{:else}
 						<div class="flex flex-col gap-1 flex-1 min-w-[240px]">
 							<div class="flex items-center gap-3">
