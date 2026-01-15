@@ -41,7 +41,8 @@
 	},
 	"private": true,
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "sh -c 'bunx wrangler dev --port 8787 & vite dev'",
+		"dev:wrangler": "bunx wrangler dev --port 8787",
 		"build": "vite build",
 		"deploy": "bunx wrangler deploy",
 		"preview": "vite preview",
