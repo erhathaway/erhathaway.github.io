@@ -31,7 +31,7 @@ export const projectArtifacts = sqliteTable('project_artifacts', {
 	projectId: integer('project_id')
 		.notNull()
 		.references(() => projects.id, { onDelete: 'cascade' }),
-	schemaVersion: integer('schema_version').notNull(),
+	schema: text('schema').notNull(),
 	dataBlob: text('data_blob', { mode: 'json' }).notNull(),
 	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
 });

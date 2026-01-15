@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { SignedIn, SignedOut, UserButton, useClerkContext } from 'svelte-clerk';
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
+	import { artifactSchemas, validateArtifactData } from '$lib/schemas/artifacts';
 
 	type Category = {
 		id: number;
@@ -29,7 +30,7 @@
 	type ProjectArtifact = {
 		id: number;
 		projectId: number;
-		schemaVersion: number;
+		schema: string;
 		dataBlob: unknown;
 		isPublished: boolean;
 	};
@@ -56,7 +57,7 @@
 	let pageError = $state('');
 	let pageSuccess = $state('');
 
-	let artifactSchemaVersion = $state(1);
+	let artifactSchema = $state(artifactSchemas[0]?.name ?? 'image-v1');
 	let artifactData = $state('{\n  \n}');
 	let artifactIsPublished = $state(false);
 
@@ -293,9 +294,9 @@
 			return;
 		}
 
-		const schemaVersion = Number(artifactSchemaVersion);
-		if (!Number.isInteger(schemaVersion) || schemaVersion <= 0) {
-			pageError = 'Schema version must be a positive integer.';
+		const schema = artifactSchema.trim();
+		if (!schema) {
+			pageError = 'Schema is required.';
 			return;
 		}
 
@@ -307,6 +308,12 @@
 			return;
 		}
 
+		const validation = validateArtifactData(schema, dataBlob);
+		if (!validation.ok) {
+			pageError = validation.errors.join('; ');
+			return;
+		}
+
 		const response = await fetch(`/api/projects/${projectId}/artifacts`, {
 			method: 'POST',
 			headers: {
@@ -314,8 +321,8 @@
 				Authorization: `Bearer ${token}`
 			},
 			body: JSON.stringify({
-				schemaVersion,
-				dataBlob,
+				schema,
+				dataBlob: validation.value,
 				isPublished: artifactIsPublished
 			})
 		});
@@ -327,7 +334,7 @@
 
 		const created = await response.json();
 		artifacts = [created, ...artifacts];
-		artifactSchemaVersion = schemaVersion;
+		artifactSchema = schema;
 		artifactData = '{\n  \n}';
 		artifactIsPublished = false;
 		pageSuccess = 'Artifact created.';
@@ -393,13 +400,15 @@
 
 					<form class="grid gap-4 md:grid-cols-[160px_1fr] items-start" onsubmit={createArtifact}>
 						<label class="text-sm">
-							<span class="text-ash">Schema version</span>
-							<input
-								type="number"
-								min="1"
-								bind:value={artifactSchemaVersion}
+							<span class="text-ash">Schema</span>
+							<select
+								bind:value={artifactSchema}
 								class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
-							/>
+							>
+								{#each artifactSchemas as schemaOption (schemaOption.name)}
+									<option value={schemaOption.name}>{schemaOption.label}</option>
+								{/each}
+							</select>
 						</label>
 						<label class="text-sm md:col-span-1">
 							<span class="text-ash">Data blob (JSON)</span>
@@ -428,7 +437,7 @@
 							{#each artifacts as artifact (artifact.id)}
 								<div class="rounded-xl border border-walnut/10 bg-cream/60 p-4">
 									<div class="flex flex-wrap items-center gap-3 text-xs text-ash">
-										<span class="uppercase tracking-wide">Schema {artifact.schemaVersion}</span>
+										<span class="uppercase tracking-wide">Schema {artifact.schema}</span>
 										<span
 											class={`rounded-full border px-2 py-0.5 ${
 												artifact.isPublished

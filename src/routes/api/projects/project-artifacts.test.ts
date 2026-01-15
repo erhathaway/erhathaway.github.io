@@ -61,7 +61,13 @@ describe('GET /api/projects/:id/artifacts', () => {
 
 	it('returns artifacts for authenticated user', async () => {
 		const rows = [
-			{ id: 10, projectId: 1, schemaVersion: 1, dataBlob: { ok: true }, isPublished: false }
+			{
+				id: 10,
+				projectId: 1,
+				schema: 'image-v1',
+				dataBlob: { imageUrl: 'https://example.com/image.jpg' },
+				isPublished: false
+			}
 		];
 		const db = createDbForGet({ id: 1, isPublished: false }, rows);
 		asAuth('user_123');
@@ -78,7 +84,7 @@ describe('POST /api/projects/:id/artifacts', () => {
 		const db = createDbForPost({ id: 1, isPublished: true }, { id: 10 });
 		const request = new Request('http://localhost/api/projects/1/artifacts', {
 			method: 'POST',
-			body: JSON.stringify({ schemaVersion: 1, dataBlob: { ok: true } }),
+			body: JSON.stringify({ schema: 'image-v1', dataBlob: { imageUrl: 'https://example.com/image.jpg' } }),
 			headers: { 'Content-Type': 'application/json' }
 		});
 
@@ -91,15 +97,19 @@ describe('POST /api/projects/:id/artifacts', () => {
 		const created = {
 			id: 10,
 			projectId: 1,
-			schemaVersion: 1,
-			dataBlob: { ok: true },
+			schema: 'image-v1',
+			dataBlob: { imageUrl: 'https://example.com/image.jpg' },
 			isPublished: true
 		};
 		const db = createDbForPost({ id: 1, isPublished: true }, created);
 		asAuth('user_123');
 		const request = new Request('http://localhost/api/projects/1/artifacts', {
 			method: 'POST',
-			body: JSON.stringify({ schemaVersion: 1, dataBlob: { ok: true }, isPublished: true }),
+			body: JSON.stringify({
+				schema: 'image-v1',
+				dataBlob: { imageUrl: 'https://example.com/image.jpg' },
+				isPublished: true
+			}),
 			headers: { 'Content-Type': 'application/json' }
 		});
 

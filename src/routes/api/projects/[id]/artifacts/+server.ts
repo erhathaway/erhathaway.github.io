@@ -2,6 +2,7 @@ import type { RequestHandler } from './$types';
 import { and, eq } from 'drizzle-orm';
 import { error, json } from '@sveltejs/kit';
 import { projectArtifacts, projects } from '$lib/server/db/schema';
+import { validateArtifactData } from '$lib/schemas/artifacts';
 import { verifyClerkAuth } from '$lib/server/auth';
 
 const corsHeaders = {
@@ -11,7 +12,7 @@ const corsHeaders = {
 };
 
 type ArtifactInput = {
-	schemaVersion: number;
+	schema: string;
 	dataBlob: unknown;
 	isPublished?: boolean;
 };
@@ -47,8 +48,8 @@ const parseArtifact = (payload: unknown) => {
 		throw error(400, 'Invalid artifact payload');
 	}
 	const data = payload as ArtifactInput;
-	if (!Number.isInteger(data.schemaVersion) || data.schemaVersion <= 0) {
-		throw error(400, 'schemaVersion must be a positive integer');
+	if (typeof data.schema !== 'string' || data.schema.trim().length === 0) {
+		throw error(400, 'schema must be a non-empty string');
 	}
 	if (data.dataBlob === undefined) {
 		throw error(400, 'dataBlob is required');
@@ -61,9 +62,15 @@ const parseArtifact = (payload: unknown) => {
 			throw error(400, 'dataBlob must be valid JSON');
 		}
 	}
+	const schema = data.schema.trim();
+	const validation = validateArtifactData(schema, parsedBlob);
+	if (!validation.ok) {
+		throw error(400, validation.errors.join('; '));
+	}
+
 	return {
-		schemaVersion: data.schemaVersion,
-		dataBlob: parsedBlob,
+		schema,
+		dataBlob: validation.value,
 		isPublished: data.isPublished ?? false
 	};
 };
@@ -91,7 +98,7 @@ export const GET: RequestHandler = async ({ params, request, locals, platform })
 		.select({
 			id: projectArtifacts.id,
 			projectId: projectArtifacts.projectId,
-			schemaVersion: projectArtifacts.schemaVersion,
+			schema: projectArtifacts.schema,
 			dataBlob: projectArtifacts.dataBlob,
 			isPublished: projectArtifacts.isPublished
 		})
@@ -117,7 +124,7 @@ export const POST: RequestHandler = async ({ params, request, locals, platform }
 		.insert(projectArtifacts)
 		.values({
 			projectId,
-			schemaVersion: artifact.schemaVersion,
+			schema: artifact.schema,
 			dataBlob: artifact.dataBlob,
 			isPublished: artifact.isPublished
 		})
