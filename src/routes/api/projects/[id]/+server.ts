@@ -66,11 +66,11 @@ export const PUT: RequestHandler = async ({ params, request, locals, platform })
 	const payload = (await request.json()) as Partial<ProjectInput>;
 	const name = payload.name?.trim();
 	const displayName = payload.displayName?.trim() || name;
-	const description = payload.description?.trim();
+	const description = payload.description?.trim() || null;
 	const isPublished = payload.isPublished;
 
-	if (!name || !description) {
-		throw error(400, 'name and description are required');
+	if (!name) {
+		throw error(400, 'name is required');
 	}
 
 	const [updated] = await db

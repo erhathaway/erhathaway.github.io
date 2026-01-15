@@ -4,7 +4,7 @@ export const projects = sqliteTable('projects', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	name: text('name').notNull().unique(),
 	displayName: text('display_name').notNull(),
-	description: text('description').notNull(),
+	description: text('description'),
 	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
 });
 
