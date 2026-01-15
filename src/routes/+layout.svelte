@@ -111,7 +111,7 @@
 		</div>
 	<AuthButton onOpenModal={() => showLoginModal = true} />
 	{#if !isAdminPage}
-		<div class="fixed bottom-4 right-4 z-50 xl:bottom-4 xl:right-4 max-xl:top-4 max-xl:left-1/2 max-xl:-translate-x-1/2 pointer-events-none">
+		<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none">
 			<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
 				<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
 					<a href="https://github.com" class="hover:text-copper transition-colors">GitHub</a>
