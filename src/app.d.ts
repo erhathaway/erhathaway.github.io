@@ -13,6 +13,7 @@ declare global {
 		// interface PageState {}
 		interface Platform {
 			env: {
+				CLERK_SECRET_KEY?: string;
 				DB: D1Database;
 			};
 		}
