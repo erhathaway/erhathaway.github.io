@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy, tick } from 'svelte';
 	import { validateImageV1 } from './validator';
 	import type { ImageV1Data } from './validator';
 
@@ -17,6 +18,7 @@
 	let previewUrl = $state<string | null>(null);
 	let uploading = $state(false);
 	let uploadError = $state<string | null>(null);
+	let fileInput: HTMLInputElement | null = null;
 
 	const setUploadState = (next: { uploading: boolean; error: string | null }) => {
 		uploading = next.uploading;
@@ -33,6 +35,13 @@
 		onChange?.(next);
 	};
 
+	const clearPreview = () => {
+		if (previewUrl) {
+			URL.revokeObjectURL(previewUrl);
+			previewUrl = null;
+		}
+	};
+
 	const handleFile = async (file: File) => {
 		if (!onUpload) {
 			setUploadState({ uploading: false, error: 'Upload handler not configured.' });
@@ -41,15 +50,9 @@
 
 		setUploadState({ uploading: true, error: null });
 
-		if (previewUrl) {
-			URL.revokeObjectURL(previewUrl);
-		}
+		clearPreview();
 		const nextPreview = URL.createObjectURL(file);
 		previewUrl = nextPreview;
-		onChange?.({
-			imageUrl: nextPreview,
-			description: current.description?.trim() || undefined
-		});
 
 		try {
 			const uploadedUrl = await onUpload(file);
@@ -57,16 +60,20 @@
 				imageUrl: uploadedUrl,
 				description: current.description?.trim() || undefined
 			});
-			URL.revokeObjectURL(nextPreview);
-			previewUrl = null;
+			await tick();
 			setUploadState({ uploading: false, error: null });
+			clearPreview();
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'Upload failed.';
 			setUploadState({ uploading: false, error: message });
+			if (current.imageUrl) {
+				clearPreview();
+			}
 		}
 	};
 
 	const handleFileInput = async (event: Event) => {
+		event.stopPropagation();
 		const target = event.currentTarget as HTMLInputElement | null;
 		const file = target?.files?.[0];
 		if (!file) return;
@@ -76,6 +83,7 @@
 
 	const handleDrop = async (event: DragEvent) => {
 		event.preventDefault();
+		event.stopPropagation();
 		const file = event.dataTransfer?.files?.[0];
 		if (!file) return;
 		await handleFile(file);
@@ -83,7 +91,33 @@
 
 	const handleDragOver = (event: DragEvent) => {
 		event.preventDefault();
+		event.stopPropagation();
 	};
+
+	const triggerFilePicker = () => {
+		fileInput?.click();
+	};
+
+	const displayUrl = $derived.by(() => {
+		if (uploading && previewUrl) return previewUrl;
+		if (!current.imageUrl && previewUrl) return previewUrl;
+		return current.imageUrl ?? '';
+	});
+
+	const attachFileInput = (node: HTMLInputElement) => {
+		fileInput = node;
+		return {
+			destroy() {
+				if (fileInput === node) {
+					fileInput = null;
+				}
+			}
+		};
+	};
+
+	onDestroy(() => {
+		clearPreview();
+	});
 </script>
 
 <div class="grid gap-4">
@@ -93,33 +127,44 @@
 			class="rounded-lg border border-dashed border-walnut/30 bg-cream/70 px-4 py-6 text-center text-sm text-ash"
 			ondrop={handleDrop}
 			ondragover={handleDragOver}
+			onclick={triggerFilePicker}
 			role="button"
 			tabindex="0"
 			onkeydown={(event) => {
 				if (event.key === 'Enter' || event.key === ' ') {
 					event.preventDefault();
-					(event.currentTarget as HTMLElement | null)?.querySelector('input')?.click();
+					triggerFilePicker();
 				}
 			}}
 		>
 			<p>{uploading ? 'Uploading...' : 'Drag and drop an image here'}</p>
-			<label class="mt-2 inline-flex cursor-pointer items-center justify-center rounded-full border border-walnut/20 px-3 py-1 text-xs text-walnut hover:border-copper hover:text-copper">
+			<button
+				type="button"
+				class="mt-2 inline-flex items-center justify-center rounded-full border border-walnut/20 px-3 py-1 text-xs text-walnut hover:border-copper hover:text-copper"
+				onclick={(event) => {
+					event.stopPropagation();
+					triggerFilePicker();
+				}}
+			>
 				Choose file
-				<input
-					type="file"
-					accept="image/*"
-					class="sr-only"
-					onchange={handleFileInput}
-				/>
-			</label>
-		</div>
-		{#if current.imageUrl}
-			<img
-				src={current.imageUrl}
-				alt={current.description ?? ''}
-				class="mt-2 max-h-56 w-full rounded-lg object-cover"
+			</button>
+			<input
+				type="file"
+				accept="image/*"
+				class="sr-only"
+				{@attach attachFileInput}
+				onchange={handleFileInput}
 			/>
-		{/if}
+		</div>
+		<div class="mt-2 h-56 w-full overflow-hidden rounded-lg bg-walnut/5">
+			{#if displayUrl}
+				<img
+					src={displayUrl}
+					alt={current.description ?? ''}
+					class="h-full w-full object-cover"
+				/>
+			{/if}
+		</div>
 		{#if uploadError}
 			<p class="text-xs text-red-700">{uploadError}</p>
 		{/if}

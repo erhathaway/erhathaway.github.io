@@ -71,6 +71,18 @@ const parseArtifact = (payload: unknown) => {
 	};
 };
 
+const normalizeArtifactRow = <T extends { dataBlob: unknown }>(row: T) => {
+	let dataBlob = row.dataBlob;
+	if (typeof dataBlob === 'string') {
+		try {
+			dataBlob = JSON.parse(dataBlob);
+		} catch {
+			dataBlob = row.dataBlob;
+		}
+	}
+	return { ...row, dataBlob };
+};
+
 export const OPTIONS: RequestHandler = async () => {
 	return new Response(null, { status: 200, headers: corsHeaders });
 };
@@ -102,7 +114,7 @@ export const PUT: RequestHandler = async ({ params, request, locals, platform })
 		throw error(404, 'Artifact not found');
 	}
 
-	return json(updated, { headers: corsHeaders });
+	return json(normalizeArtifactRow(updated), { headers: corsHeaders });
 };
 
 export const DELETE: RequestHandler = async ({ params, request, locals, platform }) => {

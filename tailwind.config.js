@@ -3,6 +3,9 @@ export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
     extend: {
+      screens: {
+        'mobile': '600px',
+      },
       colors: {
         cream: '#F5F1EB',
         warmwhite: '#FFFCF7',

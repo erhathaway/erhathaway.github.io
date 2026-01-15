@@ -75,6 +75,18 @@ const parseArtifact = (payload: unknown) => {
 	};
 };
 
+const normalizeArtifactRow = <T extends { dataBlob: unknown }>(row: T) => {
+	let dataBlob = row.dataBlob;
+	if (typeof dataBlob === 'string') {
+		try {
+			dataBlob = JSON.parse(dataBlob);
+		} catch {
+			dataBlob = row.dataBlob;
+		}
+	}
+	return { ...row, dataBlob };
+};
+
 export const OPTIONS: RequestHandler = async () => {
 	return new Response(null, { status: 200, headers: corsHeaders });
 };
@@ -105,17 +117,7 @@ export const GET: RequestHandler = async ({ params, request, locals, platform })
 		.from(projectArtifacts)
 		.where(where);
 
-	const normalized = rows.map((row) => {
-		let dataBlob = row.dataBlob;
-		if (typeof dataBlob === 'string') {
-			try {
-				dataBlob = JSON.parse(dataBlob);
-			} catch {
-				dataBlob = row.dataBlob;
-			}
-		}
-		return { ...row, dataBlob };
-	});
+	const normalized = rows.map((row) => normalizeArtifactRow(row));
 
 	return json(normalized, { headers: corsHeaders });
 };
@@ -142,5 +144,5 @@ export const POST: RequestHandler = async ({ params, request, locals, platform }
 		})
 		.returning();
 
-	return json(created, { status: 201, headers: corsHeaders });
+	return json(normalizeArtifactRow(created), { status: 201, headers: corsHeaders });
 };
