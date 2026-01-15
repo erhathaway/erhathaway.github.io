@@ -3,7 +3,7 @@ interface Project {
 	name: string;
 	category: 'wood' | 'food' | 'other';
 	subcategory: string;
-	description: string;
+	description?: string | null;
 	metadata: Record<string, string>;
 	image?: string;
 	gridSize?: 'regular' | 'wide' | 'tall' | 'featured';

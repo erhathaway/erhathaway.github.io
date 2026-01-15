@@ -13,7 +13,7 @@
 		id: number;
 		name: string;
 		displayName: string;
-		description: string;
+		description: string | null;
 		isPublished: boolean;
 	};
 
@@ -570,7 +570,6 @@
 						<span class="text-ash">Description</span>
 						<textarea
 							bind:value={newProjectDescription}
-							required
 							rows="3"
 							class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
 							placeholder="Brief description of the project..."

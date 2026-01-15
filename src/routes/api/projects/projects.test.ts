@@ -103,7 +103,7 @@ beforeEach(() => {
 describe('GET /api/projects', () => {
 	it('returns only published projects when unauthenticated', async () => {
 		const rows = [
-			{ id: 1, name: 'table', displayName: 'Table', description: 'Wood', isPublished: true }
+			{ id: 1, name: 'table', displayName: 'Table', description: null, isPublished: true }
 		];
 		const { db, getWhereCalled } = createListDb(rows);
 
@@ -117,7 +117,7 @@ describe('GET /api/projects', () => {
 
 	it('returns all projects when authenticated', async () => {
 		const rows = [
-			{ id: 1, name: 'table', displayName: 'Table', description: 'Wood', isPublished: false }
+			{ id: 1, name: 'table', displayName: 'Table', description: null, isPublished: false }
 		];
 		const db = {
 			select: () => ({
@@ -149,14 +149,14 @@ describe('POST /api/projects', () => {
 			id: 1,
 			name: 'table',
 			displayName: 'Table',
-			description: 'Wood',
+			description: null,
 			isPublished: true
 		};
 		const db = createInsertDb(created);
 
 		asAuth('user_123');
 		const request = makeRequest(
-			{ name: 'table', displayName: 'Table', description: 'Wood', isPublished: true },
+			{ name: 'table', displayName: 'Table', isPublished: true },
 			'token'
 		);
 		const response = await listPOST({ request, locals: { db } } as any);
@@ -189,7 +189,7 @@ describe('GET /api/projects/:id', () => {
 
 	it('returns item when authenticated', async () => {
 		const rows = [
-			{ id: 1, name: 'table', displayName: 'Table', description: 'Wood', isPublished: false }
+			{ id: 1, name: 'table', displayName: 'Table', description: null, isPublished: false }
 		];
 		const { db } = createItemDb(rows);
 		asAuth('user_123');
@@ -217,12 +217,12 @@ describe('PUT /api/projects/:id', () => {
 			id: 1,
 			name: 'table',
 			displayName: 'Table',
-			description: 'Wood',
+			description: null,
 			isPublished: false
 		};
 		const db = createUpdateDb(updated);
 		asAuth('user_123');
-		const request = makeRequest({ name: 'table', displayName: 'Table', description: 'Wood' }, 'token');
+		const request = makeRequest({ name: 'table', displayName: 'Table' }, 'token');
 
 		const response = await itemPUT({ params: { id: '1' }, request, locals: { db } } as any);
 		const body = await response.json();
