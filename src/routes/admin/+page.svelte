@@ -223,7 +223,7 @@
 		editingProjectId = project.id;
 		editProjectName = project.name;
 		editProjectDisplayName = project.displayName;
-		editProjectDescription = project.description;
+		editProjectDescription = project.description ?? '';
 		editProjectIsPublished = project.isPublished;
 		projectsSuccess = '';
 		projectsError = '';
@@ -656,8 +656,8 @@
 										</span>
 									</div>
 									<p class="text-xs text-ash">/{project.name}</p>
-									<p class="text-sm text-ash">{project.description}</p>
-								</div>
+										<p class="text-sm text-ash">{project.description ?? ''}</p>
+									</div>
 								<div class="flex items-center gap-2">
 									<button
 										type="button"
