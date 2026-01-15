@@ -198,8 +198,9 @@
 						<form onsubmit={(e) => { e.preventDefault(); saveProject(); }}>
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 								<div>
-									<label class="block text-sm font-medium text-walnut mb-2">Name</label>
+									<label for="project-name" class="block text-sm font-medium text-walnut mb-2">Name</label>
 									<input
+										id="project-name"
 										bind:value={formData.name}
 										type="text"
 										required
@@ -208,8 +209,9 @@
 								</div>
 
 								<div>
-									<label class="block text-sm font-medium text-walnut mb-2">Category</label>
+									<label for="project-category" class="block text-sm font-medium text-walnut mb-2">Category</label>
 									<select
+										id="project-category"
 										bind:value={formData.category}
 										class="w-full border border-walnut/20 rounded px-3 py-2 focus:outline-none focus:border-copper"
 									>
@@ -220,8 +222,9 @@
 								</div>
 
 								<div>
-									<label class="block text-sm font-medium text-walnut mb-2">Subcategory</label>
+									<label for="project-subcategory" class="block text-sm font-medium text-walnut mb-2">Subcategory</label>
 									<input
+										id="project-subcategory"
 										bind:value={formData.subcategory}
 										type="text"
 										required
@@ -230,8 +233,9 @@
 								</div>
 
 								<div>
-									<label class="block text-sm font-medium text-walnut mb-2">Grid Size</label>
+									<label for="project-grid-size" class="block text-sm font-medium text-walnut mb-2">Grid Size</label>
 									<select
+										id="project-grid-size"
 										bind:value={formData.gridSize}
 										class="w-full border border-walnut/20 rounded px-3 py-2 focus:outline-none focus:border-copper"
 									>
@@ -244,8 +248,9 @@
 							</div>
 
 							<div class="mb-4">
-								<label class="block text-sm font-medium text-walnut mb-2">Description</label>
+								<label for="project-description" class="block text-sm font-medium text-walnut mb-2">Description</label>
 								<textarea
+									id="project-description"
 									bind:value={formData.description}
 									required
 									rows="3"
@@ -254,8 +259,9 @@
 							</div>
 
 							<div class="mb-4">
-								<label class="block text-sm font-medium text-walnut mb-2">Image URL</label>
+								<label for="project-image" class="block text-sm font-medium text-walnut mb-2">Image URL</label>
 								<input
+									id="project-image"
 									bind:value={formData.image}
 									type="url"
 									class="w-full border border-walnut/20 rounded px-3 py-2 focus:outline-none focus:border-copper"

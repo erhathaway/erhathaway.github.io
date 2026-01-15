@@ -152,7 +152,6 @@
 								disabled={isLoading}
 								class="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-md text-walnut placeholder-ash/60 focus:outline-none focus:border-copper transition-colors font-sans disabled:opacity-50"
 								placeholder="Email"
-								autofocus
 							/>
 						</div>
 
@@ -182,7 +181,6 @@
 								class="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-md text-walnut placeholder-ash/60 focus:outline-none focus:border-copper transition-colors font-sans text-center tracking-widest disabled:opacity-50"
 								placeholder="000000"
 								maxlength="6"
-								autofocus
 							/>
 						</div>
 
