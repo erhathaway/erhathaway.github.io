@@ -60,20 +60,26 @@
 	let pageError = $state('');
 	let pageSuccess = $state('');
 
-	let artifactSchema = $state(artifactSchemas[0]?.name ?? 'image-v1');
-	let artifactDraft = $state<ImageV1Data>(createImageV1Draft());
-	let artifactDraftErrors = $state<string[]>([]);
+	const initialSchema = artifactSchemas[0]?.name ?? 'image-v1';
+	const initialDraft = createImageV1Draft();
+	const initialValidation = validateArtifactData(initialSchema, initialDraft);
+	let artifactSchema = $state(initialSchema);
+	let artifactDraft = $state<ImageV1Data>(initialDraft);
+	let artifactDraftErrors = $state<string[]>(initialValidation.ok ? [] : initialValidation.errors);
 	let artifactIsPublished = $state(false);
 
-	$effect(() => {
-		if (artifactSchema !== 'image-v1') {
+	function handleSchemaChange(event: Event) {
+		const target = event.currentTarget as HTMLSelectElement | null;
+		const nextSchema = target?.value ?? '';
+		artifactSchema = nextSchema;
+		if (nextSchema !== 'image-v1') {
 			return;
 		}
 		const nextDraft = createImageV1Draft();
 		artifactDraft = nextDraft;
-		const validation = validateArtifactData(artifactSchema, nextDraft);
+		const validation = validateArtifactData(nextSchema, nextDraft);
 		artifactDraftErrors = validation.ok ? [] : validation.errors;
-	});
+	}
 
 	async function getToken() {
 		const clerk = ctx.clerk;
@@ -408,7 +414,8 @@
 						<label class="text-sm">
 							<span class="text-ash">Schema</span>
 							<select
-								bind:value={artifactSchema}
+								value={artifactSchema}
+								onchange={handleSchemaChange}
 								class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
 							>
 								{#each artifactSchemas as schemaOption (schemaOption.name)}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ImageV1Data } from '../image-v1';
+	import type { ImageV1Data } from './validator';
 
 	type Props = {
 		data: ImageV1Data;

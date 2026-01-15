@@ -3,7 +3,7 @@ import {
 	validateImageV1,
 	type ImageV1Data,
 	type ImageV1ValidationResult
-} from './image-v1';
+} from './image-v1/validator';
 
 export type ArtifactSchemaName = typeof imageV1Schema.name;
 
