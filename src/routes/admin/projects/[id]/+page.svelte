@@ -5,7 +5,7 @@
 	import ImageArtifactEditor from '$lib/schemas/artifacts/image-v1/Editor.svelte';
 	import { artifactSchemas, validateArtifactData } from '$lib/schemas/artifacts';
 	import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
-	import { createImageV1Draft, type ImageV1Data } from '$lib/schemas/artifacts/image-v1';
+	import { createImageV1Draft, type ImageV1Data } from '$lib/schemas/artifacts/image-v1/validator';
 
 	type Category = {
 		id: number;
