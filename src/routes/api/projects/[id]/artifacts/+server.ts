@@ -105,7 +105,19 @@ export const GET: RequestHandler = async ({ params, request, locals, platform })
 		.from(projectArtifacts)
 		.where(where);
 
-	return json(rows, { headers: corsHeaders });
+	const normalized = rows.map((row) => {
+		let dataBlob = row.dataBlob;
+		if (typeof dataBlob === 'string') {
+			try {
+				dataBlob = JSON.parse(dataBlob);
+			} catch {
+				dataBlob = row.dataBlob;
+			}
+		}
+		return { ...row, dataBlob };
+	});
+
+	return json(normalized, { headers: corsHeaders });
 };
 
 export const POST: RequestHandler = async ({ params, request, locals, platform }) => {
