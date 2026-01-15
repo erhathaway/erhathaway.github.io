@@ -17,11 +17,11 @@
   }
 </script>
 
-<aside class="w-full h-full text-walnut flex flex-col relative max-xl:animate-slide-in-left" style="background: linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%)">
-  <!-- Mobile close button - only show below 400px -->
+<aside class="w-full h-full text-walnut flex flex-col relative animate-slide-in-left" style="background: linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%)">
+  <!-- Mobile close button - show below md (768px) -->
   <button
     onclick={() => isOpen = false}
-    class="min-[400px]:hidden absolute top-4 right-4 z-[110] p-2 bg-white/50 backdrop-blur-sm rounded-lg"
+    class="md:hidden absolute top-4 right-4 z-[110] p-2 bg-white/50 backdrop-blur-sm rounded-lg"
   >
     <svg class="w-5 h-5 text-walnut" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

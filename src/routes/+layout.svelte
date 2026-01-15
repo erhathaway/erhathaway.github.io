@@ -17,8 +17,29 @@
 
 	let appliedHoverId = $state<number | null>(null);
 	let showLoginModal = $state(false);
-	// Start with menu open on screens 400-1280px, closed below 400px
-	let mobileMenuOpen = $state(typeof window !== 'undefined' && window.innerWidth >= 400 && window.innerWidth < 1280);
+	// Start with menu open on screens 768px and up, closed below
+	let mobileMenuOpen = $state(typeof window !== 'undefined' && window.innerWidth >= 768);
+
+	// Watch for screen size changes
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+
+		const handleResize = () => {
+			const width = window.innerWidth;
+			// Show menu by default on md screens and up (768px+)
+			// Hide menu by default below md
+			if (width >= 768 && !mobileMenuOpen) {
+				mobileMenuOpen = true;
+			} else if (width < 768 && mobileMenuOpen) {
+				mobileMenuOpen = false;
+			}
+		};
+
+		window.addEventListener('resize', handleResize);
+		handleResize(); // Check initial size
+
+		return () => window.removeEventListener('resize', handleResize);
+	});
 	$effect(() => {
 		if (hoverFromState && hoverFromState !== appliedHoverId) {
 			portfolio.lockHover(hoverFromState);
@@ -66,26 +87,26 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 	<ClerkProvider>
-		<div class="font-body bg-charcoal text-cream flex h-screen">
-			<!-- Left Panel - normal flow on xl (1280px) and up -->
-			<div class="w-80 min-w-[320px] hidden xl:block">
-				<LeftPanel />
-			</div>
-			<!-- Main Content - always full width below xl, flex-1 above -->
-			<div class="flex-1 xl:flex-1 max-xl:w-full h-full overflow-auto" style="view-transition-name: main-content">
+		<div class="font-body bg-charcoal text-cream h-screen">
+			<!-- Main Content - always full width -->
+			<div class="w-full h-full overflow-auto" style="view-transition-name: main-content">
 				{@render children()}
 			</div>
 		</div>
-		<!-- Overlay panel for screens below xl (1280px) -->
-		<div class="xl:hidden fixed inset-y-0 left-0 w-80 z-[100] max-[400px]:transition-transform max-[400px]:duration-300 {mobileMenuOpen ? '' : 'max-[400px]:-translate-x-full'}">
+		<!-- Overlay panel for all screen sizes -->
+		<div class="fixed inset-y-0 left-0 w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? '' : '-translate-x-full'}">
 			<LeftPanel bind:isOpen={mobileMenuOpen} />
 		</div>
-		<!-- Hamburger menu button - only show below 400px -->
+		<!-- Hamburger menu button - show below md (768px) -->
 		<button
-			onclick={() => mobileMenuOpen = !mobileMenuOpen}
-			class="min-[400px]:hidden fixed bottom-6 left-6 z-[110] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg"
+			type="button"
+			onclick={() => {
+				console.log('Hamburger clicked, current state:', mobileMenuOpen);
+				mobileMenuOpen = !mobileMenuOpen;
+			}}
+			class="md:hidden fixed bottom-6 left-6 z-[200] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg cursor-pointer"
 		>
-			<svg class="w-6 h-6 text-walnut" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<svg class="w-6 h-6 text-walnut pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				{#if mobileMenuOpen}
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 				{:else}
@@ -106,7 +127,7 @@
 		</div>
 	{/if}
 	{#if !isProjectPage && !isAdminPage}
-		<div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 pointer-events-none">
+		<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0">
 			<div class="pointer-events-auto animate-slide-up" style="animation-delay: 0.3s">
 				<CategoryPills />
 			</div>
