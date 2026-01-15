@@ -155,6 +155,12 @@ interface PortfolioItem {
 - Use `{#snippet}` and `{@render}` for reusable template fragments
 - Event handlers use `onclick` not `on:click`
 
+## Environment Files
+
+- `.env`: local dev vars (`DATABASE_URL`, `PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`)
+- `.env.test`: test vars (same Clerk dev keys + `DATABASE_URL` as `.env`)
+- `.env.template`: scaffold for new envs; includes `E2E_BASE_URL` and `CLERK_TEST_TOKEN` for integration tests
+
 ## Cloudflare D1 Notes
 
 - D1 binding is `DB` in `wrangler.toml`
