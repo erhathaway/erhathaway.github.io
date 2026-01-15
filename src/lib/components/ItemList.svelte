@@ -58,8 +58,8 @@
       const distanceFromTop = itemCenter - containerTop;
       const distanceFromBottom = containerBottom - itemCenter;
 
-      // Define fade zones (25% of container height from edges)
-      const fadeZone = containerHeight * 0.25;
+      // Define fade zones (10% of container height from edges)
+      const fadeZone = containerHeight * 0.1;
       const minScale = 0.4;
 
       let scale = 1;
