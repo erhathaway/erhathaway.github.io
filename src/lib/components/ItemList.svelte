@@ -113,12 +113,24 @@
     setTimeout(updateItemScales, 0);
   });
 
+  // Scroll to center the hovered item in the visible portion
   $effect(() => {
     const id = hoveredItem?.id;
     if (!id || !scrollContainer) return;
     const node = itemEls[id];
     if (!node) return;
-    scrollContainer.scrollTop = node.offsetTop;
+
+    // Calculate the center position
+    const containerHeight = scrollContainer.clientHeight;
+    const itemTop = node.offsetTop;
+    const itemHeight = node.offsetHeight;
+    const scrollTarget = itemTop - (containerHeight / 2) + (itemHeight / 2);
+
+    // Smooth scroll to center
+    scrollContainer.scrollTo({
+      top: Math.max(0, scrollTarget),
+      behavior: 'smooth'
+    });
   });
 </script>
 
@@ -135,17 +147,19 @@
         class:active-project={isActive}
         aria-current={isActive ? 'page' : undefined}
       >
-        {#if isHovered}
-          <HoverInfo item={item} />
-        {:else}
-          <span
-            class="item-label block px-8 transition-all duration-75"
-            class:active-project={isActive}
-            style="font-size: {isActive ? 1.125 * scale : 0.875 * scale}rem; opacity: {Math.pow(scale, 3)};"
-          >
-            {item.name}
-          </span>
-        {/if}
+        <div class="item-content-wrapper">
+          {#if isHovered}
+            <HoverInfo item={item} />
+          {:else}
+            <span
+              class="item-label block px-8"
+              class:active-project={isActive}
+              style="font-size: {isActive ? 1.125 * scale : 0.875 * scale}rem; opacity: {Math.pow(scale, 3)};"
+            >
+              {item.name}
+            </span>
+          {/if}
+        </div>
       </a>
     </li>
   {/each}

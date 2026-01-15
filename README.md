@@ -47,6 +47,11 @@ bunx wrangler dev --port 8787
 E2E_BASE_URL=http://localhost:8787 CLERK_TEST_TOKEN=... bunx playwright test e2e/categories.api.spec.ts
 ```
 
+## API Notes
+
+- Client API calls use same-origin `/api` endpoints (no cross-origin).
+- `/api/projects` is not implemented yet; implement projects CRUD before enabling project loading.
+
 ## Database (Cloudflare D1)
 
 - D1 binding: `DB` in `wrangler.toml`

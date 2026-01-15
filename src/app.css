@@ -109,6 +109,18 @@
     padding-right: 2rem;
   }
 
+  /* Smooth wrapper for content transitions */
+  .item-content-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.15s ease-out;
+  }
+
+  .item-content-wrapper > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+
 }
 
 @layer utilities {

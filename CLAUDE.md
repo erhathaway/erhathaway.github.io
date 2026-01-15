@@ -169,6 +169,11 @@ interface PortfolioItem {
 - Use `bunx wrangler dev` for local dev with D1 (Vite dev does not provide `platform.env`)
 - Generate migrations with `bun run db:generate`, apply with `bunx wrangler d1 execute portfolio-db --file=./drizzle/<migration>.sql`
 
+## API Notes
+
+- Client API calls should use same-origin `/api` endpoints.
+- `/api/projects` is not implemented yet; implement projects CRUD before enabling project loading.
+
 ## Known Issues
 
 ### View Transitions API - Slide Effect

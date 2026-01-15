@@ -55,12 +55,20 @@
 
 			const response = await fetch('/api/categories', { headers });
 			if (!response.ok) {
+				if (response.status === 500) {
+					throw new Error(
+						'Cloudflare bindings are unavailable. Run `bunx wrangler dev --port 5173` instead of `bun run dev`.'
+					);
+				}
 				throw new Error('Failed to load categories');
 			}
 			categories = await response.json();
 		} catch (err) {
 			console.error(err);
-			error = 'Unable to load categories.';
+			error =
+				err instanceof Error
+					? err.message
+					: 'Unable to load categories.';
 		} finally {
 			isLoading = false;
 		}
@@ -251,7 +259,9 @@
 				</form>
 
 				{#if error}
-					<p class="mt-4 text-sm text-red-600">{error}</p>
+					<div class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+						{error}
+					</div>
 				{/if}
 				{#if success}
 					<p class="mt-4 text-sm text-emerald-700">{success}</p>
