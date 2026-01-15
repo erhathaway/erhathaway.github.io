@@ -158,8 +158,28 @@ interface PortfolioItem {
 ## Environment Files
 
 - `.env`: local dev vars (`DATABASE_URL`, `PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`)
+- `.env.local` (wrangler dev): leave `PUBLIC_R2_BASE_URL` empty to use proxy URLs
+- `.env.remote` (wrangler dev --remote): set `PUBLIC_R2_BASE_URL` to the preview bucket public URL
 - `.env.test`: test vars (same Clerk dev keys + `DATABASE_URL` as `.env`)
 - `.env.template`: scaffold for new envs; includes `E2E_BASE_URL` and `CLERK_TEST_TOKEN` for integration tests
+
+Example `.env.local`:
+
+```env
+DATABASE_URL=file:local.db
+PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_key
+CLERK_SECRET_KEY=sk_test_your_key
+PUBLIC_R2_BASE_URL=
+```
+
+Example `.env.remote`:
+
+```env
+DATABASE_URL=file:local.db
+PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_key
+CLERK_SECRET_KEY=sk_test_your_key
+PUBLIC_R2_BASE_URL=https://<account-id>.r2.cloudflarestorage.com/portfolio-artifacts-22-dev
+```
 
 ## Cloudflare D1 Notes
 
