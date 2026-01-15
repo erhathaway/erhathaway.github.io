@@ -420,60 +420,57 @@
 	onMount(fetchProjects);
 </script>
 
-<section class="mt-8 bg-white/70 border border-walnut/10 rounded-2xl p-6 shadow-sm">
-	<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+<section class="mt-8 mb-8">
+	<div class="flex flex-wrap items-baseline justify-between gap-4 mb-6">
 		<div>
-			<h2 class="font-display text-2xl text-walnut">Projects</h2>
-			<p class="text-ash text-sm">Create, publish, and describe projects.</p>
+			<h2 class="font-display text-xl text-walnut">Projects</h2>
+			<p class="text-ash text-xs mt-0.5">Manage portfolio projects</p>
 		</div>
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-3">
 			<button
 				type="button"
 				onclick={fetchProjects}
-				class="px-4 py-2 rounded-full border border-walnut/20 text-sm text-walnut hover:border-copper hover:text-copper transition-colors"
+				disabled={projectsLoading}
+				class="px-3 py-1.5 text-xs border border-walnut/20 rounded-full hover:bg-walnut/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 			>
-				Refresh
+				{projectsLoading ? 'Refreshing...' : 'Refresh'}
 			</button>
 			<select
 				bind:value={projectsFilter}
-				class="px-3 py-2 rounded-full border border-walnut/20 bg-white/80 text-sm"
+				class="px-3 py-1.5 pr-8 text-xs border border-walnut/20 rounded-full bg-white appearance-none cursor-pointer hover:bg-walnut/5 focus:outline-none focus:border-walnut/40 relative"
+				style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23888%27%3e%3cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M19 9l-7 7-7-7%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 8px center; background-size: 16px;"
 			>
 				<option value="all">All</option>
 				<option value="published">Published</option>
-				<option value="unpublished">Unpublished</option>
+				<option value="unpublished">Drafts</option>
 			</select>
 		</div>
 	</div>
 
-	<form class="grid gap-4 md:grid-cols-[1fr_1fr] items-end" onsubmit={createProject}>
-		<label class="text-sm">
-			<span class="text-ash">Name</span>
+	<form class="space-y-4 mb-6 pb-6 border-b border-walnut/5" onsubmit={createProject}>
+		<div class="flex flex-wrap gap-3">
 			<input
 				bind:value={newProjectName}
 				required
-				class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
-				placeholder="side-table"
+				class="w-32 px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/50 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
+				placeholder="url-slug"
 			/>
-		</label>
-		<label class="text-sm">
-			<span class="text-ash">Display name</span>
 			<input
 				bind:value={newProjectDisplayName}
-				class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
-				placeholder="Side Table"
+				class="w-40 px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/50 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
+				placeholder="Display Name"
 			/>
-		</label>
-		<label class="text-sm md:col-span-2">
-			<span class="text-ash">Description</span>
+		</div>
+		<div>
 			<textarea
 				bind:value={newProjectDescription}
-				rows="3"
-				class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
-				placeholder="Brief description of the project..."
+				rows="2"
+				class="w-full px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/50 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
+				placeholder="Brief description..."
 			></textarea>
-		</label>
-		<div class="md:col-span-2">
-			<p class="text-sm text-ash">Categories</p>
+		</div>
+		<div>
+			<p class="text-xs text-ash mb-2">Categories</p>
 			{#if !categoriesLoaded}
 				<p class="mt-2 text-xs text-ash">Loading categories...</p>
 			{:else if categories.length === 0}
@@ -509,9 +506,9 @@
 					</div>
 				{/if}
 		</div>
-		<div class="md:col-span-2">
-			<div class="flex items-center justify-between">
-				<p class="text-sm text-ash">Attributes</p>
+		<div>
+			<div class="flex items-center justify-between mb-2">
+				<p class="text-xs text-ash">Attributes</p>
 				<button
 					type="button"
 					onclick={() => (newProjectAttributes = addAttributeRow(newProjectAttributes))}
@@ -581,133 +578,125 @@
 				</div>
 			{/if}
 		</div>
-		<label class="flex items-center gap-2 text-sm text-ash">
-			<input type="checkbox" bind:checked={newProjectIsPublished} class="accent-copper" />
-			Published
-		</label>
-		<button
-			type="submit"
-			class="px-4 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
-		>
-			Add
-		</button>
+		<div class="flex items-center gap-4">
+			<label class="flex items-center gap-2 text-xs text-ash cursor-pointer hover:text-walnut">
+				<input type="checkbox" bind:checked={newProjectIsPublished} class="w-3.5 h-3.5 rounded border-walnut/30 text-copper focus:ring-0 focus:ring-offset-0" />
+				Publish
+			</label>
+			<button
+				type="submit"
+				class="px-4 py-1.5 text-xs bg-[#F5F1EB] text-walnut border border-walnut/20 rounded-full hover:bg-walnut hover:text-cream hover:border-walnut transition-colors"
+			>
+				Add Project
+			</button>
+		</div>
 	</form>
 
 	{#if projectsError}
-		<div class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-			{projectsError}
-		</div>
+		<p class="text-xs text-red-600 mb-3">{projectsError}</p>
 	{/if}
 	{#if projectsSuccess}
-		<p class="mt-4 text-sm text-emerald-700">{projectsSuccess}</p>
+		<p class="text-xs text-emerald-600 mb-3">{projectsSuccess}</p>
 	{/if}
 
-	<div class="mt-6 space-y-3">
-		{#if projectsLoading}
-			<p class="text-ash text-sm">Loading projects...</p>
-		{:else if filteredProjects.length === 0}
-			<p class="text-ash text-sm">No projects yet.</p>
-		{:else}
+	{#if projectsLoading}
+		<p class="text-xs text-ash">Loading...</p>
+	{:else if filteredProjects.length === 0}
+		<p class="text-xs text-ash">No projects yet</p>
+	{:else if editingProjectId !== null}
+		{#each filteredProjects as project (project.id)}
+			{#if editingProjectId === project.id}
+				<div class="flex flex-wrap items-center gap-3 p-4 bg-white/70 rounded-xl border border-walnut/15">
+					{#key project.id}
+						<ProjectEditor
+							project={project}
+							{categories}
+							{categoriesLoaded}
+							categoryIds={projectCategoryIds[project.id] ?? []}
+							attributes={projectAttributes[project.id] ?? []}
+							onSave={saveProjectEdit}
+							onCancel={cancelProjectEdit}
+						/>
+					{/key}
+				</div>
+			{/if}
+		{/each}
+	{:else}
+		<div class="space-y-3">
 			{#each filteredProjects as project (project.id)}
-				<div
-					class="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-walnut/10 bg-white px-4 py-3"
-				>
-					{#if editingProjectId === project.id}
-						{#key project.id}
-							<ProjectEditor
-								project={project}
-								{categories}
-								{categoriesLoaded}
-								categoryIds={projectCategoryIds[project.id] ?? []}
-								attributes={projectAttributes[project.id] ?? []}
-								onSave={saveProjectEdit}
-								onCancel={cancelProjectEdit}
-							/>
-						{/key}
-					{:else}
-						<div class="flex flex-col gap-1 flex-1 min-w-[240px]">
-							<div class="flex items-center gap-3">
-								<p class="font-medium text-walnut">{project.displayName}</p>
-								<span
-									class="px-2 py-1 rounded-full text-xs border border-walnut/10 bg-cream/60 text-ash"
-								>
-									{project.isPublished ? 'Published' : 'Draft'}
-								</span>
+				<div class="group p-4 bg-[#E8E4DE] border border-walnut/15 rounded-xl hover:border-walnut/25 hover:bg-[#DDD9D3] transition-all">
+					<div class="flex items-start justify-between gap-4">
+						<div class="flex-1 space-y-2">
+							<div class="flex items-center gap-2">
+								<span class="text-sm text-walnut font-medium">{project.displayName || project.name}</span>
+								<span class="text-xs text-ash">/{project.name}</span>
+								{#if project.isPublished}
+									<span class="w-1.5 h-1.5 bg-copper rounded-full flex-shrink-0"></span>
+								{:else}
+									<span class="text-xs text-ash/60">(draft)</span>
+								{/if}
 							</div>
-							<p class="text-xs text-ash">/{project.name}</p>
-							<p class="text-sm text-ash">{project.description ?? ''}</p>
+
+							{#if project.description}
+								<p class="text-xs text-walnut/70">{project.description}</p>
+							{/if}
+
 							{#if (projectCategoryIds[project.id] ?? []).length > 0}
-								<div class="mt-2 flex flex-wrap gap-2">
+								<div class="flex flex-wrap gap-1.5">
 									{#each projectCategoryIds[project.id] ?? [] as categoryId (categoryId)}
 										{#if getCategory(categoryId)}
-											<span
-												class={`flex items-center gap-2 rounded-full border px-2 py-1 text-[11px] ${
-													getCategory(categoryId)?.isPublished
-														? 'border-emerald-200/60 text-emerald-700 bg-emerald-50/60'
-														: 'border-walnut/10 text-ash bg-cream/60'
-												}`}
-											>
-												{getCategory(categoryId)?.displayName}
-												<span class="uppercase tracking-wide text-[9px]">
-													{getCategory(categoryId)?.isPublished ? 'Live' : 'Draft'}
-												</span>
+											<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/60 border border-walnut/10 text-[10px]">
+												<span class="text-walnut">{getCategory(categoryId)?.displayName}</span>
+												{#if getCategory(categoryId)?.isPublished}
+													<span class="w-1 h-1 bg-copper rounded-full"></span>
+												{/if}
 											</span>
 										{/if}
 									{/each}
 								</div>
-							{:else}
-								<p class="mt-2 text-xs text-ash">No categories assigned.</p>
 							{/if}
+
 							{#if (projectAttributes[project.id] ?? []).length > 0}
-								<div class="mt-3 grid gap-2">
+								<div class="flex flex-wrap gap-x-3 gap-y-1">
 									{#each projectAttributes[project.id] ?? [] as attribute (attribute.id)}
-										<div class="flex flex-wrap items-center gap-2 text-[11px] text-ash">
-											<span class="font-medium text-walnut">{attribute.name}:</span>
-											<span>{attribute.value}</span>
-											<span class="rounded-full border border-walnut/10 bg-cream/60 px-2 py-0.5">
-												{attribute.showInNav ? 'Nav' : 'Hidden'}
-											</span>
-											<span
-												class={`rounded-full border px-2 py-0.5 ${
-													attribute.isPublished
-														? 'border-emerald-200/60 text-emerald-700 bg-emerald-50/60'
-														: 'border-walnut/10 text-ash bg-cream/60'
-												}`}
-											>
-												{attribute.isPublished ? 'Live' : 'Draft'}
-											</span>
-										</div>
+										<span class="text-[10px] text-ash">
+											<span class="text-walnut/80">{attribute.name}:</span> {attribute.value}
+											{#if attribute.showInNav}
+												<span class="text-copper">•</span>
+											{/if}
+										</span>
 									{/each}
 								</div>
-							{:else}
-								<p class="mt-2 text-xs text-ash">No attributes assigned.</p>
 							{/if}
 						</div>
-						<div class="flex items-center gap-2">
+
+						<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
 							<a
 								href={`/admin/projects/${project.id}`}
-								class="px-3 py-2 rounded-full border border-walnut/20 text-sm text-walnut hover:border-copper hover:text-copper transition-colors"
+								class="text-xs text-ash hover:text-walnut hover:bg-blue-100 rounded px-2 py-0.5 transition-colors"
 							>
 								Edit
 							</a>
+							<span class="text-ash/20">|</span>
 							<button
 								type="button"
 								onclick={() => startProjectEdit(project)}
-								class="px-3 py-2 rounded-full border border-walnut/20 text-sm text-walnut hover:border-copper hover:text-copper transition-colors"
+								class="text-xs text-ash hover:text-walnut hover:bg-copper/10 rounded px-2 py-0.5 transition-colors"
 							>
-								Quick edit
+								Quick Edit
 							</button>
+							<span class="text-ash/20">|</span>
 							<button
 								type="button"
 								onclick={() => deleteProject(project.id)}
-								class="px-3 py-2 rounded-full border border-red-200 text-sm text-red-700 hover:border-red-300 hover:text-red-800 transition-colors"
+								class="text-xs text-red-600/70 hover:text-red-600 hover:bg-red-50 rounded px-2 py-0.5 transition-colors"
 							>
 								Delete
 							</button>
 						</div>
-					{/if}
+					</div>
 				</div>
 			{/each}
-		{/if}
-	</div>
+		</div>
+	{/if}
 </section>
