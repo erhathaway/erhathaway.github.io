@@ -15,10 +15,10 @@ A personal portfolio site for Ethan Hathaway showcasing things I make — woodwo
 bun install
 
 # Local dev without platform bindings
-bun run dev
+bun run dev:vite
 
 # Local dev with Cloudflare bindings (D1, assets, etc.)
-bunx wrangler dev
+bun run dev
 ```
 
 ## Environment Files

@@ -10,6 +10,7 @@
   let itemScales = $state<Record<number, number>>({});
   let hasOverflowTop = $state(false);
   let hasOverflowBottom = $state(false);
+  let isInitialized = $state(false);
 
   // Get the active project ID from the URL
   const activeProjectId = $derived.by(() => {
@@ -20,6 +21,10 @@
   function storeEl(id: number) {
     return (node: HTMLElement) => {
       itemEls[id] = node;
+      // Initialize scale to 1 if not set
+      if (itemScales[id] === undefined) {
+        itemScales[id] = 1;
+      }
       return () => {
         itemEls[id] = null;
       };
@@ -83,11 +88,9 @@
     });
   }
 
-  // Update scales on scroll
+  // Setup scroll and event listeners
   $effect(() => {
     if (!scrollContainer) return;
-
-    updateItemScales();
 
     const handleScroll = () => {
       requestAnimationFrame(() => {
@@ -101,16 +104,30 @@
     const handleResize = () => requestAnimationFrame(updateItemScales);
     window.addEventListener('resize', handleResize);
 
+    // Update scales when mouse enters the container
+    const handleMouseEnter = () => {
+      requestAnimationFrame(updateItemScales);
+    };
+    scrollContainer.addEventListener('mouseenter', handleMouseEnter);
+
     return () => {
       scrollContainer.removeEventListener('scroll', handleScroll);
+      scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
       window.removeEventListener('resize', handleResize);
     };
   });
 
-  // Initial calculation when items change
+  // Initial calculation - run once when container is ready
   $effect(() => {
-    portfolio.filteredItems; // Subscribe to filtered items
-    setTimeout(updateItemScales, 0);
+    if (!scrollContainer || isInitialized) return;
+
+    // Mark as initialized to prevent re-runs
+    isInitialized = true;
+
+    // Initial calculations with delays to ensure DOM is ready
+    updateItemScales();
+    setTimeout(updateItemScales, 50);
+    setTimeout(updateItemScales, 200);
   });
 
   // Scroll to center the hovered item in the visible portion
