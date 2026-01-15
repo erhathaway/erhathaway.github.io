@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DELETE, GET, OPTIONS, POST } from './[id]/categories/+server';
+import { categories, projectCategories, projects } from '$lib/server/db/schema';
 
 vi.mock('$lib/server/auth', () => ({
 	verifyClerkAuth: vi.fn()
@@ -11,24 +12,26 @@ const asAuth = (value: string | null) => {
 	vi.mocked(verifyClerkAuth).mockResolvedValue(value);
 };
 
-const createProjectLookupDb = (projectRow: any) => {
+const createDbForGet = (projectRow: any, categoryRows: any[]) => {
 	return {
 		select: () => ({
-			from: () => ({
-				where: async () => (projectRow ? [projectRow] : [])
-			})
-		})
-	} as any;
-};
-
-const createCategoriesDb = (rows: any[]) => {
-	return {
-		select: () => ({
-			from: () => ({
-				innerJoin: () => ({
-					where: async () => rows
-				})
-			})
+			from: (table: unknown) => {
+				if (table === projects) {
+					return {
+						where: async () => (projectRow ? [projectRow] : [])
+					};
+				}
+				if (table === projectCategories) {
+					return {
+						innerJoin: () => ({
+							where: async () => categoryRows
+						})
+					};
+				}
+				return {
+					where: async () => []
+				};
+			}
 		})
 	} as any;
 };
@@ -57,7 +60,7 @@ beforeEach(() => {
 
 describe('GET /api/projects/:id/categories', () => {
 	it('returns 404 when project is not published and unauthenticated', async () => {
-		const db = createProjectLookupDb({ id: 1, isPublished: false });
+		const db = createDbForGet({ id: 1, isPublished: false }, []);
 		const request = new Request('http://localhost/api/projects/1/categories');
 
 		await expect(GET({ params: { id: '1' }, request, locals: { db } } as any)).rejects.toMatchObject({
@@ -66,10 +69,10 @@ describe('GET /api/projects/:id/categories', () => {
 	});
 
 	it('returns categories for authenticated user', async () => {
-		const db = {
-			...createProjectLookupDb({ id: 1, isPublished: false }),
-			...createCategoriesDb([{ id: 10, name: 'wood', displayName: 'Wood', isPublished: false }])
-		} as any;
+		const db = createDbForGet(
+			{ id: 1, isPublished: false },
+			[{ id: 10, name: 'wood', displayName: 'Wood', isPublished: false }]
+		);
 
 		asAuth('user_123');
 		const request = new Request('http://localhost/api/projects/1/categories');

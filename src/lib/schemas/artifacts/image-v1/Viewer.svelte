@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ImageV1Data } from '$lib/schemas/artifacts/image-v1';
+	import type { ImageV1Data } from '../image-v1';
 
 	type Props = {
 		data: ImageV1Data;

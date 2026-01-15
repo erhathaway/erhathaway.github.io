@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ImageArtifactView from './ImageArtifactView.svelte';
+	import ImageArtifactViewer from '$lib/schemas/artifacts/image-v1/Viewer.svelte';
 	import { validateArtifactData } from '$lib/schemas/artifacts';
 
 	type Props = {
@@ -23,5 +23,5 @@
 		Invalid artifact data: {validation.errors.join('; ')}
 	</div>
 {:else}
-	<ImageArtifactView data={validation.value} className={className} />
+	<ImageArtifactViewer data={validation.value} className={className} />
 {/if}

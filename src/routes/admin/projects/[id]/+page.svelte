@@ -2,7 +2,10 @@
 	import { onMount } from 'svelte';
 	import { SignedIn, SignedOut, UserButton, useClerkContext } from 'svelte-clerk';
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
+	import ImageArtifactEditor from '$lib/schemas/artifacts/image-v1/Editor.svelte';
 	import { artifactSchemas, validateArtifactData } from '$lib/schemas/artifacts';
+	import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
+	import { createImageV1Draft, type ImageV1Data } from '$lib/schemas/artifacts/image-v1';
 
 	type Category = {
 		id: number;
@@ -58,8 +61,19 @@
 	let pageSuccess = $state('');
 
 	let artifactSchema = $state(artifactSchemas[0]?.name ?? 'image-v1');
-	let artifactData = $state('{\n  \n}');
+	let artifactDraft = $state<ImageV1Data>(createImageV1Draft());
+	let artifactDraftErrors = $state<string[]>([]);
 	let artifactIsPublished = $state(false);
+
+	$effect(() => {
+		if (artifactSchema !== 'image-v1') {
+			return;
+		}
+		const nextDraft = createImageV1Draft();
+		artifactDraft = nextDraft;
+		const validation = validateArtifactData(artifactSchema, nextDraft);
+		artifactDraftErrors = validation.ok ? [] : validation.errors;
+	});
 
 	async function getToken() {
 		const clerk = ctx.clerk;
@@ -300,15 +314,7 @@
 			return;
 		}
 
-		let dataBlob: unknown;
-		try {
-			dataBlob = JSON.parse(artifactData);
-		} catch {
-			pageError = 'Artifact data must be valid JSON.';
-			return;
-		}
-
-		const validation = validateArtifactData(schema, dataBlob);
+		const validation = validateArtifactData(schema, artifactDraft);
 		if (!validation.ok) {
 			pageError = validation.errors.join('; ');
 			return;
@@ -335,16 +341,16 @@
 		const created = await response.json();
 		artifacts = [created, ...artifacts];
 		artifactSchema = schema;
-		artifactData = '{\n  \n}';
+		artifactDraft = createImageV1Draft();
+		artifactDraftErrors = [];
 		artifactIsPublished = false;
 		pageSuccess = 'Artifact created.';
 	}
 
-	function formatArtifactData(dataBlob: unknown) {
-		if (typeof dataBlob === 'string') {
-			return dataBlob;
-		}
-		return JSON.stringify(dataBlob, null, 2);
+	function handleArtifactDraftChange(next: ImageV1Data) {
+		artifactDraft = next;
+		const validation = validateArtifactData(artifactSchema, next);
+		artifactDraftErrors = validation.ok ? [] : validation.errors;
 	}
 
 	onMount(loadAll);
@@ -410,18 +416,21 @@
 								{/each}
 							</select>
 						</label>
-						<label class="text-sm md:col-span-1">
-							<span class="text-ash">Data blob (JSON)</span>
-							<textarea
-								bind:value={artifactData}
-								rows="6"
-								class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white font-mono text-xs"
-							></textarea>
-						</label>
+						<div class="md:col-span-1">
+							<ImageArtifactEditor
+								value={artifactDraft}
+								onChange={handleArtifactDraftChange}
+							/>
+						</div>
 						<label class="flex items-center gap-2 text-sm text-ash md:col-span-2">
 							<input type="checkbox" bind:checked={artifactIsPublished} class="accent-copper" />
 							Published
 						</label>
+						{#if artifactDraftErrors.length > 0}
+							<p class="text-xs text-red-700 md:col-span-2">
+								{artifactDraftErrors.join('; ')}
+							</p>
+						{/if}
 						<button
 							type="submit"
 							class="px-4 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
@@ -448,9 +457,9 @@
 											{artifact.isPublished ? 'Live' : 'Draft'}
 										</span>
 									</div>
-									<pre class="mt-3 text-xs text-walnut/90 whitespace-pre-wrap">
-{formatArtifactData(artifact.dataBlob)}
-									</pre>
+									<div class="mt-3">
+										<ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+									</div>
 								</div>
 							{/each}
 						</div>

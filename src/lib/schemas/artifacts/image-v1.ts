@@ -9,6 +9,11 @@ export type ImageV1Data = {
 	description?: string;
 };
 
+export const createImageV1Draft = (): ImageV1Data => ({
+	imageUrl: '',
+	description: ''
+});
+
 export type ImageV1ValidationResult =
 	| { ok: true; value: ImageV1Data }
 	| { ok: false; errors: string[] };
