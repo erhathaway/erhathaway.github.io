@@ -26,18 +26,10 @@
 			const clerk = ctx.clerk;
 			const client = clerk.client;
 
-			// Create a sign-in attempt with email
-			const signInAttempt = await client.signIn.create({
+			// Create a sign-in attempt with email (automatically sends the code)
+			await client.signIn.create({
 				identifier: email,
 				strategy: 'email_code'
-			});
-
-			// Prepare the email code
-			await signInAttempt.prepareFirstFactor({
-				strategy: 'email_code',
-				emailAddressId: signInAttempt.supportedFirstFactors?.find(
-					(f: any) => f.strategy === 'email_code'
-				)?.emailAddressId
 			});
 
 			showCodeInput = true;
