@@ -3,7 +3,7 @@
   import ItemList from './ItemList.svelte';
   import { page } from '$app/stores';
 
-  let { isOpen = $bindable(false) }: { isOpen?: boolean } = $props();
+  let { isOpen = $bindable(false), isMobile = false }: { isOpen?: boolean, isMobile?: boolean } = $props();
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
   const isAdminPage = $derived($page.route.id?.includes('/admin'));
@@ -17,7 +17,10 @@
   }
 </script>
 
-<aside class="w-full h-full text-walnut flex flex-col relative animate-slide-in-left" style="background: linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%)">
+<aside class="w-full h-full text-walnut flex flex-col relative animate-slide-in-left"
+  style="background: {isMobile
+    ? 'linear-gradient(to right, #F5F1EB 0%, #F5F1EB 30%, rgba(245, 241, 235, 0.95) 50%, rgba(245, 241, 235, 0.8) 65%, rgba(245, 241, 235, 0.5) 80%, rgba(245, 241, 235, 0.2) 90%, transparent 100%)'
+    : 'linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%)'}">
   <!-- Mobile close button - show below md (768px) -->
   <button
     onclick={() => isOpen = false}
@@ -47,5 +50,4 @@
       <!-- Admin Link (scrolls with content) -->
     </nav>
   </div>
-
 </aside>

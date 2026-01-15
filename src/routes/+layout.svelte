@@ -19,6 +19,7 @@
 	let showLoginModal = $state(false);
 	// Start with menu open on screens 768px and up, closed below
 	let mobileMenuOpen = $state(typeof window !== 'undefined' && window.innerWidth >= 768);
+	let isMobileScreen = $state(typeof window !== 'undefined' && window.innerWidth < 768);
 
 	// Watch for screen size changes
 	$effect(() => {
@@ -26,17 +27,15 @@
 
 		const handleResize = () => {
 			const width = window.innerWidth;
-			// Show menu by default on md screens and up (768px+)
-			// Hide menu by default below md
-			if (width >= 768 && !mobileMenuOpen) {
+			isMobileScreen = width < 768;
+			// Auto-show/hide based on screen size when crossing the breakpoint
+			if (width >= 768) {
 				mobileMenuOpen = true;
-			} else if (width < 768 && mobileMenuOpen) {
-				mobileMenuOpen = false;
 			}
 		};
 
 		window.addEventListener('resize', handleResize);
-		handleResize(); // Check initial size
+		handleResize(); // Initial check
 
 		return () => window.removeEventListener('resize', handleResize);
 	});
@@ -93,27 +92,14 @@
 				{@render children()}
 			</div>
 		</div>
+		<!-- Backdrop for mobile - non-blocking -->
+		{#if isMobileScreen && mobileMenuOpen}
+			<div class="fixed inset-0 z-[99] pointer-events-none bg-black/10"></div>
+		{/if}
 		<!-- Overlay panel for all screen sizes -->
-		<div class="fixed inset-y-0 left-0 w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? '' : '-translate-x-full'}">
-			<LeftPanel bind:isOpen={mobileMenuOpen} />
+		<div class="fixed inset-y-0 left-0 w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0">
+			<LeftPanel bind:isOpen={mobileMenuOpen} isMobile={isMobileScreen} />
 		</div>
-		<!-- Hamburger menu button - show below md (768px) -->
-		<button
-			type="button"
-			onclick={() => {
-				console.log('Hamburger clicked, current state:', mobileMenuOpen);
-				mobileMenuOpen = !mobileMenuOpen;
-			}}
-			class="md:hidden fixed bottom-6 left-6 z-[200] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg cursor-pointer"
-		>
-			<svg class="w-6 h-6 text-walnut pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				{#if mobileMenuOpen}
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-				{:else}
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-				{/if}
-			</svg>
-		</button>
 	<AuthButton onOpenModal={() => showLoginModal = true} />
 	{#if !isAdminPage}
 		<div class="fixed bottom-4 right-4 z-50 xl:bottom-4 xl:right-4 max-xl:top-4 max-xl:left-1/2 max-xl:-translate-x-1/2 pointer-events-none">
@@ -134,4 +120,19 @@
 		</div>
 	{/if}
 	<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
+	<!-- Hamburger menu button - show below md (768px) - placed last to ensure it's on top -->
+	{#if isMobileScreen}
+		<button
+			onclick={() => mobileMenuOpen = !mobileMenuOpen}
+			class="fixed bottom-6 left-6 z-[9999] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg"
+		>
+			<svg class="w-6 h-6 text-walnut" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				{#if mobileMenuOpen}
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				{:else}
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+				{/if}
+			</svg>
+		</button>
+	{/if}
 </ClerkProvider>
