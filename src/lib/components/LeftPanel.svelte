@@ -17,7 +17,7 @@
   }
 </script>
 
-<aside class="w-full h-full text-walnut flex flex-col relative lg:bg-cream max-lg:bg-gradient-to-r max-lg:from-cream max-lg:via-cream/90 max-lg:to-transparent max-lg:animate-slide-in-left">
+<aside class="w-full h-full text-walnut flex flex-col relative max-xl:animate-slide-in-left" style="background: linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%)">
   <!-- Mobile close button - only show below 400px -->
   <button
     onclick={() => isOpen = false}
@@ -28,7 +28,7 @@
     </svg>
   </button>
   <!-- Fixed Header - Always on top -->
-  <div class="p-8 pt-10 pb-0 z-30 relative lg:bg-cream max-lg:bg-transparent" style="view-transition-name: header-name">
+  <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent" style="view-transition-name: header-name">
     <a href="/" class="text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block animate-slide-up" style="animation-delay: 0.1s; view-transition-name: site-name; font-family: 'Times New Roman', Times, serif;">
       Ethan<br>Hathaway
     </a>

@@ -17,8 +17,8 @@
 
 	let appliedHoverId = $state<number | null>(null);
 	let showLoginModal = $state(false);
-	// Start with menu open on screens 400-1024px, closed below 400px
-	let mobileMenuOpen = $state(typeof window !== 'undefined' && window.innerWidth >= 400 && window.innerWidth < 1024);
+	// Start with menu open on screens 400-1280px, closed below 400px
+	let mobileMenuOpen = $state(typeof window !== 'undefined' && window.innerWidth >= 400 && window.innerWidth < 1280);
 	$effect(() => {
 		if (hoverFromState && hoverFromState !== appliedHoverId) {
 			portfolio.lockHover(hoverFromState);
@@ -67,17 +67,17 @@
 
 	<ClerkProvider>
 		<div class="font-body bg-charcoal text-cream flex h-screen">
-			<!-- Left Panel - normal flow on lg (1024px) and up -->
-			<div class="w-80 min-w-[320px] hidden lg:block">
+			<!-- Left Panel - normal flow on xl (1280px) and up -->
+			<div class="w-80 min-w-[320px] hidden xl:block">
 				<LeftPanel />
 			</div>
-			<!-- Main Content - always full width below lg, flex-1 above -->
-			<div class="flex-1 lg:flex-1 max-lg:w-full h-full overflow-auto" style="view-transition-name: main-content">
+			<!-- Main Content - always full width below xl, flex-1 above -->
+			<div class="flex-1 xl:flex-1 max-xl:w-full h-full overflow-auto" style="view-transition-name: main-content">
 				{@render children()}
 			</div>
 		</div>
-		<!-- Overlay panel for screens below lg (1024px) -->
-		<div class="lg:hidden fixed inset-y-0 left-0 w-80 z-[100] max-[400px]:transition-transform max-[400px]:duration-300 {mobileMenuOpen ? '' : 'max-[400px]:-translate-x-full'}">
+		<!-- Overlay panel for screens below xl (1280px) -->
+		<div class="xl:hidden fixed inset-y-0 left-0 w-80 z-[100] max-[400px]:transition-transform max-[400px]:duration-300 {mobileMenuOpen ? '' : 'max-[400px]:-translate-x-full'}">
 			<LeftPanel bind:isOpen={mobileMenuOpen} />
 		</div>
 		<!-- Hamburger menu button - only show below 400px -->
