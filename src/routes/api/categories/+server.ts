@@ -30,7 +30,8 @@ export const OPTIONS: RequestHandler = async () => {
 export const GET: RequestHandler = async ({ request, locals, platform }) => {
 	const db = getDbOrThrow(locals.db);
 	const userId = await verifyClerkAuth(request, platform?.env);
-	const rows = userId
+	const authUserId = locals.auth?.()?.userId ?? null;
+	const rows = userId || authUserId
 		? await db.select().from(categories)
 		: await db.select().from(categories).where(eq(categories.isPublished, true));
 
@@ -40,7 +41,8 @@ export const GET: RequestHandler = async ({ request, locals, platform }) => {
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const db = getDbOrThrow(locals.db);
 	const userId = await verifyClerkAuth(request, platform?.env);
-	if (!userId) {
+	const authUserId = locals.auth?.()?.userId ?? null;
+	if (!userId && !authUserId) {
 		throw error(401, 'Unauthorized');
 	}
 

@@ -38,9 +38,10 @@ export const OPTIONS: RequestHandler = async () => {
 export const GET: RequestHandler = async ({ params, request, locals, platform }) => {
 	const db = getDbOrThrow(locals.db);
 	const userId = await verifyClerkAuth(request, platform?.env);
+	const authUserId = locals.auth?.()?.userId ?? null;
 	const id = parseId(params.id);
 
-	const where = userId
+	const where = userId || authUserId
 		? eq(categories.id, id)
 		: and(eq(categories.id, id), eq(categories.isPublished, true));
 
@@ -55,7 +56,8 @@ export const GET: RequestHandler = async ({ params, request, locals, platform })
 export const PUT: RequestHandler = async ({ params, request, locals, platform }) => {
 	const db = getDbOrThrow(locals.db);
 	const userId = await verifyClerkAuth(request, platform?.env);
-	if (!userId) {
+	const authUserId = locals.auth?.()?.userId ?? null;
+	if (!userId && !authUserId) {
 		throw error(401, 'Unauthorized');
 	}
 
@@ -89,7 +91,8 @@ export const PUT: RequestHandler = async ({ params, request, locals, platform })
 export const DELETE: RequestHandler = async ({ params, request, locals, platform }) => {
 	const db = getDbOrThrow(locals.db);
 	const userId = await verifyClerkAuth(request, platform?.env);
-	if (!userId) {
+	const authUserId = locals.auth?.()?.userId ?? null;
+	if (!userId && !authUserId) {
 		throw error(401, 'Unauthorized');
 	}
 

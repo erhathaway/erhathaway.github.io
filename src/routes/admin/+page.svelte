@@ -40,7 +40,11 @@
 		const clerk = ctx.clerk;
 		const session = clerk?.session;
 		if (!session) return null;
-		return session.getToken();
+		try {
+			return await session.getToken({ template: 'session' });
+		} catch {
+			return session.getToken();
+		}
 	}
 
 	async function fetchCategories() {

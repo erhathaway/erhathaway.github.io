@@ -8,6 +8,7 @@ declare global {
 		// interface Error {}
 		interface Locals {
 			db?: Db;
+			auth?: () => { userId?: string | null };
 		}
 		// interface PageData {}
 		// interface PageState {}

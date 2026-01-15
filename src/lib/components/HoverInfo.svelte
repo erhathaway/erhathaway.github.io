@@ -9,7 +9,7 @@
 </script>
 
 {#if item}
-  <div class="hover-inline-card text-walnut py-12 mt-10 mb-10 flex items-center">
+  <div class="hover-inline-card text-walnut py-12 flex items-center">
     <div class="hover-inline-inner w-full">
       <div class="project-header-block">
       <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3" style="view-transition-name: hover-info-category;">
