@@ -12,6 +12,7 @@ route = "erhathaway.com/*"
 [vars]
 ENVIRONMENT = "production"
 PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_cG9zaXRpdmUtd29tYmF0LTUyLmNsZXJrLmFjY291bnRzLmRldiQ"
+PUBLIC_R2_BASE_URL = "https://your-cdn.example.com"
 
 # Add CLERK_SECRET_KEY as a secret (use: wrangler secret put CLERK_SECRET_KEY)
 
@@ -19,6 +20,10 @@ PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_cG9zaXRpdmUtd29tYmF0LTUyLmNsZXJrLmFjY291
 binding = "DB"
 database_name = "portfolio-db"
 database_id = "4878e4eb-3391-4401-93cd-9c6f91897a14"
+
+[[r2_buckets]]
+binding = "ARTIFACTS"
+bucket_name = "portfolio-artifacts"
 
 [assets]
 directory = ".svelte-kit/cloudflare"

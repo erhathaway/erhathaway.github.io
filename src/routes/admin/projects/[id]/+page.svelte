@@ -67,11 +67,16 @@
 	let artifactDraft = $state<ImageV1Data>(initialDraft);
 	let artifactDraftErrors = $state<string[]>(initialValidation.ok ? [] : initialValidation.errors);
 	let artifactIsPublished = $state(false);
+	let artifactUploadState = $state<{ uploading: boolean; error: string | null }>({
+		uploading: false,
+		error: null
+	});
 
 	function handleSchemaChange(event: Event) {
 		const target = event.currentTarget as HTMLSelectElement | null;
 		const nextSchema = target?.value ?? '';
 		artifactSchema = nextSchema;
+		artifactUploadState = { uploading: false, error: null };
 		if (nextSchema !== 'image-v1') {
 			return;
 		}
@@ -308,6 +313,11 @@
 		pageError = '';
 		pageSuccess = '';
 
+		if (artifactUploadState.uploading) {
+			pageError = 'Wait for the image upload to finish.';
+			return;
+		}
+
 		const token = await getToken();
 		if (!token) {
 			pageError = 'Sign in to create artifacts.';
@@ -357,6 +367,38 @@
 		artifactDraft = next;
 		const validation = validateArtifactData(artifactSchema, next);
 		artifactDraftErrors = validation.ok ? [] : validation.errors;
+	}
+
+	function handleArtifactUploadStateChange(state: { uploading: boolean; error: string | null }) {
+		artifactUploadState = state;
+	}
+
+	async function handleArtifactUpload(file: File) {
+		const token = await getToken();
+		if (!token) {
+			throw new Error('Sign in to upload images.');
+		}
+
+		const formData = new FormData();
+		formData.append('file', file);
+		const response = await fetch('/api/uploads/artifacts', {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${token}`
+			},
+			body: formData
+		});
+
+		if (!response.ok) {
+			throw new Error('Upload failed.');
+		}
+
+		const payload = (await response.json()) as { url?: string };
+		if (!payload.url) {
+			throw new Error('Upload response missing url.');
+		}
+
+		return payload.url;
 	}
 
 	onMount(loadAll);
@@ -427,6 +469,8 @@
 							<ImageArtifactEditor
 								value={artifactDraft}
 								onChange={handleArtifactDraftChange}
+								onUpload={handleArtifactUpload}
+								onUploadStateChange={handleArtifactUploadStateChange}
 							/>
 						</div>
 						<label class="flex items-center gap-2 text-sm text-ash md:col-span-2">
@@ -437,6 +481,14 @@
 							<p class="text-xs text-red-700 md:col-span-2">
 								{artifactDraftErrors.join('; ')}
 							</p>
+						{/if}
+						{#if artifactUploadState.error}
+							<p class="text-xs text-red-700 md:col-span-2">
+								{artifactUploadState.error}
+							</p>
+						{/if}
+						{#if artifactUploadState.uploading}
+							<p class="text-xs text-ash md:col-span-2">Uploading image...</p>
 						{/if}
 						<button
 							type="submit"
