@@ -16,6 +16,22 @@
 		isPublished: boolean;
 	};
 
+	type ProjectAttribute = {
+		id: number;
+		name: string;
+		value: string;
+		showInNav: boolean;
+		isPublished: boolean;
+	};
+
+	type AttributeDraft = {
+		id?: number;
+		name: string;
+		value: string;
+		showInNav: boolean;
+		isPublished: boolean;
+	};
+
 	type Props = {
 		categories: Category[];
 		categoriesLoaded: boolean;
@@ -35,6 +51,7 @@
 	let newProjectDescription = $state('');
 	let newProjectIsPublished = $state(false);
 	let newProjectCategoryIds = $state<number[]>([]);
+	let newProjectAttributes = $state<AttributeDraft[]>([]);
 
 	let editingProjectId = $state<number | null>(null);
 	let editProjectName = $state('');
@@ -42,8 +59,10 @@
 	let editProjectDescription = $state('');
 	let editProjectIsPublished = $state(false);
 	let editProjectCategoryIds = $state<number[]>([]);
+	let editProjectAttributes = $state<AttributeDraft[]>([]);
 
 	let projectCategoryIds = $state<Record<number, number[]>>({});
+	let projectAttributes = $state<Record<number, ProjectAttribute[]>>({});
 
 	const filteredProjects = $derived.by(() => {
 		if (projectsFilter === 'published') {
@@ -76,8 +95,10 @@
 			}
 			projects = await response.json();
 			projectCategoryIds = {};
+			projectAttributes = {};
 			for (const project of projects) {
 				await fetchProjectCategories(project.id);
+				await fetchProjectAttributes(project.id);
 			}
 		} catch (err) {
 			console.error(err);
@@ -120,11 +141,13 @@
 		const created = await response.json();
 		projects = [created, ...projects];
 		await updateProjectCategories(created.id, newProjectCategoryIds);
+		await createProjectAttributes(created.id, newProjectAttributes);
 		newProjectName = '';
 		newProjectDisplayName = '';
 		newProjectDescription = '';
 		newProjectIsPublished = false;
 		newProjectCategoryIds = [];
+		newProjectAttributes = [];
 		projectsSuccess = 'Project created.';
 	}
 
@@ -135,6 +158,9 @@
 		editProjectDescription = project.description ?? '';
 		editProjectIsPublished = project.isPublished;
 		editProjectCategoryIds = [...(projectCategoryIds[project.id] ?? [])];
+		editProjectAttributes = (projectAttributes[project.id] ?? []).map((attribute) => ({
+			...attribute
+		}));
 		projectsSuccess = '';
 		projectsError = '';
 	}
@@ -146,6 +172,7 @@
 		editProjectDescription = '';
 		editProjectIsPublished = false;
 		editProjectCategoryIds = [];
+		editProjectAttributes = [];
 	}
 
 	async function saveProjectEdit() {
@@ -181,6 +208,7 @@
 		const updated = await response.json();
 		projects = projects.map((project) => (project.id === updated.id ? updated : project));
 		await updateProjectCategories(editingProjectId, editProjectCategoryIds);
+		await updateProjectAttributes(editingProjectId, editProjectAttributes);
 		cancelProjectEdit();
 		projectsSuccess = 'Project updated.';
 	}
@@ -210,6 +238,8 @@
 		projects = projects.filter((project) => project.id !== projectId);
 		const { [projectId]: _removed, ...rest } = projectCategoryIds;
 		projectCategoryIds = rest;
+		const { [projectId]: _removedAttributes, ...restAttributes } = projectAttributes;
+		projectAttributes = restAttributes;
 		projectsSuccess = 'Project deleted.';
 	}
 
@@ -235,6 +265,24 @@
 		projectCategoryIds = {
 			...projectCategoryIds,
 			[projectId]: rows.map((row) => row.id)
+		};
+	}
+
+	async function fetchProjectAttributes(projectId: number) {
+		const token = await getToken();
+		const headers: Record<string, string> = {};
+		if (token) {
+			headers.Authorization = `Bearer ${token}`;
+		}
+
+		const response = await fetch(`/api/projects/${projectId}/attributes`, { headers });
+		if (!response.ok) {
+			throw new Error('Failed to load project attributes');
+		}
+		const rows = (await response.json()) as ProjectAttribute[];
+		projectAttributes = {
+			...projectAttributes,
+			[projectId]: rows
 		};
 	}
 
@@ -282,8 +330,116 @@
 		projectCategoryIds = { ...projectCategoryIds, [projectId]: [...desiredIds] };
 	}
 
+	function sanitizeAttributes(attributes: AttributeDraft[]) {
+		const cleaned: AttributeDraft[] = [];
+		for (const attribute of attributes) {
+			const name = attribute.name.trim();
+			const value = attribute.value.trim();
+			if (!name && !value) {
+				continue;
+			}
+			if (!name || !value) {
+				projectsError = 'Attributes need both a name and a value.';
+				return null;
+			}
+			cleaned.push({
+				id: attribute.id,
+				name,
+				value,
+				showInNav: attribute.showInNav,
+				isPublished: attribute.isPublished
+			});
+		}
+		return cleaned;
+	}
+
+	async function createProjectAttributes(projectId: number, attributes: AttributeDraft[]) {
+		const token = await getToken();
+		if (!token) {
+			projectsError = 'Sign in to add project attributes.';
+			return;
+		}
+
+		const cleaned = sanitizeAttributes(attributes);
+		if (!cleaned) {
+			return;
+		}
+		if (cleaned.length === 0) {
+			projectAttributes = { ...projectAttributes, [projectId]: [] };
+			return;
+		}
+
+		const response = await fetch(`/api/projects/${projectId}/attributes`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify({ attributes: cleaned })
+		});
+		if (!response.ok) {
+			projectsError = 'Unable to add project attributes.';
+			return;
+		}
+		const created = (await response.json()) as ProjectAttribute[];
+		projectAttributes = { ...projectAttributes, [projectId]: created };
+	}
+
+	async function updateProjectAttributes(projectId: number, attributes: AttributeDraft[]) {
+		const token = await getToken();
+		if (!token) {
+			projectsError = 'Sign in to update project attributes.';
+			return;
+		}
+
+		const cleaned = sanitizeAttributes(attributes);
+		if (!cleaned) {
+			return;
+		}
+
+		const response = await fetch(`/api/projects/${projectId}/attributes`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify({ attributes: cleaned })
+		});
+		if (!response.ok) {
+			projectsError = 'Unable to update project attributes.';
+			return;
+		}
+		const updated = (await response.json()) as ProjectAttribute[];
+		projectAttributes = { ...projectAttributes, [projectId]: updated };
+	}
+
 	function getCategory(categoryId: number) {
 		return categories.find((category) => category.id === categoryId);
+	}
+
+	function createAttributeDraft(): AttributeDraft {
+		return {
+			name: '',
+			value: '',
+			showInNav: false,
+			isPublished: false
+		};
+	}
+
+	function addAttributeRow(list: AttributeDraft[]) {
+		return [...list, createAttributeDraft()];
+	}
+
+	function updateAttributeRow(
+		list: AttributeDraft[],
+		index: number,
+		patch: Partial<AttributeDraft>
+	) {
+		return list.map((attribute, i) => (i === index ? { ...attribute, ...patch } : attribute));
+	}
+
+	function removeAttributeRow(list: AttributeDraft[], index: number) {
+		return list.filter((_, i) => i !== index);
 	}
 
 	onMount(fetchProjects);
@@ -378,6 +534,78 @@
 					</div>
 				{/if}
 		</div>
+		<div class="md:col-span-2">
+			<div class="flex items-center justify-between">
+				<p class="text-sm text-ash">Attributes</p>
+				<button
+					type="button"
+					onclick={() => (newProjectAttributes = addAttributeRow(newProjectAttributes))}
+					class="text-xs text-copper hover:text-walnut"
+				>
+					Add attribute
+				</button>
+			</div>
+			{#if newProjectAttributes.length === 0}
+				<p class="mt-2 text-xs text-ash">No attributes yet.</p>
+			{:else}
+				<div class="mt-2 grid gap-2">
+					{#each newProjectAttributes as attribute, index (index)}
+						<div class="flex flex-wrap items-center gap-2 rounded-lg border border-walnut/10 bg-cream/60 p-2">
+							<input
+								class="flex-1 min-w-[160px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
+								placeholder="Name"
+								value={attribute.name}
+								oninput={(event) =>
+									(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
+										name: (event.target as HTMLInputElement).value
+									}))}
+							/>
+							<input
+								class="flex-1 min-w-[200px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
+								placeholder="Value"
+								value={attribute.value}
+								oninput={(event) =>
+									(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
+										value: (event.target as HTMLInputElement).value
+									}))}
+							/>
+							<label class="flex items-center gap-1 text-[11px] text-ash">
+								<input
+									type="checkbox"
+									checked={attribute.showInNav}
+									onchange={(event) =>
+										(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
+											showInNav: (event.target as HTMLInputElement).checked
+										}))}
+									class="accent-copper"
+								/>
+								Show in nav
+							</label>
+							<label class="flex items-center gap-1 text-[11px] text-ash">
+								<input
+									type="checkbox"
+									checked={attribute.isPublished}
+									onchange={(event) =>
+										(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
+											isPublished: (event.target as HTMLInputElement).checked
+										}))}
+									class="accent-copper"
+								/>
+								Published
+							</label>
+							<button
+								type="button"
+								onclick={() =>
+									(newProjectAttributes = removeAttributeRow(newProjectAttributes, index))}
+								class="text-xs text-red-600 hover:text-red-700"
+							>
+								Remove
+							</button>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
 		<label class="flex items-center gap-2 text-sm text-ash">
 			<input type="checkbox" bind:checked={newProjectIsPublished} class="accent-copper" />
 			Published
@@ -461,6 +689,98 @@
 										{/each}
 									</div>
 								</div>
+							<div>
+								<div class="flex items-center justify-between">
+									<p class="text-sm text-ash">Attributes</p>
+									<button
+										type="button"
+										onclick={() =>
+											(editProjectAttributes = addAttributeRow(editProjectAttributes))}
+										class="text-xs text-copper hover:text-walnut"
+									>
+										Add attribute
+									</button>
+								</div>
+								{#if editProjectAttributes.length === 0}
+									<p class="mt-2 text-xs text-ash">No attributes yet.</p>
+								{:else}
+									<div class="mt-2 grid gap-2">
+										{#each editProjectAttributes as attribute, index (attribute.id ?? index)}
+											<div class="flex flex-wrap items-center gap-2 rounded-lg border border-walnut/10 bg-cream/60 p-2">
+												<input
+													class="flex-1 min-w-[160px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
+													placeholder="Name"
+													value={attribute.name}
+													oninput={(event) =>
+														(editProjectAttributes = updateAttributeRow(
+															editProjectAttributes,
+															index,
+															{
+																name: (event.target as HTMLInputElement).value
+															}
+														))}
+												/>
+												<input
+													class="flex-1 min-w-[200px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
+													placeholder="Value"
+													value={attribute.value}
+													oninput={(event) =>
+														(editProjectAttributes = updateAttributeRow(
+															editProjectAttributes,
+															index,
+															{
+																value: (event.target as HTMLInputElement).value
+															}
+														))}
+												/>
+												<label class="flex items-center gap-1 text-[11px] text-ash">
+													<input
+														type="checkbox"
+														checked={attribute.showInNav}
+														onchange={(event) =>
+															(editProjectAttributes = updateAttributeRow(
+																editProjectAttributes,
+																index,
+																{
+																	showInNav: (event.target as HTMLInputElement).checked
+																}
+															))}
+														class="accent-copper"
+													/>
+													Show in nav
+												</label>
+												<label class="flex items-center gap-1 text-[11px] text-ash">
+													<input
+														type="checkbox"
+														checked={attribute.isPublished}
+														onchange={(event) =>
+															(editProjectAttributes = updateAttributeRow(
+																editProjectAttributes,
+																index,
+																{
+																	isPublished: (event.target as HTMLInputElement).checked
+																}
+															))}
+														class="accent-copper"
+													/>
+													Published
+												</label>
+												<button
+													type="button"
+													onclick={() =>
+														(editProjectAttributes = removeAttributeRow(
+															editProjectAttributes,
+															index
+														))}
+													class="text-xs text-red-600 hover:text-red-700"
+												>
+													Remove
+												</button>
+											</div>
+										{/each}
+									</div>
+								{/if}
+							</div>
 							<label class="flex items-center gap-2 text-sm text-ash">
 								<input type="checkbox" bind:checked={editProjectIsPublished} class="accent-copper" />
 								Published
@@ -515,6 +835,30 @@
 								</div>
 							{:else}
 								<p class="mt-2 text-xs text-ash">No categories assigned.</p>
+							{/if}
+							{#if (projectAttributes[project.id] ?? []).length > 0}
+								<div class="mt-3 grid gap-2">
+									{#each projectAttributes[project.id] ?? [] as attribute (attribute.id)}
+										<div class="flex flex-wrap items-center gap-2 text-[11px] text-ash">
+											<span class="font-medium text-walnut">{attribute.name}:</span>
+											<span>{attribute.value}</span>
+											<span class="rounded-full border border-walnut/10 bg-cream/60 px-2 py-0.5">
+												{attribute.showInNav ? 'Nav' : 'Hidden'}
+											</span>
+											<span
+												class={`rounded-full border px-2 py-0.5 ${
+													attribute.isPublished
+														? 'border-emerald-200/60 text-emerald-700 bg-emerald-50/60'
+														: 'border-walnut/10 text-ash bg-cream/60'
+												}`}
+											>
+												{attribute.isPublished ? 'Live' : 'Draft'}
+											</span>
+										</div>
+									{/each}
+								</div>
+							{:else}
+								<p class="mt-2 text-xs text-ash">No attributes assigned.</p>
 							{/if}
 						</div>
 						<div class="flex items-center gap-2">
