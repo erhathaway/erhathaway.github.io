@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import LeftPanel from '$lib/components/LeftPanel.svelte';
 	import CategoryPills from '$lib/components/CategoryPills.svelte';
+	import LoginModal from '$lib/components/LoginModal.svelte';
 	import { portfolio } from '$lib/stores/portfolio.svelte';
 	import { onNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -13,6 +14,7 @@
 	const hoverFromState = $derived($page.state?.hoverId as number | undefined);
 
 	let appliedHoverId = $state<number | null>(null);
+	let showLoginModal = $state(false);
 	$effect(() => {
 		if (hoverFromState && hoverFromState !== appliedHoverId) {
 			portfolio.lockHover(hoverFromState);
@@ -66,9 +68,12 @@
 				{@render children()}
 			</div>
 		</div>
-	<a href="/admin" class="fixed top-4 right-4 text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors z-50">
+	<button
+		onclick={() => showLoginModal = true}
+		class="fixed top-4 right-4 text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors z-50"
+	>
 		Admin
-	</a>
+	</button>
 	<div class="fixed bottom-4 right-4 z-50">
 		<div class="px-4 py-2 bg-charcoal/40 backdrop-blur-md">
 			<div class="flex gap-6 text-[11px] tracking-[0.18em] uppercase text-cream/60">
@@ -85,4 +90,5 @@
 			</div>
 		</div>
 	{/if}
+	<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 </ClerkProvider>
