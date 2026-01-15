@@ -64,11 +64,11 @@ export const PUT: RequestHandler = async ({ params, request, locals, platform })
 	const id = parseId(params.id);
 	const payload = (await request.json()) as Partial<CategoryInput>;
 	const name = payload.name?.trim();
-	const displayName = payload.displayName?.trim();
+	const displayName = payload.displayName?.trim() || name;
 	const isPublished = payload.isPublished;
 
-	if (!name || !displayName) {
-		throw error(400, 'name and displayName are required');
+	if (!name) {
+		throw error(400, 'name is required');
 	}
 
 	const [updated] = await db

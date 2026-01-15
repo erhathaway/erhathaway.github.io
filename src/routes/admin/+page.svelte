@@ -241,7 +241,6 @@
 						<span class="text-ash">Display name</span>
 						<input
 							bind:value={newDisplayName}
-							required
 							class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
 							placeholder="Wood"
 						/>
@@ -286,6 +285,7 @@
 										<input
 											bind:value={editDisplayName}
 											class="w-56 rounded-md border border-walnut/20 px-3 py-2 text-sm"
+											placeholder={editName}
 										/>
 										<label class="flex items-center gap-2 text-sm text-ash">
 											<input type="checkbox" bind:checked={editIsPublished} class="accent-copper" />

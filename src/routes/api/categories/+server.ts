@@ -48,10 +48,10 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	const payload = (await request.json()) as Partial<CategoryInput>;
 	const name = payload.name?.trim();
-	const displayName = payload.displayName?.trim();
+	const displayName = payload.displayName?.trim() || name;
 
-	if (!name || !displayName) {
-		throw error(400, 'name and displayName are required');
+	if (!name) {
+		throw error(400, 'name is required');
 	}
 
 	const isPublished = payload.isPublished ?? false;
