@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { signIn } from 'svelte-clerk';
+	import { goto } from '$app/navigation';
+
 	interface Props {
 		isOpen: boolean;
 		onClose: () => void;
@@ -7,18 +10,101 @@
 	let { isOpen = $bindable(), onClose }: Props = $props();
 
 	let email = $state('');
-	let password = $state('');
+	let code = $state('');
+	let showCodeInput = $state(false);
+	let isLoading = $state(false);
+	let error = $state('');
 
-	function handleSubmit(e: Event) {
+	async function handleEmailSubmit(e: Event) {
 		e.preventDefault();
-		window.location.href = '/admin/sign-in';
+		error = '';
+		isLoading = true;
+
+		try {
+			// Create a sign-in with email
+			await signIn.create({
+				identifier: email
+			});
+
+			// Prepare the email code factor
+			const emailFactor = signIn.supportedFirstFactors?.find(
+				(factor: any) => factor.strategy === 'email_code'
+			);
+
+			if (emailFactor) {
+				await signIn.prepareFirstFactor({
+					strategy: 'email_code',
+					emailAddressId: emailFactor.emailAddressId
+				});
+
+				showCodeInput = true;
+			} else {
+				error = 'Email authentication not available. Please contact support.';
+			}
+		} catch (err: any) {
+			console.error('Error sending code:', err);
+			error = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Failed to send code. Please try again.';
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	async function handleCodeSubmit(e: Event) {
+		e.preventDefault();
+		error = '';
+		isLoading = true;
+
+		try {
+			// Attempt to verify the code
+			const result = await signIn.attemptFirstFactor({
+				strategy: 'email_code',
+				code: code
+			});
+
+			if (result.status === 'complete') {
+				// Navigate to admin
+				await goto('/admin');
+				onClose();
+			} else if (result.status === 'needs_second_factor') {
+				error = 'Additional verification required.';
+			} else {
+				error = 'Unable to sign in. Please try again.';
+			}
+		} catch (err: any) {
+			console.error('Error verifying code:', err);
+			error = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Invalid code. Please try again.';
+		} finally {
+			isLoading = false;
+		}
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
+		if (e.key === 'Escape' && !isLoading) {
 			onClose();
+			resetState();
 		}
 	}
+
+	function resetState() {
+		email = '';
+		code = '';
+		showCodeInput = false;
+		error = '';
+		isLoading = false;
+	}
+
+	function goBack() {
+		showCodeInput = false;
+		code = '';
+		error = '';
+	}
+
+	// Reset state when modal opens/closes
+	$effect(() => {
+		if (!isOpen) {
+			resetState();
+		}
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -45,36 +131,73 @@
 			<div class="w-full max-w-sm px-4">
 				<h1 class="font-sans font-light text-5xl mb-12 text-walnut text-center tracking-wide">Admin</h1>
 
-				<form onsubmit={handleSubmit} class="space-y-6">
-					<div>
-						<input
-							id="email"
-							type="email"
-							bind:value={email}
-							required
-							class="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-md text-walnut placeholder-ash/60 focus:outline-none focus:border-copper transition-colors font-sans"
-							placeholder="Email"
-						/>
-					</div>
+				{#if !showCodeInput}
+					<form onsubmit={handleEmailSubmit} class="space-y-6">
+						<div>
+							<input
+								id="email"
+								type="email"
+								bind:value={email}
+								required
+								disabled={isLoading}
+								class="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-md text-walnut placeholder-ash/60 focus:outline-none focus:border-copper transition-colors font-sans disabled:opacity-50"
+								placeholder="Email"
+								autofocus
+							/>
+						</div>
 
-					<div>
-						<input
-							id="password"
-							type="password"
-							bind:value={password}
-							required
-							class="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-md text-walnut placeholder-ash/60 focus:outline-none focus:border-copper transition-colors font-sans"
-							placeholder="Password"
-						/>
-					</div>
+						{#if error}
+							<p class="text-red-600 text-sm text-center">{error}</p>
+						{/if}
 
-					<button
-						type="submit"
-						class="w-full py-3 bg-walnut text-cream font-sans hover:bg-copper transition-colors rounded-md"
-					>
-						Sign In
-					</button>
-				</form>
+						<button
+							type="submit"
+							disabled={isLoading}
+							class="w-full py-3 bg-walnut text-cream font-sans hover:bg-copper transition-colors rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{isLoading ? 'Sending...' : 'Continue'}
+						</button>
+					</form>
+				{:else}
+					<form onsubmit={handleCodeSubmit} class="space-y-6">
+						<p class="text-center text-ash/80 text-sm mb-4">Enter the code sent to {email}</p>
+
+						<div>
+							<input
+								id="code"
+								type="text"
+								bind:value={code}
+								required
+								disabled={isLoading}
+								class="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-md text-walnut placeholder-ash/60 focus:outline-none focus:border-copper transition-colors font-sans text-center tracking-widest disabled:opacity-50"
+								placeholder="000000"
+								maxlength="6"
+								autofocus
+							/>
+						</div>
+
+						{#if error}
+							<p class="text-red-600 text-sm text-center">{error}</p>
+						{/if}
+
+						<button
+							type="submit"
+							disabled={isLoading}
+							class="w-full py-3 bg-walnut text-cream font-sans hover:bg-copper transition-colors rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{isLoading ? 'Verifying...' : 'Sign In'}
+						</button>
+
+						<button
+							type="button"
+							onclick={goBack}
+							disabled={isLoading}
+							class="w-full text-center text-ash/60 hover:text-ash text-sm font-sans disabled:opacity-50"
+						>
+							Use a different email
+						</button>
+					</form>
+				{/if}
 			</div>
 		</div>
 	</div>
