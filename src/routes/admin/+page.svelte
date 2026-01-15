@@ -57,7 +57,7 @@
 			if (!response.ok) {
 				if (response.status === 500) {
 					throw new Error(
-						'Cloudflare bindings are unavailable. Run `bunx wrangler dev --port 5173` instead of `bun run dev`.'
+						'Cloudflare bindings are unavailable. Run `bun run dev` (do not pass --open), then open http://localhost:5173 manually.'
 					);
 				}
 				throw new Error('Failed to load categories');

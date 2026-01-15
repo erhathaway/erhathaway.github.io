@@ -41,8 +41,9 @@
 	},
 	"private": true,
 	"scripts": {
-		"dev": "sh -c 'bunx wrangler dev --port 5173' --",
+		"dev": "sh -c 'bun run dev:kill-wrangler; bunx wrangler dev --port 5173'",
 		"dev:vite": "vite dev",
+		"dev:kill-wrangler": "pkill -f \"wrangler dev\" || true",
 		"build": "vite build",
 		"deploy": "bunx wrangler deploy",
 		"preview": "vite preview",
@@ -57,6 +58,7 @@
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
+		"db:migrate:local": "sh -c 'for f in ./drizzle/*.sql; do bunx wrangler d1 execute portfolio-db --file=\"$f\"; done'",
 		"db:studio": "drizzle-kit studio"
 	},
 	"type": "module",
