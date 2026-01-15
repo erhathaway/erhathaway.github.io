@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { signIn } from 'svelte-clerk';
+	import { useClerkContext } from 'svelte-clerk';
 	import { goto } from '$app/navigation';
 
 	interface Props {
@@ -8,6 +8,8 @@
 	}
 
 	let { isOpen = $bindable(), onClose }: Props = $props();
+
+	const ctx = useClerkContext();
 
 	let email = $state('');
 	let code = $state('');
@@ -21,29 +23,31 @@
 		isLoading = true;
 
 		try {
-			// Create a sign-in with email
-			await signIn.create({
-				identifier: email
+			const clerk = ctx.clerk;
+			const client = clerk.client;
+
+			// Create a sign-in attempt with email
+			const signInAttempt = await client.signIn.create({
+				identifier: email,
+				strategy: 'email_code'
 			});
 
-			// Prepare the email code factor
-			const emailFactor = signIn.supportedFirstFactors?.find(
-				(factor: any) => factor.strategy === 'email_code'
-			);
+			// Prepare the email code
+			await signInAttempt.prepareFirstFactor({
+				strategy: 'email_code',
+				emailAddressId: signInAttempt.supportedFirstFactors?.find(
+					(f: any) => f.strategy === 'email_code'
+				)?.emailAddressId
+			});
 
-			if (emailFactor) {
-				await signIn.prepareFirstFactor({
-					strategy: 'email_code',
-					emailAddressId: emailFactor.emailAddressId
-				});
-
-				showCodeInput = true;
-			} else {
-				error = 'Email authentication not available. Please contact support.';
-			}
+			showCodeInput = true;
 		} catch (err: any) {
 			console.error('Error sending code:', err);
-			error = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Failed to send code. Please try again.';
+			if (err?.errors?.[0]?.code === 'form_identifier_not_found') {
+				error = 'Email not found. Please check and try again.';
+			} else {
+				error = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Failed to send code. Please try again.';
+			}
 		} finally {
 			isLoading = false;
 		}
@@ -55,18 +59,24 @@
 		isLoading = true;
 
 		try {
+			const clerk = ctx.clerk;
+			const client = clerk.client;
+
+			// Get the current sign-in attempt
+			const signInAttempt = client.signIn;
+
 			// Attempt to verify the code
-			const result = await signIn.attemptFirstFactor({
+			const result = await signInAttempt.attemptFirstFactor({
 				strategy: 'email_code',
 				code: code
 			});
 
 			if (result.status === 'complete') {
+				// Set active session
+				await clerk.setActive({ session: result.createdSessionId });
 				// Navigate to admin
 				await goto('/admin');
 				onClose();
-			} else if (result.status === 'needs_second_factor') {
-				error = 'Additional verification required.';
 			} else {
 				error = 'Unable to sign in. Please try again.';
 			}
