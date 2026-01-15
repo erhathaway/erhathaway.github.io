@@ -4,6 +4,7 @@
 	import LeftPanel from '$lib/components/LeftPanel.svelte';
 	import CategoryPills from '$lib/components/CategoryPills.svelte';
 	import LoginModal from '$lib/components/LoginModal.svelte';
+	import AuthButton from '$lib/components/AuthButton.svelte';
 	import { portfolio } from '$lib/stores/portfolio.svelte';
 	import { onNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -11,6 +12,7 @@
 
 	let { children } = $props();
 	const isProjectPage = $derived($page.route.id?.includes('/project/'));
+	const isAdminPage = $derived($page.route.id?.includes('/admin'));
 	const hoverFromState = $derived($page.state?.hoverId as number | undefined);
 
 	let appliedHoverId = $state<number | null>(null);
@@ -68,22 +70,19 @@
 				{@render children()}
 			</div>
 		</div>
-	<button
-		onclick={() => showLoginModal = true}
-		class="fixed top-4 right-4 text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors z-50"
-	>
-		Admin
-	</button>
-	<div class="fixed bottom-4 right-4 z-50">
-		<div class="px-4 py-2 bg-charcoal/40 backdrop-blur-md">
-			<div class="flex gap-6 text-[11px] tracking-[0.18em] uppercase text-cream/60">
-				<a href="https://github.com" class="hover:text-copper transition-colors">GitHub</a>
-				<a href="https://instagram.com" class="hover:text-copper transition-colors">Instagram</a>
-				<a href="mailto:contact@example.com" class="hover:text-copper transition-colors">Contact</a>
+	<AuthButton onOpenModal={() => showLoginModal = true} />
+	{#if !isAdminPage}
+		<div class="fixed bottom-4 right-4 z-50">
+			<div class="px-4 py-2 bg-charcoal/40 backdrop-blur-md">
+				<div class="flex gap-6 text-[11px] tracking-[0.18em] uppercase text-cream/60">
+					<a href="https://github.com" class="hover:text-copper transition-colors">GitHub</a>
+					<a href="https://instagram.com" class="hover:text-copper transition-colors">Instagram</a>
+					<a href="mailto:contact@example.com" class="hover:text-copper transition-colors">Contact</a>
+				</div>
 			</div>
 		</div>
-	</div>
-	{#if !isProjectPage}
+	{/if}
+	{#if !isProjectPage && !isAdminPage}
 		<div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 pointer-events-none">
 			<div class="pointer-events-auto animate-slide-up" style="animation-delay: 0.3s">
 				<CategoryPills />

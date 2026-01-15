@@ -1,38 +1,47 @@
-# sv
+# Ethan Hathaway - Personal Portfolio
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A personal portfolio site for Ethan Hathaway showcasing things I make — woodworking, baking, cooking, and other crafts.
 
-## Creating a project
+## Stack
 
-If you're seeing this, you've probably already done this step. Congrats!
+- SvelteKit (Svelte 5 runes)
+- Tailwind CSS
+- Cloudflare adapter for deployment
+- Cloudflare D1 (SQLite) via Drizzle ORM
 
-```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Development
 
 ```sh
-npm run dev
+bun install
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# Local dev without platform bindings
+bun run dev
+
+# Local dev with Cloudflare bindings (D1, assets, etc.)
+bunx wrangler dev
 ```
 
-## Building
-
-To create a production version of your app:
+## Build and Deploy
 
 ```sh
-npm run build
+bun run build
+bun run preview
+bun run deploy
 ```
 
-You can preview the production build with `npm run preview`.
+## Database (Cloudflare D1)
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- D1 binding: `DB` in `wrangler.toml`
+- DB helper: `src/lib/server/db/index.ts` (`getDb`)
+- `event.locals.db` is set in `src/hooks.server.ts`
+- Schema lives in `src/lib/server/db/schema.ts`
+
+### Migrations
+
+```sh
+# Generate SQL from the schema
+bun run db:generate
+
+# Apply a generated migration to D1
+bunx wrangler d1 execute portfolio-db --file=./drizzle/<migration>.sql
+```

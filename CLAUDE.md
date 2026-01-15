@@ -42,6 +42,7 @@ A personal portfolio website for Ethan Hathaway showcasing things I make — woo
 - **Styling:** Tailwind CSS (installed via bun, not CDN)
 - **Build Tool:** Vite
 - **Package Manager:** bun
+- **Data:** Cloudflare D1 (SQLite) via Drizzle ORM
 
 ## Design Requirements
 
@@ -153,6 +154,14 @@ interface PortfolioItem {
 - Use `$props()` for component props
 - Use `{#snippet}` and `{@render}` for reusable template fragments
 - Event handlers use `onclick` not `on:click`
+
+## Cloudflare D1 Notes
+
+- D1 binding is `DB` in `wrangler.toml`
+- Access database via `event.platform.env.DB` and `getDb` in `src/lib/server/db/index.ts`
+- `event.locals.db` is set in `src/hooks.server.ts`
+- Use `bunx wrangler dev` for local dev with D1 (Vite dev does not provide `platform.env`)
+- Generate migrations with `bun run db:generate`, apply with `bunx wrangler d1 execute portfolio-db --file=./drizzle/<migration>.sql`
 
 ## Known Issues
 
