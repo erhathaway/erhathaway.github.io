@@ -12,7 +12,7 @@ route = "erhathaway.com/*"
 [vars]
 ENVIRONMENT = "production"
 PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_cG9zaXRpdmUtd29tYmF0LTUyLmNsZXJrLmFjY291bnRzLmRldiQ"
-PUBLIC_R2_BASE_URL = "https://your-cdn.example.com"
+PUBLIC_R2_BASE_URL = "https://9775094dc19ae9b19f8cc75e2f2b3e5c.r2.cloudflarestorage.com/portfolio-artifacts-22"
 
 # Add CLERK_SECRET_KEY as a secret (use: wrangler secret put CLERK_SECRET_KEY)
 
@@ -23,7 +23,7 @@ database_id = "4878e4eb-3391-4401-93cd-9c6f91897a14"
 
 [[r2_buckets]]
 binding = "ARTIFACTS"
-bucket_name = "portfolio-artifacts"
+bucket_name = "portfolio-artifacts-22"
 
 [assets]
 directory = ".svelte-kit/cloudflare"
