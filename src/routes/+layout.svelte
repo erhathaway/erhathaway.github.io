@@ -73,8 +73,8 @@
 	<AuthButton onOpenModal={() => showLoginModal = true} />
 	{#if !isAdminPage}
 		<div class="fixed bottom-4 right-4 z-50">
-			<div class="px-4 py-2 bg-charcoal/40 backdrop-blur-md">
-				<div class="flex gap-6 text-[11px] tracking-[0.18em] uppercase text-cream/60">
+			<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md">
+				<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
 					<a href="https://github.com" class="hover:text-copper transition-colors">GitHub</a>
 					<a href="https://instagram.com" class="hover:text-copper transition-colors">Instagram</a>
 					<a href="mailto:contact@example.com" class="hover:text-copper transition-colors">Contact</a>

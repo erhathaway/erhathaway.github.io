@@ -1,7 +1,8 @@
 CREATE TABLE `categories` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
-	`display_name` text NOT NULL
+	`display_name` text NOT NULL,
+	`is_published` integer DEFAULT false NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `categories_name_unique` ON `categories` (`name`);--> statement-breakpoint
@@ -10,6 +11,7 @@ CREATE TABLE `project_artifacts` (
 	`project_id` integer NOT NULL,
 	`schema_version` integer NOT NULL,
 	`data_blob` text NOT NULL,
+	`is_published` integer DEFAULT false NOT NULL,
 	FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -25,7 +27,8 @@ CREATE TABLE `projects` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
 	`display_name` text NOT NULL,
-	`description` text NOT NULL
+	`description` text NOT NULL,
+	`is_published` integer DEFAULT false NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `projects_name_unique` ON `projects` (`name`);

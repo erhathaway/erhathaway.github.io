@@ -4,13 +4,15 @@ export const projects = sqliteTable('projects', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	name: text('name').notNull().unique(),
 	displayName: text('display_name').notNull(),
-	description: text('description').notNull()
+	description: text('description').notNull(),
+	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
 });
 
 export const categories = sqliteTable('categories', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	name: text('name').notNull().unique(),
-	displayName: text('display_name').notNull()
+	displayName: text('display_name').notNull(),
+	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
 });
 
 export const projectCategories = sqliteTable('project_categories', {
@@ -30,5 +32,6 @@ export const projectArtifacts = sqliteTable('project_artifacts', {
 		.notNull()
 		.references(() => projects.id, { onDelete: 'cascade' }),
 	schemaVersion: integer('schema_version').notNull(),
-	dataBlob: text('data_blob', { mode: 'json' }).notNull()
+	dataBlob: text('data_blob', { mode: 'json' }).notNull(),
+	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
 });

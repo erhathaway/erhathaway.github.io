@@ -35,6 +35,7 @@ bun run deploy
 - DB helper: `src/lib/server/db/index.ts` (`getDb`)
 - `event.locals.db` is set in `src/hooks.server.ts`
 - Schema lives in `src/lib/server/db/schema.ts`
+- API spec: `docs/api-spec.md`
 
 ### Migrations
 
