@@ -59,6 +59,7 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:migrate:local": "bash scripts/d1_migrate_local.sh",
+		"db:migrate:remote": "bash scripts/d1_migrate_remote.sh",
 		"db:studio": "drizzle-kit studio"
 	},
 	"type": "module",
