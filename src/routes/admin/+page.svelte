@@ -50,6 +50,10 @@
 	let editProjectDisplayName = $state('');
 	let editProjectDescription = $state('');
 	let editProjectIsPublished = $state(false);
+	let projectCategoryIds = $state<Record<number, number[]>>({});
+	let newProjectCategoryIds = $state<number[]>([]);
+	let editProjectCategoryIds = $state<number[]>([]);
+	let categoriesLoaded = $state(false);
 
 	const filteredCategories = $derived.by(() => {
 		if (filter === 'published') {
@@ -98,6 +102,7 @@
 				throw new Error('Failed to load categories');
 			}
 			categories = await response.json();
+			categoriesLoaded = true;
 		} catch (err) {
 			console.error(err);
 			error = err instanceof Error ? err.message : 'Unable to load categories.';
@@ -126,6 +131,10 @@
 				throw new Error('Failed to load projects');
 			}
 			projects = await response.json();
+			projectCategoryIds = {};
+			for (const project of projects) {
+				await fetchProjectCategories(project.id);
+			}
 		} catch (err) {
 			console.error(err);
 			projectsError = err instanceof Error ? err.message : 'Unable to load projects.';
@@ -203,10 +212,12 @@
 
 		const created = await response.json();
 		projects = [created, ...projects];
+		await updateProjectCategories(created.id, newProjectCategoryIds);
 		newProjectName = '';
 		newProjectDisplayName = '';
 		newProjectDescription = '';
 		newProjectIsPublished = false;
+		newProjectCategoryIds = [];
 		projectsSuccess = 'Project created.';
 	}
 
@@ -225,6 +236,7 @@
 		editProjectDisplayName = project.displayName;
 		editProjectDescription = project.description ?? '';
 		editProjectIsPublished = project.isPublished;
+		editProjectCategoryIds = [...(projectCategoryIds[project.id] ?? [])];
 		projectsSuccess = '';
 		projectsError = '';
 	}
@@ -242,6 +254,7 @@
 		editProjectDisplayName = '';
 		editProjectDescription = '';
 		editProjectIsPublished = false;
+		editProjectCategoryIds = [];
 	}
 
 	async function saveEdit() {
@@ -311,6 +324,7 @@
 
 		const updated = await response.json();
 		projects = projects.map((project) => (project.id === updated.id ? updated : project));
+		await updateProjectCategories(editingProjectId, editProjectCategoryIds);
 		cancelProjectEdit();
 		projectsSuccess = 'Project updated.';
 	}
@@ -364,7 +378,82 @@
 		}
 
 		projects = projects.filter((project) => project.id !== projectId);
+		const { [projectId]: _removed, ...rest } = projectCategoryIds;
+		projectCategoryIds = rest;
 		projectsSuccess = 'Project deleted.';
+	}
+
+	function toggleCategory(ids: number[], categoryId: number) {
+		if (ids.includes(categoryId)) {
+			return ids.filter((id) => id !== categoryId);
+		}
+		return [...ids, categoryId];
+	}
+
+	async function fetchProjectCategories(projectId: number) {
+		const token = await getToken();
+		const headers: Record<string, string> = {};
+		if (token) {
+			headers.Authorization = `Bearer ${token}`;
+		}
+
+		const response = await fetch(`/api/projects/${projectId}/categories`, { headers });
+		if (!response.ok) {
+			throw new Error('Failed to load project categories');
+		}
+		const rows = (await response.json()) as Category[];
+		projectCategoryIds = {
+			...projectCategoryIds,
+			[projectId]: rows.map((row) => row.id)
+		};
+	}
+
+	async function updateProjectCategories(projectId: number, desiredIds: number[]) {
+		const token = await getToken();
+		if (!token) {
+			projectsError = 'Sign in to update project categories.';
+			return;
+		}
+
+		const current = projectCategoryIds[projectId] ?? [];
+		const toAdd = desiredIds.filter((id) => !current.includes(id));
+		const toRemove = current.filter((id) => !desiredIds.includes(id));
+
+		if (toAdd.length > 0) {
+			const response = await fetch(`/api/projects/${projectId}/categories`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({ category_ids: toAdd })
+			});
+			if (!response.ok) {
+				projectsError = 'Unable to add project categories.';
+				return;
+			}
+		}
+
+		if (toRemove.length > 0) {
+			const response = await fetch(`/api/projects/${projectId}/categories`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({ category_ids: toRemove })
+			});
+			if (!response.ok) {
+				projectsError = 'Unable to remove project categories.';
+				return;
+			}
+		}
+
+		projectCategoryIds = { ...projectCategoryIds, [projectId]: [...desiredIds] };
+	}
+
+	function getCategory(categoryId: number) {
+		return categories.find((category) => category.id === categoryId);
 	}
 
 	onMount(fetchCategories);
@@ -575,6 +664,36 @@
 							placeholder="Brief description of the project..."
 						></textarea>
 					</label>
+					<div class="md:col-span-2">
+						<p class="text-sm text-ash">Categories</p>
+						{#if categoriesLoaded && categories.length === 0}
+							<p class="mt-2 text-xs text-ash">Create a category to start tagging projects.</p>
+						{:else}
+							<div class="mt-2 flex flex-wrap gap-2">
+								{#each categories as category (category.id)}
+									<button
+										type="button"
+										onclick={() =>
+											(newProjectCategoryIds = toggleCategory(newProjectCategoryIds, category.id))}
+										class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
+											newProjectCategoryIds.includes(category.id)
+												? 'bg-walnut text-cream border-walnut'
+												: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
+										}`}
+									>
+										<span>{category.displayName}</span>
+										<span
+											class={`text-[10px] uppercase tracking-wide ${
+												category.isPublished ? 'text-emerald-200' : 'text-ash'
+											}`}
+										>
+											{category.isPublished ? 'Live' : 'Draft'}
+										</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
 					<label class="flex items-center gap-2 text-sm text-ash">
 						<input type="checkbox" bind:checked={newProjectIsPublished} class="accent-copper" />
 						Published
@@ -624,6 +743,35 @@
 											rows="3"
 											class="w-full rounded-md border border-walnut/20 px-3 py-2 text-sm"
 										></textarea>
+										<div>
+											<p class="text-sm text-ash">Categories</p>
+											<div class="mt-2 flex flex-wrap gap-2">
+												{#each categories as category (category.id)}
+													<button
+														type="button"
+														onclick={() =>
+															(editProjectCategoryIds = toggleCategory(
+																editProjectCategoryIds,
+																category.id
+															))}
+														class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
+															editProjectCategoryIds.includes(category.id)
+																? 'bg-walnut text-cream border-walnut'
+																: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
+														}`}
+													>
+														<span>{category.displayName}</span>
+														<span
+															class={`text-[10px] uppercase tracking-wide ${
+																category.isPublished ? 'text-emerald-200' : 'text-ash'
+															}`}
+														>
+															{category.isPublished ? 'Live' : 'Draft'}
+														</span>
+													</button>
+												{/each}
+											</div>
+										</div>
 										<label class="flex items-center gap-2 text-sm text-ash">
 											<input type="checkbox" bind:checked={editProjectIsPublished} class="accent-copper" />
 											Published
@@ -656,8 +804,30 @@
 										</span>
 									</div>
 									<p class="text-xs text-ash">/{project.name}</p>
-										<p class="text-sm text-ash">{project.description ?? ''}</p>
-									</div>
+									<p class="text-sm text-ash">{project.description ?? ''}</p>
+									{#if (projectCategoryIds[project.id] ?? []).length > 0}
+										<div class="mt-2 flex flex-wrap gap-2">
+											{#each projectCategoryIds[project.id] ?? [] as categoryId (categoryId)}
+												{#if getCategory(categoryId)}
+													<span
+														class={`flex items-center gap-2 rounded-full border px-2 py-1 text-[11px] ${
+															getCategory(categoryId)?.isPublished
+																? 'border-emerald-200/60 text-emerald-700 bg-emerald-50/60'
+																: 'border-walnut/10 text-ash bg-cream/60'
+														}`}
+													>
+														{getCategory(categoryId)?.displayName}
+														<span class="uppercase tracking-wide text-[9px]">
+															{getCategory(categoryId)?.isPublished ? 'Live' : 'Draft'}
+														</span>
+													</span>
+												{/if}
+											{/each}
+										</div>
+									{:else}
+										<p class="mt-2 text-xs text-ash">No categories assigned.</p>
+									{/if}
+								</div>
 								<div class="flex items-center gap-2">
 									<button
 										type="button"
