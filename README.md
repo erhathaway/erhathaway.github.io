@@ -50,7 +50,7 @@ E2E_BASE_URL=http://localhost:8787 CLERK_TEST_TOKEN=... bunx playwright test e2e
 ## API Notes
 
 - Client API calls use same-origin `/api` endpoints (no cross-origin).
-- `/api/projects` is not implemented yet; implement projects CRUD before enabling project loading.
+- `/api/projects` endpoints are available for CRUD; reads are public for published items.
 
 ## Database (Cloudflare D1)
 

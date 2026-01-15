@@ -172,7 +172,7 @@ interface PortfolioItem {
 ## API Notes
 
 - Client API calls should use same-origin `/api` endpoints.
-- `/api/projects` is not implemented yet; implement projects CRUD before enabling project loading.
+- `/api/projects` endpoints are available for CRUD; reads are public for published items.
 
 ## Known Issues
 
