@@ -58,9 +58,9 @@
       const distanceFromTop = itemCenter - containerTop;
       const distanceFromBottom = containerBottom - itemCenter;
 
-      // Define fade zones (40% of container height from edges)
-      const fadeZone = containerHeight * 0.4;
-      const minScale = 0.6;
+      // Define fade zones (25% of container height from edges)
+      const fadeZone = containerHeight * 0.25;
+      const minScale = 0.4;
 
       let scale = 1;
 
@@ -130,19 +130,18 @@
     <li class="w-full" {@attach storeEl(item.id)}>
       <a
         href="/project/{item.id}"
-        class="item-link hover:text-copper transition-all duration-200 view-transition-item w-full block {isActive ? 'text-copper font-medium' : 'text-walnut'} {isHovered ? '' : 'pb-0.5'}"
+        class="item-link hover:text-copper transition-colors duration-200 view-transition-item w-full block {isActive ? 'text-copper font-medium' : 'text-walnut'} {isHovered ? '' : 'pb-0.5'}"
         class:active={isActive || isHovered}
         class:active-project={isActive}
         aria-current={isActive ? 'page' : undefined}
-        style="opacity: {Math.max(scale, 0.85)};"
       >
         {#if isHovered}
           <HoverInfo item={item} />
         {:else}
           <span
-            class="item-label block px-8 transition-all duration-200"
+            class="item-label block px-8 transition-all duration-75"
             class:active-project={isActive}
-            style="font-size: {isActive ? 1.125 * scale : 0.875 * scale}rem;"
+            style="font-size: {isActive ? 1.125 * scale : 0.875 * scale}rem; opacity: {Math.pow(scale, 3)};"
           >
             {item.name}
           </span>
