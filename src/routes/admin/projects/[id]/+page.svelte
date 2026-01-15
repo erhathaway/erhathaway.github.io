@@ -3,8 +3,8 @@
 	import { SignedIn, SignedOut, UserButton, useClerkContext } from 'svelte-clerk';
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
 	import ImageArtifactEditor from '$lib/schemas/artifacts/image-v1/Editor.svelte';
+	import ImageArtifactAdminList from '$lib/schemas/artifacts/image-v1/AdminList.svelte';
 	import { artifactSchemas, validateArtifactData } from '$lib/schemas/artifacts';
-	import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
 	import { createImageV1Draft, type ImageV1Data } from '$lib/schemas/artifacts/image-v1/validator';
 
 	type Category = {
@@ -517,7 +517,11 @@
 										</span>
 									</div>
 									<div class="mt-3">
-										<ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+										{#if artifact.schema === 'image-v1'}
+											<ImageArtifactAdminList data={artifact.dataBlob as ImageV1Data} />
+										{:else}
+											<p class="text-xs text-ash">Unsupported schema.</p>
+										{/if}
 									</div>
 								</div>
 							{/each}

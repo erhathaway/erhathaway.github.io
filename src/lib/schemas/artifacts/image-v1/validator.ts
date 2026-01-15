@@ -27,7 +27,7 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 	const data = payload as Record<string, unknown>;
 	const imageUrl = data.imageUrl;
 	if (typeof imageUrl !== 'string' || imageUrl.trim().length === 0) {
-		errors.push('imageUrl is required');
+		errors.push('image is required');
 	}
 
 	const description = data.description;
