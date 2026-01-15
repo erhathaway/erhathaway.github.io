@@ -1,7 +1,6 @@
 <script lang="ts">
 	import ImageArtifactView from './ImageArtifactView.svelte';
 	import { validateArtifactData } from '$lib/schemas/artifacts';
-	import type { ArtifactSchemaName } from '$lib/schemas/artifacts';
 
 	type Props = {
 		schema: string;
@@ -11,15 +10,11 @@
 
 	let { schema, data, className = '' }: Props = $props();
 
-	const viewBySchema: Partial<Record<ArtifactSchemaName, typeof ImageArtifactView>> = {
-		'image-v1': ImageArtifactView
-	};
-
-	const component = $derived(() => viewBySchema[schema as ArtifactSchemaName] ?? null);
-	const validation = $derived(() => validateArtifactData(schema, data));
+	const isImageV1 = $derived(schema === 'image-v1');
+	const validation = $derived.by(() => validateArtifactData(schema, data));
 </script>
 
-{#if !component}
+{#if !isImageV1}
 	<div class={`rounded-lg border border-walnut/20 bg-cream/60 p-3 text-xs text-ash ${className}`}>
 		Unknown schema: {schema}
 	</div>
@@ -28,5 +23,5 @@
 		Invalid artifact data: {validation.errors.join('; ')}
 	</div>
 {:else}
-	<svelte:component this={component} data={validation.value} className={className} />
+	<ImageArtifactView data={validation.value} className={className} />
 {/if}
