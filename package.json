@@ -58,7 +58,7 @@
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:migrate:local": "sh -c 'for f in ./drizzle/*.sql; do bunx wrangler d1 execute portfolio-db --file=\"$f\"; done'",
+		"db:migrate:local": "bash scripts/d1_migrate_local.sh",
 		"db:studio": "drizzle-kit studio"
 	},
 	"type": "module",
