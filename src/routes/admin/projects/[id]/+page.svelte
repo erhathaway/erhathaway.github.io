@@ -71,6 +71,14 @@
 		uploading: false,
 		error: null
 	});
+	let editingArtifactId = $state<number | null>(null);
+	let editArtifactDraft = $state<ImageV1Data>(createImageV1Draft());
+	let editArtifactErrors = $state<string[]>([]);
+	let editArtifactIsPublished = $state(false);
+	let editArtifactUploadState = $state<{ uploading: boolean; error: string | null }>({
+		uploading: false,
+		error: null
+	});
 
 	function handleSchemaChange(event: Event) {
 		const target = event.currentTarget as HTMLSelectElement | null;
@@ -401,6 +409,99 @@
 		return payload.url;
 	}
 
+	function startArtifactEdit(artifact: ProjectArtifact) {
+		if (artifact.schema !== 'image-v1') {
+			pageError = 'Unsupported schema for editing.';
+			return;
+		}
+		const validation = validateArtifactData(artifact.schema, artifact.dataBlob);
+		editingArtifactId = artifact.id;
+		editArtifactDraft = validation.ok ? (validation.value as ImageV1Data) : createImageV1Draft();
+		editArtifactErrors = validation.ok ? [] : validation.errors;
+		editArtifactIsPublished = artifact.isPublished;
+		editArtifactUploadState = { uploading: false, error: null };
+	}
+
+	function cancelArtifactEdit() {
+		editingArtifactId = null;
+		editArtifactDraft = createImageV1Draft();
+		editArtifactErrors = [];
+		editArtifactIsPublished = false;
+		editArtifactUploadState = { uploading: false, error: null };
+	}
+
+	function handleEditArtifactDraftChange(next: ImageV1Data) {
+		editArtifactDraft = next;
+		const validation = validateArtifactData('image-v1', next);
+		editArtifactErrors = validation.ok ? [] : validation.errors;
+	}
+
+	function handleEditArtifactUploadStateChange(state: { uploading: boolean; error: string | null }) {
+		editArtifactUploadState = state;
+	}
+
+	async function saveArtifactEdit() {
+		if (editingArtifactId === null) return;
+		if (editArtifactUploadState.uploading) {
+			pageError = 'Wait for the image upload to finish.';
+			return;
+		}
+		const validation = validateArtifactData('image-v1', editArtifactDraft);
+		if (!validation.ok) {
+			editArtifactErrors = validation.errors;
+			return;
+		}
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to update artifacts.';
+			return;
+		}
+		const response = await fetch(`/api/projects/${projectId}/artifacts/${editingArtifactId}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify({
+				schema: 'image-v1',
+				dataBlob: validation.value,
+				isPublished: editArtifactIsPublished
+			})
+		});
+		if (!response.ok) {
+			pageError = 'Unable to update artifact.';
+			return;
+		}
+		const updated = await response.json();
+		artifacts = artifacts.map((artifact) => (artifact.id === updated.id ? updated : artifact));
+		cancelArtifactEdit();
+		pageSuccess = 'Artifact updated.';
+	}
+
+	async function deleteArtifact(artifactId: number) {
+		if (!confirm('Delete this artifact?')) return;
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to delete artifacts.';
+			return;
+		}
+		const response = await fetch(`/api/projects/${projectId}/artifacts/${artifactId}`, {
+			method: 'DELETE',
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		});
+		if (!response.ok) {
+			pageError = 'Unable to delete artifact.';
+			return;
+		}
+		artifacts = artifacts.filter((artifact) => artifact.id !== artifactId);
+		if (editingArtifactId === artifactId) {
+			cancelArtifactEdit();
+		}
+		pageSuccess = 'Artifact deleted.';
+	}
+
 	onMount(loadAll);
 </script>
 
@@ -515,9 +616,63 @@
 										>
 											{artifact.isPublished ? 'Live' : 'Draft'}
 										</span>
+										<div class="ml-auto flex gap-2">
+											<button
+												type="button"
+												class="text-xs uppercase tracking-wide text-ash hover:text-copper"
+												onclick={() => startArtifactEdit(artifact)}
+											>
+												Edit
+											</button>
+											<button
+												type="button"
+												class="text-xs uppercase tracking-wide text-ash hover:text-red-600"
+												onclick={() => deleteArtifact(artifact.id)}
+											>
+												Delete
+											</button>
+										</div>
 									</div>
 									<div class="mt-3">
-										{#if artifact.schema === 'image-v1'}
+										{#if editingArtifactId === artifact.id}
+											<div class="grid gap-4">
+												<ImageArtifactEditor
+													value={editArtifactDraft}
+													onChange={handleEditArtifactDraftChange}
+													onUpload={handleArtifactUpload}
+													onUploadStateChange={handleEditArtifactUploadStateChange}
+												/>
+												<label class="flex items-center gap-2 text-sm text-ash">
+													<input type="checkbox" bind:checked={editArtifactIsPublished} class="accent-copper" />
+													Published
+												</label>
+												{#if editArtifactErrors.length > 0}
+													<p class="text-xs text-red-700">{editArtifactErrors.join('; ')}</p>
+												{/if}
+												{#if editArtifactUploadState.error}
+													<p class="text-xs text-red-700">{editArtifactUploadState.error}</p>
+												{/if}
+												{#if editArtifactUploadState.uploading}
+													<p class="text-xs text-ash">Uploading image...</p>
+												{/if}
+												<div class="flex gap-3">
+													<button
+														type="button"
+														class="px-3 py-1 rounded-full bg-walnut text-cream text-xs hover:bg-copper transition-colors"
+														onclick={saveArtifactEdit}
+													>
+														Save
+													</button>
+													<button
+														type="button"
+														class="px-3 py-1 rounded-full border border-walnut/20 text-xs text-ash hover:text-walnut"
+														onclick={cancelArtifactEdit}
+													>
+														Cancel
+													</button>
+												</div>
+											</div>
+										{:else if artifact.schema === 'image-v1'}
 											<ImageArtifactAdminList data={artifact.dataBlob as ImageV1Data} />
 										{:else}
 											<p class="text-xs text-ash">Unsupported schema.</p>
