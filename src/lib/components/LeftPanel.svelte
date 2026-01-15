@@ -3,7 +3,7 @@
   import ItemList from './ItemList.svelte';
   import { page } from '$app/stores';
 
-  let { isOpen = $bindable(false), isMobile = false }: { isOpen?: boolean, isMobile?: boolean } = $props();
+  let { isMobile = false }: { isMobile?: boolean } = $props();
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
   const isAdminPage = $derived($page.route.id?.includes('/admin'));
@@ -21,15 +21,6 @@
   style="background: {isMobile
     ? 'linear-gradient(to right, #F5F1EB 0%, #F5F1EB 30%, rgba(245, 241, 235, 0.95) 50%, rgba(245, 241, 235, 0.8) 65%, rgba(245, 241, 235, 0.5) 80%, rgba(245, 241, 235, 0.2) 90%, transparent 100%)'
     : 'linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%)'}">
-  <!-- Mobile close button - show below md (768px) -->
-  <button
-    onclick={() => isOpen = false}
-    class="md:hidden absolute top-4 right-4 z-[110] p-2 bg-white/50 backdrop-blur-sm rounded-lg"
-  >
-    <svg class="w-5 h-5 text-walnut" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  </button>
   <!-- Fixed Header - Always on top -->
   <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent" style="view-transition-name: header-name">
     <a href="/" class="text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block animate-slide-up" style="animation-delay: 0.1s; view-transition-name: site-name; font-family: 'Times New Roman', Times, serif;">

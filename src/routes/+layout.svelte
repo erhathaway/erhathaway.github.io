@@ -98,7 +98,7 @@
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
 		<div class="fixed inset-y-0 left-0 w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0">
-			<LeftPanel bind:isOpen={mobileMenuOpen} isMobile={isMobileScreen} />
+			<LeftPanel isMobile={isMobileScreen} />
 		</div>
 	<AuthButton onOpenModal={() => showLoginModal = true} />
 	{#if !isAdminPage}
