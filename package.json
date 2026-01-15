@@ -42,6 +42,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "sh -c 'bun run dev:kill-wrangler; bunx wrangler dev --port 5173'",
+		"dev:remote": "sh -c 'bun run dev:kill-wrangler; bunx wrangler dev --remote --port 5173'",
 		"dev:vite": "vite dev",
 		"dev:kill-wrangler": "pkill -f \"wrangler dev\" || true",
 		"build": "sh -c 'rm -rf .svelte-kit/cloudflare && vite build'",

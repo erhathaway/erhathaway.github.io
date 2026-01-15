@@ -60,7 +60,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const extension = getExtension(file);
 	const key = `artifacts/${crypto.randomUUID()}.${extension}`;
 
-	await bucket.put(key, file.stream(), {
+	const body = await file.arrayBuffer();
+	await bucket.put(key, body, {
 		httpMetadata: {
 			contentType: file.type || undefined
 		}
