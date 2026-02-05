@@ -95,7 +95,9 @@
 		<AuthButton onOpenModal={() => showLoginModal = true} />
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 	{:else}
-		<div class="font-body bg-charcoal text-cream h-screen flex">
+		<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[200]"></div>
+
+		<div class="font-body bg-charcoal text-cream h-screen flex ml-[12px]">
 			<!-- Left spacer only on project pages on larger screens -->
 			{#if isProjectPage}
 				<div class="hidden sm:block w-80 shrink-0"></div>
@@ -110,7 +112,7 @@
 			<div class="fixed inset-0 z-[99] pointer-events-none bg-black/10"></div>
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
-		<div class="fixed inset-y-0 left-0 w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0">
+		<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0">
 			<LeftPanel isMobile={isMobileScreen} onItemClick={() => {
 				// Only close menu on mobile when clicking an item
 				if (isMobileScreen) {
