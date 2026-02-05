@@ -924,6 +924,23 @@
 					onSave={handleSave}
 				/>
 			{/key}
+
+			<!-- Danger Zone -->
+			<div class="mt-6 pt-6 border-t border-red-200">
+				<div class="flex items-center justify-between gap-4">
+					<div>
+						<h2 class="text-sm font-semibold text-red-900">Danger zone</h2>
+						<p class="text-xs text-red-700/70 mt-0.5">Permanently delete this project and all its data.</p>
+					</div>
+					<button
+						type="button"
+						class="px-4 py-1.5 rounded-lg border border-red-300 bg-white text-xs font-medium text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors duration-150"
+						onclick={() => (showDeleteProjectModal = true)}
+					>
+						Delete project
+					</button>
+				</div>
+			</div>
 		</section>
 
 		<section class="mt-6">
@@ -1049,23 +1066,6 @@
 				{/each}
 			</div>
 		</section>
-		<!-- Danger Zone -->
-		<section class="mt-6 rounded-2xl border border-red-200 bg-red-50/50 p-6">
-			<div class="flex items-center justify-between gap-4">
-				<div>
-					<h2 class="text-sm font-semibold text-red-900">Danger zone</h2>
-					<p class="text-xs text-red-700/70 mt-0.5">Permanently delete this project and all its data.</p>
-				</div>
-				<button
-					type="button"
-					class="px-4 py-1.5 rounded-lg border border-red-300 bg-white text-xs font-medium text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors duration-150"
-					onclick={() => (showDeleteProjectModal = true)}
-				>
-					Delete project
-				</button>
-			</div>
-		</section>
-
 	{:else}
 		<div class="flex items-center justify-center py-16">
 			<p class="text-sm text-slate-400">Project not found.</p>
@@ -1163,7 +1163,7 @@
 		<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-10 overflow-hidden">
 			<button
 				type="button"
-				class="absolute inset-0 bg-black/50 backdrop-blur-2xl backdrop-saturate-150"
+				class="absolute inset-0 bg-white/15 backdrop-blur-3xl backdrop-saturate-200"
 				onclick={cancelArtifactEdit}
 				aria-label="Close edit artifact modal"
 			></button>
