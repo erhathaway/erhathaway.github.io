@@ -39,10 +39,8 @@
 	}
 
 	async function handleConnect() {
-		const token = await getToken();
-		if (!token) return;
-		// Redirect via our connect endpoint (which redirects to Google)
-		window.location.href = `/api/integrations/google-photos/connect?_auth=${encodeURIComponent(token)}`;
+		// Browser redirect — Clerk middleware handles auth via cookies
+		window.location.href = '/api/integrations/google-photos/connect';
 	}
 
 	async function handleDisconnect() {

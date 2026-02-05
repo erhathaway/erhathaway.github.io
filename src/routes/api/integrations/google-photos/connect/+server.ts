@@ -1,22 +1,10 @@
 import type { RequestHandler } from './$types';
 import { redirect, error } from '@sveltejs/kit';
-import { verifyClerkAuth } from '$lib/server/auth';
 import { buildOAuthUrl } from '$lib/server/integrations/google-photos';
 
-export const GET: RequestHandler = async ({ request, platform, url }) => {
-	// Support auth via query param since this is a browser redirect
-	const authToken = url.searchParams.get('_auth');
-	let userId: string | null = null;
-
-	if (authToken) {
-		// Build a fake request with the Authorization header for verification
-		const authRequest = new Request(request.url, {
-			headers: { Authorization: `Bearer ${authToken}` }
-		});
-		userId = await verifyClerkAuth(authRequest, platform?.env);
-	} else {
-		userId = await verifyClerkAuth(request, platform?.env);
-	}
+export const GET: RequestHandler = async ({ locals, platform, url }) => {
+	// This is a browser redirect, so Clerk middleware provides auth via cookies
+	const userId = locals.auth?.()?.userId ?? null;
 
 	if (!userId) {
 		throw error(401, 'Unauthorized');
