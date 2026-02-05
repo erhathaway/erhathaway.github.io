@@ -753,28 +753,16 @@
 
 			<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 				<!-- New Artifact Card -->
-				<div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col gap-4">
-					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">New Artifact</p>
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium text-slate-600">Schema</span>
-						<select
-							value={artifactSchema}
-							onchange={handleSchemaChange}
-							class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 bg-white focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
-						>
-							{#each artifactSchemas as schemaOption (schemaOption.name)}
-								<option value={schemaOption.name}>{schemaOption.label}</option>
-							{/each}
-						</select>
-					</label>
-					<button
-						type="button"
-						class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150"
-						onclick={() => (showCreateArtifactModal = true)}
-					>
-						Add artifact
-					</button>
-				</div>
+				<button
+					type="button"
+					class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-2 min-h-[160px] hover:border-slate-400 hover:bg-slate-50 transition-all duration-150 cursor-pointer"
+					onclick={() => (showCreateArtifactModal = true)}
+				>
+					<svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
+					</svg>
+					<span class="text-xs font-medium text-slate-500">Add artifact</span>
+				</button>
 
 				<!-- Existing Artifacts -->
 				{#each artifacts as artifact (artifact.id)}
@@ -842,83 +830,62 @@
 				onclick={() => (showCreateArtifactModal = false)}
 				aria-label="Close create artifact modal"
 			></button>
-			<div class="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden">
-				<!-- Header -->
-				<div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
-					<div>
-						<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">New Artifact</p>
-						<h3 class="text-lg font-semibold text-slate-900 mt-1">Add details</h3>
-					</div>
+			<div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
+				<div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
+					<h3 class="text-sm font-semibold text-slate-900">New Artifact</h3>
 					<button
 						type="button"
-						class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+						class="rounded-lg p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
 						onclick={() => (showCreateArtifactModal = false)}
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 						</svg>
 					</button>
 				</div>
 
-				<!-- Body -->
-				<form class="px-6 py-5 grid gap-4" onsubmit={createArtifact}>
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium text-slate-600">Schema</span>
-						<select
-							value={artifactSchema}
-							onchange={handleSchemaChange}
-							class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 bg-white focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
-						>
-							{#each artifactSchemas as schemaOption (schemaOption.name)}
-								<option value={schemaOption.name}>{schemaOption.label}</option>
-							{/each}
-						</select>
-					</label>
+				<form class="px-5 py-4 grid gap-3" onsubmit={createArtifact}>
 					<ImageArtifactEditor
 						value={artifactDraft}
 						onChange={handleArtifactDraftChange}
 						onUpload={handleArtifactUpload}
 						onUploadStateChange={handleArtifactUploadStateChange}
 					/>
-					<div class="flex items-center gap-3">
-						<button
-							type="button"
-							role="switch"
-							aria-checked={artifactIsPublished}
-							aria-label="Toggle published"
-							onclick={() => { artifactIsPublished = !artifactIsPublished; }}
-							class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${artifactIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
-						>
-							<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${artifactIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
-						</button>
-						<span class="text-sm text-slate-600">Published</span>
-					</div>
-					{#if artifactDraftErrors.length > 0}
-						<p class="text-xs font-medium text-red-600">{artifactDraftErrors.join('; ')}</p>
+					{#if artifactDraftErrors.length > 0 || artifactUploadState.error}
+						<p class="text-xs font-medium text-red-600">
+							{[...artifactDraftErrors, artifactUploadState.error].filter(Boolean).join('; ')}
+						</p>
 					{/if}
-					{#if artifactUploadState.error}
-						<p class="text-xs font-medium text-red-600">{artifactUploadState.error}</p>
-					{/if}
-					{#if artifactUploadState.uploading}
-						<div class="flex items-center gap-2">
-							<div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500"></div>
-							<p class="text-xs text-slate-500">Uploading image...</p>
+					<div class="flex items-center justify-between pt-3 border-t border-slate-100">
+						<div class="flex items-center gap-2.5">
+							<button
+								type="button"
+								role="switch"
+								aria-checked={artifactIsPublished}
+								aria-label="Toggle published"
+								onclick={() => { artifactIsPublished = !artifactIsPublished; }}
+								class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${artifactIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+							>
+								<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${artifactIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+							</button>
+							<span class="text-xs text-slate-500">{artifactIsPublished ? 'Published' : 'Draft'}</span>
 						</div>
-					{/if}
-					<div class="flex items-center gap-2.5 pt-2 border-t border-slate-100 mt-2">
-						<button
-							type="submit"
-							class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150"
-						>
-							Create artifact
-						</button>
-						<button
-							type="button"
-							class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-							onclick={() => (showCreateArtifactModal = false)}
-						>
-							Cancel
-						</button>
+						<div class="flex items-center gap-2">
+							<button
+								type="button"
+								class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors duration-150"
+								onclick={() => (showCreateArtifactModal = false)}
+							>
+								Cancel
+							</button>
+							<button
+								type="submit"
+								disabled={artifactUploadState.uploading}
+								class="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+							>
+								{artifactUploadState.uploading ? 'Uploading...' : 'Create'}
+							</button>
+						</div>
 					</div>
 				</form>
 			</div>
@@ -934,75 +901,66 @@
 				onclick={cancelArtifactEdit}
 				aria-label="Close edit artifact modal"
 			></button>
-			<div class="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden">
-				<!-- Header -->
-				<div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
-					<div>
-						<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Edit Artifact</p>
-						<h3 class="text-lg font-semibold text-slate-900 mt-1">Artifact details</h3>
+			<div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
+				<div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
+					<div class="flex items-center gap-2">
+						<h3 class="text-sm font-semibold text-slate-900">Edit Artifact</h3>
+						<span class="text-[11px] font-mono text-slate-400">{artifactSchema}</span>
 					</div>
 					<button
 						type="button"
-						class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+						class="rounded-lg p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
 						onclick={cancelArtifactEdit}
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 						</svg>
 					</button>
 				</div>
 
-				<!-- Body -->
-				<div class="px-6 py-5 grid gap-4">
-					<p class="text-xs font-mono text-slate-400">
-						Schema: <span class="text-slate-600">image-v1</span>
-					</p>
+				<div class="px-5 py-4 grid gap-3">
 					<ImageArtifactEditor
 						value={editArtifactDraft}
 						onChange={handleEditArtifactDraftChange}
 						onUpload={handleArtifactUpload}
 						onUploadStateChange={handleEditArtifactUploadStateChange}
 					/>
-					<div class="flex items-center gap-3">
-						<button
-							type="button"
-							role="switch"
-							aria-checked={editArtifactIsPublished}
-							aria-label="Toggle published"
-							onclick={() => { editArtifactIsPublished = !editArtifactIsPublished; }}
-							class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editArtifactIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
-						>
-							<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${editArtifactIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
-						</button>
-						<span class="text-sm text-slate-600">Published</span>
-					</div>
-					{#if editArtifactErrors.length > 0}
-						<p class="text-xs font-medium text-red-600">{editArtifactErrors.join('; ')}</p>
+					{#if editArtifactErrors.length > 0 || editArtifactUploadState.error}
+						<p class="text-xs font-medium text-red-600">
+							{[...editArtifactErrors, editArtifactUploadState.error].filter(Boolean).join('; ')}
+						</p>
 					{/if}
-					{#if editArtifactUploadState.error}
-						<p class="text-xs font-medium text-red-600">{editArtifactUploadState.error}</p>
-					{/if}
-					{#if editArtifactUploadState.uploading}
-						<div class="flex items-center gap-2">
-							<div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500"></div>
-							<p class="text-xs text-slate-500">Uploading image...</p>
+					<div class="flex items-center justify-between pt-3 border-t border-slate-100">
+						<div class="flex items-center gap-2.5">
+							<button
+								type="button"
+								role="switch"
+								aria-checked={editArtifactIsPublished}
+								aria-label="Toggle published"
+								onclick={() => { editArtifactIsPublished = !editArtifactIsPublished; }}
+								class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editArtifactIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+							>
+								<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${editArtifactIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+							</button>
+							<span class="text-xs text-slate-500">{editArtifactIsPublished ? 'Published' : 'Draft'}</span>
 						</div>
-					{/if}
-					<div class="flex items-center gap-2.5 pt-2 border-t border-slate-100 mt-2">
-						<button
-							type="button"
-							class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150"
-							onclick={saveArtifactEdit}
-						>
-							Save changes
-						</button>
-						<button
-							type="button"
-							class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-							onclick={cancelArtifactEdit}
-						>
-							Cancel
-						</button>
+						<div class="flex items-center gap-2">
+							<button
+								type="button"
+								class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors duration-150"
+								onclick={cancelArtifactEdit}
+							>
+								Cancel
+							</button>
+							<button
+								type="button"
+								disabled={editArtifactUploadState.uploading}
+								class="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+								onclick={saveArtifactEdit}
+							>
+								{editArtifactUploadState.uploading ? 'Uploading...' : 'Save'}
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
