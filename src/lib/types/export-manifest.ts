@@ -32,6 +32,7 @@ export interface ExportArtifact {
 	schema: string;
 	dataBlob: Record<string, unknown>;
 	isPublished: boolean;
+	isCover?: boolean;
 	_localImagePath?: string;
 }
 

@@ -46,3 +46,13 @@ export const projectAttributes = sqliteTable('project_attributes', {
 	showInNav: integer('show_in_nav', { mode: 'boolean' }).notNull().default(false),
 	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
 });
+
+export const projectCoverArtifact = sqliteTable('project_cover_artifact', {
+	projectId: integer('project_id')
+		.notNull()
+		.unique()
+		.references(() => projects.id, { onDelete: 'cascade' }),
+	artifactId: integer('artifact_id')
+		.notNull()
+		.references(() => projectArtifacts.id, { onDelete: 'cascade' })
+});

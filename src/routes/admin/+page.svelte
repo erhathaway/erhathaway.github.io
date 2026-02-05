@@ -45,7 +45,7 @@
 		{setCategories}
 		{setCategoriesLoaded}
 	/>
-	<ProjectManager {categories} {categoriesLoaded} {getToken} />
+	<ProjectManager {getToken} />
 </SignedIn>
 
 <SignedOut>

@@ -37,6 +37,7 @@
 		schema: string;
 		dataBlob: unknown;
 		isPublished: boolean;
+		isCover: boolean;
 	};
 
 	type PageProps = {
@@ -68,6 +69,7 @@
 	let artifactDraft = $state<ImageV1Data>(initialDraft);
 	let artifactDraftErrors = $state<string[]>(initialValidation.ok ? [] : initialValidation.errors);
 	let artifactIsPublished = $state(false);
+	let artifactIsCover = $state(false);
 	let showCreateArtifactModal = $state(false);
 	let artifactUploadState = $state<{ uploading: boolean; error: string | null }>({
 		uploading: false,
@@ -82,6 +84,7 @@
 		uploading: false,
 		error: null
 	});
+	let editArtifactIsCover = $state(false);
 
 	let editingArtifactIndex = $derived(
 		editingArtifactId !== null ? artifacts.findIndex((a) => a.id === editingArtifactId) : -1
@@ -396,10 +399,24 @@
 
 		const created = await response.json();
 		artifacts = [created, ...artifacts];
+
+		// Set as cover if toggled
+		if (artifactIsCover) {
+			const coverRes = await fetch(`/api/projects/${projectId}/cover`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ artifactId: created.id })
+			});
+			if (coverRes.ok) {
+				artifacts = artifacts.map((a) => ({ ...a, isCover: a.id === created.id }));
+			}
+		}
+
 		artifactSchema = schema;
 		artifactDraft = createImageV1Draft();
 		artifactDraftErrors = [];
 		artifactIsPublished = false;
+		artifactIsCover = false;
 		showCreateArtifactModal = false;
 		pageSuccess = 'Artifact created.';
 	}
@@ -452,6 +469,7 @@
 		editArtifactDraft = validation.ok ? (validation.value as ImageV1Data) : createImageV1Draft();
 		editArtifactErrors = validation.ok ? [] : validation.errors;
 		editArtifactIsPublished = artifact.isPublished;
+		editArtifactIsCover = artifact.isCover;
 		editArtifactUploadState = { uploading: false, error: null };
 		showEditArtifactModal = true;
 	}
@@ -461,6 +479,7 @@
 		editArtifactDraft = createImageV1Draft();
 		editArtifactErrors = [];
 		editArtifactIsPublished = false;
+		editArtifactIsCover = false;
 		editArtifactUploadState = { uploading: false, error: null };
 		showEditArtifactModal = false;
 	}
@@ -518,7 +537,35 @@
 			return;
 		}
 		const updated = await response.json();
+		const wasCover = updated.isCover;
 		artifacts = artifacts.map((artifact) => (artifact.id === updated.id ? updated : artifact));
+
+		// Handle cover toggle
+		if (editArtifactIsCover && !wasCover) {
+			const coverRes = await fetch(`/api/projects/${projectId}/cover`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ artifactId: editingArtifactId })
+			});
+			if (!coverRes.ok) {
+				pageError = 'Artifact saved but failed to set as cover.';
+				cancelArtifactEdit();
+				return;
+			}
+			artifacts = artifacts.map((a) => ({ ...a, isCover: a.id === editingArtifactId }));
+		} else if (!editArtifactIsCover && wasCover) {
+			const coverRes = await fetch(`/api/projects/${projectId}/cover`, {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` }
+			});
+			if (!coverRes.ok) {
+				pageError = 'Artifact saved but failed to clear cover.';
+				cancelArtifactEdit();
+				return;
+			}
+			artifacts = artifacts.map((a) => ({ ...a, isCover: false }));
+		}
+
 		cancelArtifactEdit();
 		pageSuccess = 'Artifact updated.';
 	}
@@ -545,6 +592,64 @@
 			cancelArtifactEdit();
 		}
 		pageSuccess = 'Artifact deleted.';
+	}
+
+	async function setCoverArtifact(artifactId: number) {
+		pageError = '';
+		pageSuccess = '';
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to set cover.';
+			return;
+		}
+
+		const response = await fetch(`/api/projects/${projectId}/cover`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify({ artifactId })
+		});
+
+		if (!response.ok) {
+			pageError = 'Unable to set cover artifact.';
+			return;
+		}
+
+		artifacts = artifacts.map((a) => ({
+			...a,
+			isCover: a.id === artifactId
+		}));
+		pageSuccess = 'Cover artifact set.';
+	}
+
+	async function clearCoverArtifact() {
+		pageError = '';
+		pageSuccess = '';
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to clear cover.';
+			return;
+		}
+
+		const response = await fetch(`/api/projects/${projectId}/cover`, {
+			method: 'DELETE',
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		});
+
+		if (!response.ok) {
+			pageError = 'Unable to clear cover artifact.';
+			return;
+		}
+
+		artifacts = artifacts.map((a) => ({
+			...a,
+			isCover: false
+		}));
+		pageSuccess = 'Cover cleared.';
 	}
 
 	async function updateProjectBasicInfo() {
@@ -859,6 +964,37 @@
 								<span class={`inline-block h-1.5 w-1.5 rounded-full ${artifact.isPublished ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
 								{artifact.isPublished ? 'Live' : 'Draft'}
 							</span>
+							{#if artifact.isCover}
+								<button
+									type="button"
+									class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors duration-150"
+									onclick={(event) => {
+										event.stopPropagation();
+										void clearCoverArtifact();
+									}}
+									title="Click to remove as cover"
+								>
+									<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+										<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+									</svg>
+									Cover
+								</button>
+							{:else}
+								<button
+									type="button"
+									class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium text-slate-400 border border-transparent hover:bg-slate-100 hover:text-slate-600 hover:border-slate-200 transition-all duration-150"
+									onclick={(event) => {
+										event.stopPropagation();
+										void setCoverArtifact(artifact.id);
+									}}
+									title="Set as cover"
+								>
+									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+									</svg>
+									Set cover
+								</button>
+							{/if}
 							<div class="ml-auto">
 								<button
 									type="button"
@@ -926,18 +1062,33 @@
 						</p>
 					{/if}
 					<div class="flex items-center justify-between pt-3 border-t border-slate-100">
-						<div class="flex items-center gap-2.5">
-							<button
-								type="button"
-								role="switch"
-								aria-checked={artifactIsPublished}
-								aria-label="Toggle published"
-								onclick={() => { artifactIsPublished = !artifactIsPublished; }}
-								class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${artifactIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
-							>
-								<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${artifactIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
-							</button>
-							<span class="text-xs text-slate-500">{artifactIsPublished ? 'Published' : 'Draft'}</span>
+						<div class="flex items-center gap-4">
+							<div class="flex items-center gap-2.5">
+								<button
+									type="button"
+									role="switch"
+									aria-checked={artifactIsPublished}
+									aria-label="Toggle published"
+									onclick={() => { artifactIsPublished = !artifactIsPublished; }}
+									class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${artifactIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+								>
+									<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${artifactIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+								</button>
+								<span class="text-xs text-slate-500">{artifactIsPublished ? 'Published' : 'Draft'}</span>
+							</div>
+							<div class="flex items-center gap-2.5">
+								<button
+									type="button"
+									role="switch"
+									aria-checked={artifactIsCover}
+									aria-label="Toggle cover"
+									onclick={() => { artifactIsCover = !artifactIsCover; }}
+									class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${artifactIsCover ? 'bg-amber-500' : 'bg-slate-200'}`}
+								>
+									<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${artifactIsCover ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+								</button>
+								<span class="text-xs text-slate-500">{artifactIsCover ? 'Cover' : 'Not cover'}</span>
+							</div>
 						</div>
 						<div class="flex items-center gap-2">
 							<button
@@ -1054,18 +1205,33 @@
 						</p>
 					{/if}
 					<div class="flex items-center justify-between pt-3 border-t border-slate-100">
-						<div class="flex items-center gap-2.5">
-							<button
-								type="button"
-								role="switch"
-								aria-checked={editArtifactIsPublished}
-								aria-label="Toggle published"
-								onclick={() => { editArtifactIsPublished = !editArtifactIsPublished; }}
-								class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editArtifactIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
-							>
-								<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${editArtifactIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
-							</button>
-							<span class="text-xs text-slate-500">{editArtifactIsPublished ? 'Published' : 'Draft'}</span>
+						<div class="flex items-center gap-4">
+							<div class="flex items-center gap-2.5">
+								<button
+									type="button"
+									role="switch"
+									aria-checked={editArtifactIsPublished}
+									aria-label="Toggle published"
+									onclick={() => { editArtifactIsPublished = !editArtifactIsPublished; }}
+									class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editArtifactIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+								>
+									<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${editArtifactIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+								</button>
+								<span class="text-xs text-slate-500">{editArtifactIsPublished ? 'Published' : 'Draft'}</span>
+							</div>
+							<div class="flex items-center gap-2.5">
+								<button
+									type="button"
+									role="switch"
+									aria-checked={editArtifactIsCover}
+									aria-label="Toggle cover"
+									onclick={() => { editArtifactIsCover = !editArtifactIsCover; }}
+									class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editArtifactIsCover ? 'bg-amber-500' : 'bg-slate-200'}`}
+								>
+									<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${editArtifactIsCover ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+								</button>
+								<span class="text-xs text-slate-500">{editArtifactIsCover ? 'Cover' : 'Not cover'}</span>
+							</div>
 						</div>
 						<div class="flex items-center gap-2">
 							<button

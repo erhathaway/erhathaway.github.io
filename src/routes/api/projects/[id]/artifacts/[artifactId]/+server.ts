@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { and, eq } from 'drizzle-orm';
 import { error, json } from '@sveltejs/kit';
-import { projectArtifacts, projects } from '$lib/server/db/schema';
+import { projectArtifacts, projects, projectCoverArtifact } from '$lib/server/db/schema';
 import { verifyClerkAuth } from '$lib/server/auth';
 import { validateArtifactData } from '$lib/schemas/artifacts';
 
@@ -114,7 +114,12 @@ export const PUT: RequestHandler = async ({ params, request, locals, platform })
 		throw error(404, 'Artifact not found');
 	}
 
-	return json(normalizeArtifactRow(updated), { headers: corsHeaders });
+	const [coverRow] = await db
+		.select({ artifactId: projectCoverArtifact.artifactId })
+		.from(projectCoverArtifact)
+		.where(and(eq(projectCoverArtifact.projectId, projectId), eq(projectCoverArtifact.artifactId, artifactId)));
+
+	return json({ ...normalizeArtifactRow(updated), isCover: !!coverRow }, { headers: corsHeaders });
 };
 
 export const DELETE: RequestHandler = async ({ params, request, locals, platform }) => {

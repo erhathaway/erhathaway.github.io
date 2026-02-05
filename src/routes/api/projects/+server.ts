@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { projects } from '$lib/server/db/schema';
+import { projects, projectArtifacts, projectCoverArtifact } from '$lib/server/db/schema';
 import { verifyClerkAuth } from '$lib/server/auth';
 
 const corsHeaders = {
@@ -32,11 +32,41 @@ export const GET: RequestHandler = async ({ request, locals, platform }) => {
 	const db = getDbOrThrow(locals.db);
 	const userId = await verifyClerkAuth(request, platform?.env);
 	const authUserId = locals.auth?.()?.userId ?? null;
-	const rows = userId || authUserId
-		? await db.select().from(projects)
-		: await db.select().from(projects).where(eq(projects.isPublished, true));
+	const isAuthed = !!(userId || authUserId);
 
-	return json(rows, { headers: corsHeaders });
+	const rows = await db
+		.select({
+			id: projects.id,
+			name: projects.name,
+			displayName: projects.displayName,
+			description: projects.description,
+			isPublished: projects.isPublished,
+			coverArtifactDataBlob: projectArtifacts.dataBlob
+		})
+		.from(projects)
+		.leftJoin(projectCoverArtifact, eq(projects.id, projectCoverArtifact.projectId))
+		.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id))
+		.where(isAuthed ? undefined : eq(projects.isPublished, true));
+
+	const result = rows.map((row) => {
+		let coverImageUrl: string | null = null;
+		if (row.coverArtifactDataBlob) {
+			const blob = typeof row.coverArtifactDataBlob === 'string'
+				? JSON.parse(row.coverArtifactDataBlob)
+				: row.coverArtifactDataBlob;
+			coverImageUrl = blob?.imageUrl ?? null;
+		}
+		return {
+			id: row.id,
+			name: row.name,
+			displayName: row.displayName,
+			description: row.description,
+			isPublished: row.isPublished,
+			coverImageUrl
+		};
+	});
+
+	return json(result, { headers: corsHeaders });
 };
 
 export const POST: RequestHandler = async ({ request, locals, platform }) => {

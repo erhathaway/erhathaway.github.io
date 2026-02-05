@@ -7,7 +7,8 @@ import {
 	categories,
 	projectCategories,
 	projectArtifacts,
-	projectAttributes
+	projectAttributes,
+	projectCoverArtifact
 } from '$lib/server/db/schema';
 import { verifyClerkAuth } from '$lib/server/auth';
 import type { Db } from '$lib/server/db';
@@ -287,6 +288,7 @@ async function createProject(
 	}
 
 	// Insert artifacts with image upload
+	let coverArtifactId: number | null = null;
 	for (const artifact of proj.artifacts) {
 		const dataBlob = { ...artifact.dataBlob };
 
@@ -297,13 +299,22 @@ async function createProject(
 			}
 		}
 
-		await db.insert(projectArtifacts).values({
+		const [created] = await db.insert(projectArtifacts).values({
 			projectId,
 			schema: artifact.schema,
 			dataBlob,
 			isPublished: artifact.isPublished
-		});
+		}).returning();
 		summary.artifactsCreated++;
+
+		if (artifact.isCover) {
+			coverArtifactId = created.id;
+		}
+	}
+
+	if (coverArtifactId !== null) {
+		await db.delete(projectCoverArtifact).where(eq(projectCoverArtifact.projectId, projectId));
+		await db.insert(projectCoverArtifact).values({ projectId, artifactId: coverArtifactId });
 	}
 }
 
@@ -380,6 +391,7 @@ async function mergeProject(
 	}
 
 	// Add new artifacts (don't remove existing)
+	let coverArtifactId: number | null = null;
 	for (const artifact of proj.artifacts) {
 		const dataBlob = { ...artifact.dataBlob };
 
@@ -390,12 +402,21 @@ async function mergeProject(
 			}
 		}
 
-		await db.insert(projectArtifacts).values({
+		const [created] = await db.insert(projectArtifacts).values({
 			projectId: existingProjectId,
 			schema: artifact.schema,
 			dataBlob,
 			isPublished: artifact.isPublished
-		});
+		}).returning();
 		summary.artifactsCreated++;
+
+		if (artifact.isCover) {
+			coverArtifactId = created.id;
+		}
+	}
+
+	if (coverArtifactId !== null) {
+		await db.delete(projectCoverArtifact).where(eq(projectCoverArtifact.projectId, existingProjectId));
+		await db.insert(projectCoverArtifact).values({ projectId: existingProjectId, artifactId: coverArtifactId });
 	}
 }

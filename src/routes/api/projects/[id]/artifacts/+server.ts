@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { and, eq } from 'drizzle-orm';
 import { error, json } from '@sveltejs/kit';
-import { projectArtifacts, projects } from '$lib/server/db/schema';
+import { projectArtifacts, projects, projectCoverArtifact } from '$lib/server/db/schema';
 import { validateArtifactData } from '$lib/schemas/artifacts';
 import { verifyClerkAuth } from '$lib/server/auth';
 
@@ -112,12 +112,23 @@ export const GET: RequestHandler = async ({ params, request, locals, platform })
 			projectId: projectArtifacts.projectId,
 			schema: projectArtifacts.schema,
 			dataBlob: projectArtifacts.dataBlob,
-			isPublished: projectArtifacts.isPublished
+			isPublished: projectArtifacts.isPublished,
+			coverArtifactId: projectCoverArtifact.artifactId
 		})
 		.from(projectArtifacts)
+		.leftJoin(
+			projectCoverArtifact,
+			and(
+				eq(projectCoverArtifact.projectId, projectArtifacts.projectId),
+				eq(projectCoverArtifact.artifactId, projectArtifacts.id)
+			)
+		)
 		.where(where);
 
-	const normalized = rows.map((row) => normalizeArtifactRow(row));
+	const normalized = rows.map((row) => ({
+		...normalizeArtifactRow(row),
+		isCover: row.coverArtifactId !== null
+	}));
 
 	return json(normalized, { headers: corsHeaders });
 };
@@ -144,5 +155,5 @@ export const POST: RequestHandler = async ({ params, request, locals, platform }
 		})
 		.returning();
 
-	return json(normalizeArtifactRow(created), { status: 201, headers: corsHeaders });
+	return json({ ...normalizeArtifactRow(created), isCover: false }, { status: 201, headers: corsHeaders });
 };

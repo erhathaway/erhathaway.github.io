@@ -11,6 +11,7 @@ export type AdminProject = {
 	displayName: string;
 	description: string | null;
 	isPublished: boolean;
+	coverImageUrl: string | null;
 };
 
 class AdminStore {

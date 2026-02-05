@@ -7,7 +7,8 @@ import {
 	categories,
 	projectCategories,
 	projectArtifacts,
-	projectAttributes
+	projectAttributes,
+	projectCoverArtifact
 } from '$lib/server/db/schema';
 import { verifyClerkAuth } from '$lib/server/auth';
 import type {
@@ -114,12 +115,20 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		// Get project artifacts
 		const artifactRows = await db
 			.select({
+				id: projectArtifacts.id,
 				schema: projectArtifacts.schema,
 				dataBlob: projectArtifacts.dataBlob,
 				isPublished: projectArtifacts.isPublished
 			})
 			.from(projectArtifacts)
 			.where(eq(projectArtifacts.projectId, project.id));
+
+		// Get cover artifact ID
+		const [coverRow] = await db
+			.select({ artifactId: projectCoverArtifact.artifactId })
+			.from(projectCoverArtifact)
+			.where(eq(projectCoverArtifact.projectId, project.id));
+		const coverArtifactId = coverRow?.artifactId ?? null;
 
 		const exportArtifacts: ExportArtifact[] = [];
 
@@ -133,7 +142,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			const exportArtifact: ExportArtifact = {
 				schema: artifact.schema,
 				dataBlob,
-				isPublished: artifact.isPublished
+				isPublished: artifact.isPublished,
+				isCover: artifact.id === coverArtifactId
 			};
 
 			// Try to fetch and include the image

@@ -1,49 +1,18 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from './ProjectEditor.svelte';
 	import { adminStore } from '$lib/stores/admin.svelte';
 
-	type Category = {
-		id: number;
-		name: string;
-		displayName: string;
-		isPublished: boolean;
-	};
-
-	type Project = {
-		id: number;
-		name: string;
-		displayName: string;
-		description: string | null;
-		isPublished: boolean;
-	};
-
-	type ProjectAttribute = {
-		id: number;
-		name: string;
-		value: string;
-		showInNav: boolean;
-		isPublished: boolean;
-	};
-
 	type Props = {
-		categories: Category[];
-		categoriesLoaded: boolean;
 		getToken: () => Promise<string | null>;
 	};
 
-	let { categories, categoriesLoaded, getToken } = $props<Props>();
+	let { getToken }: Props = $props();
 
 	const projects = $derived(adminStore.projects);
 	let projectsFilter = $state<'all' | 'published' | 'unpublished'>('all');
 	let projectsLoading = $state(false);
 	let projectsError = $state('');
 	let projectsSuccess = $state('');
-
-	let editingProjectId = $state<number | null>(null);
-
-	let projectCategoryIds = $state<Record<number, number[]>>({});
-	let projectAttributes = $state<Record<number, ProjectAttribute[]>>({});
 
 	const filteredProjects = $derived.by(() => {
 		if (projectsFilter === 'published') {
@@ -76,12 +45,6 @@
 			}
 			adminStore.projects = await response.json();
 			adminStore.projectsLoaded = true;
-			projectCategoryIds = {};
-			projectAttributes = {};
-			for (const project of adminStore.projects) {
-				await fetchProjectCategories(project.id);
-				await fetchProjectAttributes(project.id);
-			}
 		} catch (err) {
 			console.error(err);
 			projectsError = err instanceof Error ? err.message : 'Unable to load projects.';
@@ -90,60 +53,12 @@
 		}
 	}
 
+	async function deleteProject(event: MouseEvent, projectId: number) {
+		event.preventDefault();
+		event.stopPropagation();
 
-	function startProjectEdit(project: Project) {
-		editingProjectId = project.id;
-		projectsSuccess = '';
-		projectsError = '';
-	}
+		if (!confirm('Delete this project?')) return;
 
-	function cancelProjectEdit() {
-		editingProjectId = null;
-	}
-
-	async function saveProjectEdit(payload: ProjectEditorPayload) {
-		if (editingProjectId === null) {
-			return;
-		}
-		projectsError = '';
-		projectsSuccess = '';
-
-		const token = await getToken();
-		if (!token) {
-			projectsError = 'Sign in to update projects.';
-			return;
-		}
-
-		const response = await fetch(`/api/projects/${editingProjectId}`, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`
-			},
-			body: JSON.stringify({
-				name: payload.name.trim(),
-				displayName: payload.displayName.trim() || payload.name.trim(),
-				description: payload.description.trim(),
-				isPublished: payload.isPublished
-			})
-		});
-
-		if (!response.ok) {
-			projectsError = 'Unable to update project.';
-			return;
-		}
-
-		const updated = await response.json();
-		adminStore.projects = adminStore.projects.map((project) =>
-			project.id === updated.id ? updated : project
-		);
-		await updateProjectCategories(editingProjectId, payload.categoryIds);
-		await updateProjectAttributes(editingProjectId, payload.attributes);
-		cancelProjectEdit();
-		projectsSuccess = 'Project updated.';
-	}
-
-	async function deleteProject(projectId: number) {
 		projectsError = '';
 		projectsSuccess = '';
 
@@ -166,146 +81,7 @@
 		}
 
 		adminStore.projects = adminStore.projects.filter((project) => project.id !== projectId);
-		const { [projectId]: _removed, ...rest } = projectCategoryIds;
-		projectCategoryIds = rest;
-		const { [projectId]: _removedAttributes, ...restAttributes } = projectAttributes;
-		projectAttributes = restAttributes;
 		projectsSuccess = 'Project deleted.';
-	}
-
-	async function fetchProjectCategories(projectId: number) {
-		const token = await getToken();
-		const headers: Record<string, string> = {};
-		if (token) {
-			headers.Authorization = `Bearer ${token}`;
-		}
-
-		const response = await fetch(`/api/projects/${projectId}/categories`, { headers });
-		if (!response.ok) {
-			throw new Error('Failed to load project categories');
-		}
-		const rows = (await response.json()) as Category[];
-		projectCategoryIds = {
-			...projectCategoryIds,
-			[projectId]: rows.map((row) => row.id)
-		};
-	}
-
-	async function fetchProjectAttributes(projectId: number) {
-		const token = await getToken();
-		const headers: Record<string, string> = {};
-		if (token) {
-			headers.Authorization = `Bearer ${token}`;
-		}
-
-		const response = await fetch(`/api/projects/${projectId}/attributes`, { headers });
-		if (!response.ok) {
-			throw new Error('Failed to load project attributes');
-		}
-		const rows = (await response.json()) as ProjectAttribute[];
-		projectAttributes = {
-			...projectAttributes,
-			[projectId]: rows
-		};
-	}
-
-	async function updateProjectCategories(projectId: number, desiredIds: number[]) {
-		const token = await getToken();
-		if (!token) {
-			projectsError = 'Sign in to update project categories.';
-			return;
-		}
-
-		const current = projectCategoryIds[projectId] ?? [];
-		const toAdd = desiredIds.filter((id) => !current.includes(id));
-		const toRemove = current.filter((id) => !desiredIds.includes(id));
-
-		if (toAdd.length > 0) {
-			const response = await fetch(`/api/projects/${projectId}/categories`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`
-				},
-				body: JSON.stringify({ category_ids: toAdd })
-			});
-			if (!response.ok) {
-				projectsError = 'Unable to add project categories.';
-				return;
-			}
-		}
-
-		if (toRemove.length > 0) {
-			const response = await fetch(`/api/projects/${projectId}/categories`, {
-				method: 'DELETE',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`
-				},
-				body: JSON.stringify({ category_ids: toRemove })
-			});
-			if (!response.ok) {
-				projectsError = 'Unable to remove project categories.';
-				return;
-			}
-		}
-
-		projectCategoryIds = { ...projectCategoryIds, [projectId]: [...desiredIds] };
-	}
-
-	function sanitizeAttributes(attributes: AttributeDraft[]) {
-		const cleaned: AttributeDraft[] = [];
-		for (const attribute of attributes) {
-			const name = attribute.name.trim();
-			const value = attribute.value.trim();
-			if (!name && !value) {
-				continue;
-			}
-			if (!name || !value) {
-				projectsError = 'Attributes need both a name and a value.';
-				return null;
-			}
-			cleaned.push({
-				id: attribute.id,
-				name,
-				value,
-				showInNav: attribute.showInNav,
-				isPublished: attribute.isPublished
-			});
-		}
-		return cleaned;
-	}
-
-	async function updateProjectAttributes(projectId: number, attributes: AttributeDraft[]) {
-		const token = await getToken();
-		if (!token) {
-			projectsError = 'Sign in to update project attributes.';
-			return;
-		}
-
-		const cleaned = sanitizeAttributes(attributes);
-		if (!cleaned) {
-			return;
-		}
-
-		const response = await fetch(`/api/projects/${projectId}/attributes`, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`
-			},
-			body: JSON.stringify({ attributes: cleaned })
-		});
-		if (!response.ok) {
-			projectsError = 'Unable to update project attributes.';
-			return;
-		}
-		const updated = (await response.json()) as ProjectAttribute[];
-		projectAttributes = { ...projectAttributes, [projectId]: updated };
-	}
-
-	function getCategory(categoryId: number) {
-		return categories.find((category) => category.id === categoryId);
 	}
 
 	onMount(fetchProjects);
@@ -366,91 +142,57 @@
 		</div>
 	{:else if filteredProjects.length === 0}
 		<p class="text-xs text-slate-400 py-4">No projects yet</p>
-	{:else if editingProjectId !== null}
-		{#each filteredProjects as project (project.id)}
-			{#if editingProjectId === project.id}
-				<div class="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
-					{#key project.id}
-						<ProjectEditor
-							project={project}
-							{categories}
-							{categoriesLoaded}
-							categoryIds={projectCategoryIds[project.id] ?? []}
-							attributes={projectAttributes[project.id] ?? []}
-							onSave={saveProjectEdit}
-							onCancel={cancelProjectEdit}
-						/>
-					{/key}
-				</div>
-			{/if}
-		{/each}
 	{:else}
-		<div class="space-y-2">
+		<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
 			{#each filteredProjects as project (project.id)}
-				<div class="group p-4 bg-white border border-slate-200 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all duration-150">
-					<div class="flex items-start justify-between gap-4">
-						<div class="flex-1 space-y-2">
-							<div class="flex items-center gap-2.5">
-								<span class="text-sm font-medium text-slate-800">{project.displayName || project.name}</span>
-								<span class="text-xs font-mono text-slate-400">/{project.name}</span>
-								<span class={`inline-block h-1.5 w-1.5 rounded-full ${project.isPublished ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
+				<a
+					href={`/admin/projects/${project.id}`}
+					class="group relative rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-slate-300 hover:shadow-md transition-all duration-200"
+				>
+					<!-- Cover Image or Placeholder -->
+					<div class="aspect-[3/4] w-full bg-slate-100 overflow-hidden">
+						{#if project.coverImageUrl}
+							<img
+								src={project.coverImageUrl}
+								alt={project.displayName}
+								class="h-full w-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+								loading="lazy"
+							/>
+						{:else}
+							<div class="h-full w-full flex flex-col items-center justify-center gap-2 text-slate-300">
+								<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+								</svg>
+								<span class="text-[10px] font-medium">No cover</span>
 							</div>
-
-							{#if project.description}
-								<p class="text-xs text-slate-500">{project.description}</p>
-							{/if}
-
-							{#if (projectCategoryIds[project.id] ?? []).length > 0}
-								<div class="flex flex-wrap gap-1.5">
-									{#each projectCategoryIds[project.id] ?? [] as categoryId (categoryId)}
-										{#if getCategory(categoryId)}
-											<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-[10px] font-medium text-slate-600">
-												{getCategory(categoryId)?.displayName}
-												<span class={`inline-block h-1 w-1 rounded-full ${getCategory(categoryId)?.isPublished ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
-											</span>
-										{/if}
-									{/each}
-								</div>
-							{/if}
-
-							{#if (projectAttributes[project.id] ?? []).length > 0}
-								<div class="flex flex-wrap gap-x-3 gap-y-1">
-									{#each projectAttributes[project.id] ?? [] as attribute (attribute.id)}
-										<span class="text-[10px] text-slate-400">
-											<span class="text-slate-600 font-medium">{attribute.name}:</span> {attribute.value}
-											{#if attribute.showInNav}
-												<span class="inline-block h-1 w-1 rounded-full bg-blue-400 ml-0.5"></span>
-											{/if}
-										</span>
-									{/each}
-								</div>
-							{/if}
-						</div>
-
-						<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-							<a
-								href={`/admin/projects/${project.id}`}
-								class="text-xs font-medium text-slate-400 hover:text-slate-700 rounded-lg px-2 py-1 hover:bg-slate-100 transition-colors duration-150"
-							>
-								Edit
-							</a>
-							<button
-								type="button"
-								onclick={() => startProjectEdit(project)}
-								class="text-xs font-medium text-slate-400 hover:text-slate-700 rounded-lg px-2 py-1 hover:bg-slate-100 transition-colors duration-150"
-							>
-								Quick Edit
-							</button>
-							<button
-								type="button"
-								onclick={() => deleteProject(project.id)}
-								class="text-xs font-medium text-slate-400 hover:text-red-600 rounded-lg px-2 py-1 hover:bg-red-50 transition-colors duration-150"
-							>
-								Delete
-							</button>
-						</div>
+						{/if}
 					</div>
-				</div>
+
+					<!-- Bottom Overlay -->
+					<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-3 pt-10">
+						<div class="flex items-center gap-1.5">
+							<span class={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${project.isPublished ? 'bg-emerald-400' : 'bg-slate-400'}`}></span>
+							<h3 class="text-sm font-medium text-white truncate">{project.displayName || project.name}</h3>
+						</div>
+						{#if project.description}
+							<p class="text-[11px] text-white/70 mt-0.5 line-clamp-2">{project.description}</p>
+						{/if}
+					</div>
+
+					<!-- Hover Actions -->
+					<div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+						<button
+							type="button"
+							onclick={(e) => deleteProject(e, project.id)}
+							class="rounded-lg p-1.5 bg-black/50 text-white/80 hover:bg-red-600 hover:text-white backdrop-blur-sm transition-colors duration-150"
+							aria-label="Delete project"
+						>
+							<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+							</svg>
+						</button>
+					</div>
+				</a>
 			{/each}
 		</div>
 	{/if}
