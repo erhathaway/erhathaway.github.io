@@ -118,7 +118,9 @@
 				}
 			}} />
 		</div>
-		<AuthButton onOpenModal={() => showLoginModal = true} />
+		{#if !isProjectPage}
+			<AuthButton onOpenModal={() => showLoginModal = true} />
+		{/if}
 		<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none">
 			<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
 				<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
