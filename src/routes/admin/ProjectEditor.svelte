@@ -53,9 +53,9 @@
 		onAddCategory
 	} = $props<Props>();
 
-	let editIsPublished = $derived(project.isPublished);
-	let editCategoryIds = $derived([...categoryIds]);
-	let editAttributes = $derived(attributes.map((attribute) => ({ ...attribute })));
+	let editIsPublished = $state(project.isPublished);
+	let editCategoryIds = $state([...categoryIds]);
+	let editAttributes = $state(attributes.map((attribute) => ({ ...attribute })));
 
 	let showAttributeModal = $state(false);
 	let editingAttributeIndex = $state<number | null>(null);
@@ -180,47 +180,100 @@
 	function triggerAutoSave() {
 		hasUnsavedChanges = true;
 		if (saveTimeout) clearTimeout(saveTimeout);
-		saveTimeout = setTimeout(() => {
-			void onSave({
-				name: project.name,
-				displayName: project.displayName,
-				description: project.description ?? '',
-				isPublished: editIsPublished,
-				categoryIds: editCategoryIds,
-				attributes: editAttributes
-			});
-			hasUnsavedChanges = false;
+		saveTimeout = setTimeout(async () => {
+			isSaving = true;
+			try {
+				await onSave({
+					name: project.name,
+					displayName: project.displayName,
+					description: project.description ?? '',
+					isPublished: editIsPublished,
+					categoryIds: editCategoryIds,
+					attributes: editAttributes
+				});
+			} finally {
+				isSaving = false;
+				hasUnsavedChanges = false;
+			}
 		}, 3000);
 	}
 
-	function saveImmediately() {
+	async function saveImmediately() {
 		if (saveTimeout) clearTimeout(saveTimeout);
 		if (hasUnsavedChanges) {
-			void onSave({
-				name: project.name,
-				displayName: project.displayName,
-				description: project.description ?? '',
-				isPublished: editIsPublished,
-				categoryIds: editCategoryIds,
-				attributes: editAttributes
-			});
-			hasUnsavedChanges = false;
+			isSaving = true;
+			try {
+				await onSave({
+					name: project.name,
+					displayName: project.displayName,
+					description: project.description ?? '',
+					isPublished: editIsPublished,
+					categoryIds: editCategoryIds,
+					attributes: editAttributes
+				});
+			} finally {
+				isSaving = false;
+				hasUnsavedChanges = false;
+			}
 		}
 	}
 
-	// Watch for changes and trigger auto-save
+	// Sync state when project changes (not on every update)
+	let lastProjectId = project.id;
 	$effect(() => {
-		// Track dependencies
-		editIsPublished;
-		editCategoryIds;
-		editAttributes;
+		if (project.id !== lastProjectId) {
+			editIsPublished = project.isPublished;
+			editCategoryIds = [...categoryIds];
+			editAttributes = attributes.map((attribute) => ({ ...attribute }));
+			lastProjectId = project.id;
+		}
+	});
+
+	// Watch for changes and trigger auto-save
+	let mounted = false;
+	$effect(() => {
+		// Track dependencies by reading them
+		const currentIsPublished = editIsPublished;
+		const currentCategoryIds = editCategoryIds.length;
+		const currentAttributes = editAttributes.length;
+
+		// Skip initial render
+		if (!mounted) {
+			mounted = true;
+			return;
+		}
 
 		// Trigger auto-save on change
+		console.log('Auto-save triggered:', { currentIsPublished, currentCategoryIds, currentAttributes });
 		triggerAutoSave();
 	});
 </script>
 
-<div class="flex flex-col gap-3 flex-1 min-w-[240px]">
+<div class="relative flex flex-col gap-3 flex-1 min-w-[240px]">
+	{#if isSaving}
+		<div class="absolute top-0 right-0">
+			<svg
+				class="animate-spin h-5 w-5 text-copper"
+				xmlns="http://www.w3.org/2000/svg"
+				fill="none"
+				viewBox="0 0 24 24"
+			>
+				<circle
+					class="opacity-25"
+					cx="12"
+					cy="12"
+					r="10"
+					stroke="currentColor"
+					stroke-width="4"
+				></circle>
+				<path
+					class="opacity-75"
+					fill="currentColor"
+					d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+				></path>
+			</svg>
+		</div>
+	{/if}
 	<div>
 		<p class="text-sm text-ash mb-2">Categories</p>
 		<div class="flex flex-wrap gap-2">
