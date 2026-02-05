@@ -601,6 +601,14 @@
 					<div
 						class="rounded-2xl border border-walnut/10 bg-cream/60 p-4 flex flex-col gap-3 cursor-pointer hover:border-copper/40"
 						onclick={() => startArtifactEdit(artifact)}
+						role="button"
+						tabindex="0"
+						onkeydown={(event) => {
+							if (event.key === 'Enter' || event.key === ' ') {
+								event.preventDefault();
+								startArtifactEdit(artifact);
+							}
+						}}
 					>
 						<div class="flex flex-wrap items-center gap-3 text-xs text-ash">
 							<span class="uppercase tracking-wide">Schema {artifact.schema}</span>
@@ -742,7 +750,7 @@
 
 				<div class="mt-6 grid gap-4">
 					<p class="text-xs uppercase tracking-[0.2em] text-ash">
-						Schema <span class="text-walnut">{'image-v1'}</span>
+						Schema <span class="text-walnut">image-v1</span>
 					</p>
 					<ImageArtifactEditor
 						value={editArtifactDraft}
