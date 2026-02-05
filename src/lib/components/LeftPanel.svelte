@@ -21,7 +21,8 @@
     ? 'linear-gradient(to right, #F5F1EB 0%, #F5F1EB 30%, rgba(245, 241, 235, 0.95) 50%, rgba(245, 241, 235, 0.8) 65%, rgba(245, 241, 235, 0.5) 80%, rgba(245, 241, 235, 0.2) 90%, transparent 100%)'
     : 'linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%)'}">
   <!-- Background rectangle behind name and tagline -->
-  <div class="absolute top-0 left-0 w-[230px] h-[220px] border border-walnut/10 bg-white/10 backdrop-blur-md z-0"></div>
+  <div class="absolute top-0 left-0 w-[280px] h-[220px] border backdrop-blur-md z-0" style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1))"></div>
+
 
   <!-- Fixed Header - Always on top -->
   <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent" style="view-transition-name: header-name">
@@ -37,7 +38,7 @@
     </p>
 
     <!-- Scrollable Navigation Area -->
-    <nav class="flex-1 overflow-y-auto animate-slide-up min-h-0 max-h-full scrollbar-hide pt-12 pb-[50%] -mx-8 mt-10" style="animation-delay: 0.4s" {@attach storeNav}>
+    <nav class="flex-1 overflow-y-auto animate-slide-up min-h-0 max-h-full scrollbar-hide pt-12 pb-[50%] -mx-8 mt-16" style="animation-delay: 0.4s" {@attach storeNav}>
       <ItemList scrollContainer={navEl} onItemClick={onItemClick} />
 
       <!-- Admin Link (scrolls with content) -->
