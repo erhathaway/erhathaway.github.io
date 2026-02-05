@@ -20,6 +20,9 @@
   style="background: {isMobile
     ? 'linear-gradient(to right, #F5F1EB 0%, #F5F1EB 30%, rgba(245, 241, 235, 0.95) 50%, rgba(245, 241, 235, 0.8) 65%, rgba(245, 241, 235, 0.5) 80%, rgba(245, 241, 235, 0.2) 90%, transparent 100%)'
     : 'linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%)'}">
+  <!-- Background rectangle behind name and tagline -->
+  <div class="absolute top-0 left-0 w-[230px] h-[220px] border border-walnut/10 bg-white/10 backdrop-blur-md z-0"></div>
+
   <!-- Fixed Header - Always on top -->
   <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent" style="view-transition-name: header-name">
     <a href="/" class="text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block animate-slide-up" style="animation-delay: 0.1s; view-transition-name: site-name; font-family: 'Times New Roman', Times, serif;">
