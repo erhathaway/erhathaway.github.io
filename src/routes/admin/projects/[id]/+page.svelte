@@ -83,6 +83,15 @@
 		error: null
 	});
 
+	let editingField = $state<'name' | 'displayName' | 'description' | null>(null);
+	let editName = $state('');
+	let editDisplayName = $state('');
+	let editDescription = $state('');
+
+	let nameInput: HTMLInputElement | undefined = $state();
+	let displayNameInput: HTMLInputElement | undefined = $state();
+	let descriptionInput: HTMLTextAreaElement | undefined = $state();
+
 	function handleSchemaChange(event: Event) {
 		const target = event.currentTarget as HTMLSelectElement | null;
 		const nextSchema = target?.value ?? '';
@@ -509,6 +518,39 @@
 		pageSuccess = 'Artifact deleted.';
 	}
 
+	async function updateProjectBasicInfo() {
+		pageError = '';
+		pageSuccess = '';
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to update projects.';
+			return;
+		}
+
+		const response = await fetch(`/api/projects/${projectId}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify({
+				name: editName.trim(),
+				displayName: editDisplayName.trim() || editName.trim(),
+				description: editDescription.trim() || null,
+				isPublished: project?.isPublished ?? false
+			})
+		});
+
+		if (!response.ok) {
+			pageError = 'Unable to update project.';
+			return;
+		}
+
+		project = await response.json();
+		editingField = null;
+		pageSuccess = 'Project updated.';
+	}
+
 	onMount(() => {
 		let currentId = Number.isNaN(projectId) ? null : projectId;
 		if (currentId !== null) {
@@ -524,6 +566,46 @@
 		return () => {
 			unsubscribe();
 		};
+	});
+
+	$effect(() => {
+		if (project) {
+			editName = project.name;
+			editDisplayName = project.displayName;
+			editDescription = project.description ?? '';
+		}
+	});
+
+	function handleClickOutside(event: MouseEvent) {
+		if (editingField && event.target instanceof HTMLElement) {
+			const target = event.target;
+			const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+			if (!isInput) {
+				void updateProjectBasicInfo();
+			}
+		}
+	}
+
+	$effect(() => {
+		if (editingField) {
+			document.addEventListener('click', handleClickOutside);
+			return () => {
+				document.removeEventListener('click', handleClickOutside);
+			};
+		}
+	});
+
+	$effect(() => {
+		if (editingField === 'name' && nameInput) {
+			nameInput.focus();
+			nameInput.select();
+		} else if (editingField === 'displayName' && displayNameInput) {
+			displayNameInput.focus();
+			displayNameInput.select();
+		} else if (editingField === 'description' && descriptionInput) {
+			descriptionInput.focus();
+			descriptionInput.select();
+		}
 	});
 </script>
 
@@ -541,16 +623,94 @@
 	{:else if project}
 		<section class="rounded-2xl border border-walnut/10 bg-white/70 p-6 shadow-sm">
 			<div class="flex items-start justify-between gap-4 mb-6">
-				<div>
-					<h2 class="font-display text-2xl text-walnut">{project.displayName}</h2>
-					<p class="text-xs text-ash">/{project.name}</p>
+				<div class="flex-1">
+					<div class="flex items-baseline gap-2">
+						{#if editingField === 'displayName'}
+							<input
+								bind:this={displayNameInput}
+								bind:value={editDisplayName}
+								class="flex-1 rounded-md border border-walnut/20 px-3 py-2 font-display text-2xl"
+								onblur={() => {
+									void updateProjectBasicInfo();
+								}}
+								onkeydown={(event) => {
+									if (event.key === 'Enter') {
+										void updateProjectBasicInfo();
+									}
+									if (event.key === 'Escape') {
+										editDisplayName = project?.displayName ?? '';
+										editingField = null;
+									}
+								}}
+							/>
+						{:else}
+							<h2
+								class="font-display text-2xl text-walnut cursor-pointer hover:text-copper"
+								ondblclick={() => (editingField = 'displayName')}
+								role="button"
+								tabindex="0"
+							>
+								{project.displayName}
+							</h2>
+						{/if}
+						{#if editingField === 'name'}
+							<input
+								bind:this={nameInput}
+								bind:value={editName}
+								class="rounded-md border border-walnut/20 px-2 py-1 text-xs"
+								onblur={() => {
+									void updateProjectBasicInfo();
+								}}
+								onkeydown={(event) => {
+									if (event.key === 'Enter') {
+										void updateProjectBasicInfo();
+									}
+									if (event.key === 'Escape') {
+										editName = project?.name ?? '';
+										editingField = null;
+									}
+								}}
+							/>
+						{:else}
+							<p
+								class="text-xs text-ash cursor-pointer hover:text-copper"
+								ondblclick={() => (editingField = 'name')}
+								role="button"
+								tabindex="0"
+							>
+								/{project.name}
+							</p>
+						{/if}
+					</div>
+					{#if editingField === 'description'}
+						<textarea
+							bind:this={descriptionInput}
+							bind:value={editDescription}
+							rows="2"
+							class="w-full mt-2 rounded-md border border-walnut/20 px-3 py-2 text-sm"
+							onblur={() => {
+								void updateProjectBasicInfo();
+							}}
+							onkeydown={(event) => {
+								if (event.key === 'Escape') {
+									editDescription = project?.description ?? '';
+									editingField = null;
+								}
+							}}
+						></textarea>
+					{:else}
+						<p
+							class={`text-sm mt-2 cursor-pointer hover:text-copper ${
+								project.description ? 'text-ash' : 'text-ash opacity-50 italic'
+							}`}
+							ondblclick={() => (editingField = 'description')}
+							role="button"
+							tabindex="0"
+						>
+							{project.description || '<no description>'}
+						</p>
+					{/if}
 				</div>
-				<a
-					href="/admin"
-					class="text-xs uppercase tracking-wide text-ash hover:text-copper"
-				>
-					Back to admin
-				</a>
 			</div>
 
 			{#key project.id}
@@ -561,6 +721,9 @@
 					{categoryIds}
 					attributes={attributes}
 					onSave={handleSave}
+					onAddCategory={() => {
+						window.location.href = '/admin#categories';
+					}}
 				/>
 			{/key}
 		</section>

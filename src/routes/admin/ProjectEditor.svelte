@@ -39,6 +39,7 @@
 		attributes: AttributeDraft[];
 		onSave: (payload: ProjectEditorPayload) => void | Promise<void>;
 		onCancel?: () => void;
+		onAddCategory?: () => void;
 	};
 
 	let {
@@ -48,16 +49,23 @@
 		categoryIds,
 		attributes,
 		onSave,
-		onCancel
+		onCancel,
+		onAddCategory
 	} = $props<Props>();
 
-	let editName = $derived(project.name);
-	let editDisplayName = $derived(project.displayName);
-	let editDescription = $derived(project.description ?? '');
 	let editIsPublished = $derived(project.isPublished);
 	let editCategoryIds = $derived([...categoryIds]);
 	let editAttributes = $derived(attributes.map((attribute) => ({ ...attribute })));
-	let editingField = $state<'name' | 'displayName' | 'description' | null>(null);
+
+	let showAttributeModal = $state(false);
+	let editingAttributeIndex = $state<number | null>(null);
+	let modalAttributeName = $state('');
+	let modalAttributeValue = $state('');
+	let modalAttributeShowInNav = $state(false);
+	let modalAttributeIsPublished = $state(false);
+
+	let showLinkCategoryModal = $state(false);
+	let focusedCategoryId = $state<number | null>(null);
 
 	function toggleCategory(ids: number[], categoryId: number) {
 		if (ids.includes(categoryId)) {
@@ -91,226 +99,413 @@
 		return list.filter((_, i) => i !== index);
 	}
 
-	function handleSave() {
-		void onSave({
-			name: editName.trim(),
-			displayName: editDisplayName.trim(),
-			description: editDescription.trim(),
-			isPublished: editIsPublished,
-			categoryIds: editCategoryIds,
-			attributes: editAttributes
-		});
+	function openNewAttributeModal() {
+		editingAttributeIndex = null;
+		modalAttributeName = '';
+		modalAttributeValue = '';
+		modalAttributeShowInNav = false;
+		modalAttributeIsPublished = false;
+		showAttributeModal = true;
 	}
+
+	function openEditAttributeModal(index: number) {
+		const attribute = editAttributes[index];
+		if (!attribute) return;
+		editingAttributeIndex = index;
+		modalAttributeName = attribute.name;
+		modalAttributeValue = attribute.value;
+		modalAttributeShowInNav = attribute.showInNav;
+		modalAttributeIsPublished = attribute.isPublished;
+		showAttributeModal = true;
+	}
+
+	function closeAttributeModal() {
+		showAttributeModal = false;
+		editingAttributeIndex = null;
+		modalAttributeName = '';
+		modalAttributeValue = '';
+		modalAttributeShowInNav = false;
+		modalAttributeIsPublished = false;
+		saveImmediately();
+	}
+
+	function saveAttributeModal() {
+		if (!modalAttributeName.trim() || !modalAttributeValue.trim()) return;
+
+		if (editingAttributeIndex !== null) {
+			// Edit existing
+			editAttributes = updateAttributeRow(editAttributes, editingAttributeIndex, {
+				name: modalAttributeName,
+				value: modalAttributeValue,
+				showInNav: modalAttributeShowInNav,
+				isPublished: modalAttributeIsPublished
+			});
+		} else {
+			// Add new
+			editAttributes = [
+				...editAttributes,
+				{
+					name: modalAttributeName,
+					value: modalAttributeValue,
+					showInNav: modalAttributeShowInNav,
+					isPublished: modalAttributeIsPublished
+				}
+			];
+		}
+		closeAttributeModal();
+	}
+
+	function openLinkCategoryModal(categoryId?: number) {
+		focusedCategoryId = categoryId ?? null;
+		showLinkCategoryModal = true;
+	}
+
+	function closeLinkCategoryModal() {
+		showLinkCategoryModal = false;
+		focusedCategoryId = null;
+		saveImmediately();
+	}
+
+	function unlinkFocusedCategory() {
+		if (focusedCategoryId !== null) {
+			editCategoryIds = editCategoryIds.filter((id) => id !== focusedCategoryId);
+		}
+		closeLinkCategoryModal();
+	}
+
+	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+	let hasUnsavedChanges = $state(false);
+	let isSaving = $state(false);
+
+	function triggerAutoSave() {
+		hasUnsavedChanges = true;
+		if (saveTimeout) clearTimeout(saveTimeout);
+		saveTimeout = setTimeout(() => {
+			void onSave({
+				name: project.name,
+				displayName: project.displayName,
+				description: project.description ?? '',
+				isPublished: editIsPublished,
+				categoryIds: editCategoryIds,
+				attributes: editAttributes
+			});
+			hasUnsavedChanges = false;
+		}, 3000);
+	}
+
+	function saveImmediately() {
+		if (saveTimeout) clearTimeout(saveTimeout);
+		if (hasUnsavedChanges) {
+			void onSave({
+				name: project.name,
+				displayName: project.displayName,
+				description: project.description ?? '',
+				isPublished: editIsPublished,
+				categoryIds: editCategoryIds,
+				attributes: editAttributes
+			});
+			hasUnsavedChanges = false;
+		}
+	}
+
+	// Watch for changes and trigger auto-save
+	$effect(() => {
+		// Track dependencies
+		editIsPublished;
+		editCategoryIds;
+		editAttributes;
+
+		// Trigger auto-save on change
+		triggerAutoSave();
+	});
 </script>
 
 <div class="flex flex-col gap-3 flex-1 min-w-[240px]">
-	<div class="grid gap-3 sm:grid-cols-[140px_1fr] items-start">
-		<p class="text-xs uppercase tracking-[0.2em] text-ash">Name</p>
-		{#if editingField === 'displayName'}
-			<input
-				bind:value={editDisplayName}
-				class="w-full rounded-md border border-walnut/20 px-3 py-2 text-sm"
-				onblur={() => (editingField = null)}
-				onkeydown={(event) => {
-					if (event.key === 'Enter') {
-						editingField = null;
-					}
-					if (event.key === 'Escape') {
-						editingField = null;
-					}
-				}}
-			/>
-		{:else}
-			<button
-				type="button"
-				class={`text-left text-lg font-display ${
-					editDisplayName.trim() ? 'text-walnut' : 'text-ash/70 italic'
-				}`}
-				ondblclick={() => (editingField = 'displayName')}
-			>
-				{editDisplayName.trim() || 'Double click to add a name'}
-			</button>
-		{/if}
-
-		<p class="text-xs uppercase tracking-[0.2em] text-ash">URL</p>
-		{#if editingField === 'name'}
-			<input
-				bind:value={editName}
-				class="w-full rounded-md border border-walnut/20 px-3 py-2 text-sm"
-				onblur={() => (editingField = null)}
-				onkeydown={(event) => {
-					if (event.key === 'Enter') {
-						editingField = null;
-					}
-					if (event.key === 'Escape') {
-						editingField = null;
-					}
-				}}
-			/>
-		{:else}
-			<button
-				type="button"
-				class={`text-left text-sm ${
-					editName.trim() ? 'text-ash' : 'text-ash/70 italic'
-				}`}
-				ondblclick={() => (editingField = 'name')}
-			>
-				{editName.trim() ? `/${editName.trim()}` : 'Double click to add a url slug'}
-			</button>
-		{/if}
-
-		<p class="text-xs uppercase tracking-[0.2em] text-ash">Description</p>
-		{#if editingField === 'description'}
-			<textarea
-				bind:value={editDescription}
-				rows="3"
-				class="w-full rounded-md border border-walnut/20 px-3 py-2 text-sm"
-				onblur={() => (editingField = null)}
-				onkeydown={(event) => {
-					if (event.key === 'Escape') {
-						editingField = null;
-					}
-				}}
-			></textarea>
-		{:else}
-			<button
-				type="button"
-				class={`text-left text-sm leading-relaxed ${
-					editDescription.trim() ? 'text-ash' : 'text-ash/70 italic'
-				}`}
-				ondblclick={() => (editingField = 'description')}
-			>
-				{editDescription.trim() || 'Double click to add a description'}
-			</button>
-		{/if}
-	</div>
 	<div>
-		<p class="text-sm text-ash">Categories</p>
-		{#if !categoriesLoaded}
-			<p class="mt-2 text-xs text-ash">Loading categories...</p>
-		{:else if categories.length === 0}
-			<p class="mt-2 text-xs text-ash">Create a category to start tagging projects.</p>
-		{:else}
-			<div class="mt-2 flex flex-wrap gap-2">
-				{#each categories as category (category.id)}
-					{@const isSelected = editCategoryIds.includes(category.id)}
+		<p class="text-sm text-ash mb-2">Categories</p>
+		<div class="flex flex-wrap gap-2">
+			{#if !categoriesLoaded}
+				<p class="text-xs text-ash">Loading categories...</p>
+			{:else}
+				<!-- Add new category button pill -->
+				{#if onAddCategory}
 					<button
 						type="button"
-						onclick={() => (editCategoryIds = toggleCategory(editCategoryIds, category.id))}
-						class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
-							isSelected
-								? 'bg-copper/90 text-cream border-copper ring-2 ring-copper/40'
-								: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
-						}`}
+						onclick={onAddCategory}
+						class="inline-flex items-center rounded-full border-2 border-dashed border-walnut/30 bg-cream/60 hover:border-copper hover:bg-copper/10 transition-colors"
 					>
-						<span class={isSelected ? 'font-semibold' : ''}>{category.displayName}</span>
+						<span class="px-3 py-1 text-xs text-copper font-medium">+ Add new category</span>
+					</button>
+				{/if}
+
+				<!-- Link category button pill -->
+				{#if categories.length > 0}
+					<button
+						type="button"
+						onclick={() => openLinkCategoryModal()}
+						class="inline-flex items-center rounded-full border-2 border-dashed border-walnut/30 bg-cream/60 hover:border-copper hover:bg-copper/10 transition-colors"
+					>
+						<span class="px-3 py-1 text-xs text-copper font-medium">Link category</span>
+					</button>
+				{/if}
+
+				<!-- Selected category pills -->
+				{#each categories.filter((c) => editCategoryIds.includes(c.id)) as category (category.id)}
+					<button
+						type="button"
+						onclick={() => openLinkCategoryModal(category.id)}
+						class="flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors bg-copper/90 text-cream border-copper ring-2 ring-copper/40 hover:bg-copper"
+					>
+						<span class="font-semibold">{category.displayName}</span>
 						<span
-							class={`text-[10px] uppercase tracking-wide ${
-								isSelected
-									? 'text-cream/80'
-									: category.isPublished
-										? 'text-emerald-200'
-										: 'text-ash'
+							class={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full ${
+								category.isPublished
+									? 'bg-emerald-500 text-white'
+									: 'bg-cream/20 text-cream/70'
 							}`}
 						>
-							{isSelected ? 'Selected' : category.isPublished ? 'Live' : 'Draft'}
+							{category.isPublished ? 'Published' : 'Not published'}
 						</span>
 					</button>
 				{/each}
-			</div>
-		{/if}
+
+				{#if categories.length === 0 && !onAddCategory}
+					<p class="text-xs text-ash">Create a category to start tagging projects.</p>
+				{/if}
+			{/if}
+		</div>
 	</div>
 	<div>
-		<div class="flex items-center justify-between">
-			<p class="text-sm text-ash">Attributes</p>
+		<p class="text-sm text-ash mb-2">Attributes</p>
+		<div class="flex flex-wrap gap-2">
+			<!-- Add attribute button pill -->
 			<button
 				type="button"
-				onclick={() => (editAttributes = addAttributeRow(editAttributes))}
-				class="text-xs text-copper hover:text-walnut"
+				onclick={openNewAttributeModal}
+				class="inline-flex items-center rounded-full border-2 border-dashed border-walnut/30 bg-cream/60 hover:border-copper hover:bg-copper/10 transition-colors"
 			>
-				Add attribute
+				<span class="px-3 py-1 text-xs text-copper font-medium">+ Add attribute</span>
 			</button>
+
+			<!-- Attribute pills -->
+			{#each editAttributes as attribute, index (attribute.id ?? index)}
+				<button
+					type="button"
+					ondblclick={() => openEditAttributeModal(index)}
+					class="inline-flex items-center gap-1.5 rounded-full border border-walnut/20 bg-white hover:border-copper transition-colors group"
+				>
+					<span class="px-3 py-1 text-xs font-medium text-walnut border-r border-walnut/20 group-hover:border-copper">
+						{attribute.name}
+					</span>
+					<span class="pl-1 pr-2 py-1 text-xs text-ash">
+						{attribute.value}
+					</span>
+					{#if attribute.showInNav}
+						<span class="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-blue-500 text-white">
+							In nav
+						</span>
+					{/if}
+					<span
+						class={`mr-1 text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full ${
+							attribute.isPublished
+								? 'bg-emerald-500 text-white'
+								: 'bg-ash/20 text-ash'
+						}`}
+					>
+						{attribute.isPublished ? 'Published' : 'Not published'}
+					</span>
+				</button>
+			{/each}
 		</div>
-		{#if editAttributes.length === 0}
-			<p class="mt-2 text-xs text-ash">No attributes yet.</p>
-		{:else}
-			<div class="mt-2 grid gap-2">
-				{#each editAttributes as attribute, index (attribute.id ?? index)}
-					<div class="flex flex-wrap items-center gap-2 rounded-lg border border-walnut/10 bg-cream/60 p-2">
-						<input
-							class="flex-1 min-w-[160px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
-							placeholder="Name"
-							value={attribute.name}
-							oninput={(event) =>
-								(editAttributes = updateAttributeRow(editAttributes, index, {
-									name: (event.target as HTMLInputElement).value
-								}))}
-						/>
-						<input
-							class="flex-1 min-w-[200px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
-							placeholder="Value"
-							value={attribute.value}
-							oninput={(event) =>
-								(editAttributes = updateAttributeRow(editAttributes, index, {
-									value: (event.target as HTMLInputElement).value
-								}))}
-						/>
-						<label class="flex items-center gap-1 text-[11px] text-ash">
-							<input
-								type="checkbox"
-								checked={attribute.showInNav}
-								onchange={(event) =>
-									(editAttributes = updateAttributeRow(editAttributes, index, {
-										showInNav: (event.target as HTMLInputElement).checked
-									}))}
-								class="accent-copper"
-							/>
-							Show in nav
-						</label>
-						<label class="flex items-center gap-1 text-[11px] text-ash">
-							<input
-								type="checkbox"
-								checked={attribute.isPublished}
-								onchange={(event) =>
-									(editAttributes = updateAttributeRow(editAttributes, index, {
-										isPublished: (event.target as HTMLInputElement).checked
-									}))}
-								class="accent-copper"
-							/>
-							Published
-						</label>
-						<button
-							type="button"
-							onclick={() => (editAttributes = removeAttributeRow(editAttributes, index))}
-							class="text-xs text-red-600 hover:text-red-700"
-						>
-							Remove
-						</button>
-					</div>
-				{/each}
-			</div>
-		{/if}
 	</div>
 	<label class="flex items-center gap-2 text-sm text-ash">
 		<input type="checkbox" bind:checked={editIsPublished} class="accent-copper" />
 		Published
 	</label>
-	<div class="flex items-center gap-2">
+</div>
+
+{#if showAttributeModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center px-4">
 		<button
 			type="button"
-			onclick={handleSave}
-			class="px-3 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
-		>
-			Save
-		</button>
-		{#if onCancel}
-			<button
-				type="button"
-				onclick={onCancel}
-				class="px-3 py-2 rounded-full border border-walnut/20 text-sm text-walnut hover:border-copper hover:text-copper transition-colors"
-			>
-				Cancel
-			</button>
-		{/if}
+			class="absolute inset-0 bg-black/40"
+			onclick={closeAttributeModal}
+			aria-label="Close attribute modal"
+		></button>
+		<div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+			<div class="flex items-start justify-between gap-4 mb-4">
+				<div>
+					<p class="text-xs uppercase tracking-[0.25em] text-ash">
+						{editingAttributeIndex !== null ? 'Edit' : 'New'} Attribute
+					</p>
+					<h3 class="font-display text-2xl text-walnut mt-1">
+						{editingAttributeIndex !== null ? 'Update details' : 'Add details'}
+					</h3>
+				</div>
+				<button
+					type="button"
+					class="text-xs uppercase tracking-wide text-ash hover:text-copper"
+					onclick={closeAttributeModal}
+				>
+					Close
+				</button>
+			</div>
+
+			<div class="grid gap-4">
+				<label class="text-sm">
+					<span class="text-ash">Name</span>
+					<input
+						type="text"
+						bind:value={modalAttributeName}
+						class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
+						placeholder="e.g., Material, Size, Time"
+					/>
+				</label>
+				<label class="text-sm">
+					<span class="text-ash">Value</span>
+					<input
+						type="text"
+						bind:value={modalAttributeValue}
+						class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
+						placeholder="e.g., Black Walnut, 8' × 42&quot;, 2 hours"
+					/>
+				</label>
+				<label class="flex items-center gap-2 text-sm text-ash">
+					<input type="checkbox" bind:checked={modalAttributeShowInNav} class="accent-copper" />
+					Show in navigation
+				</label>
+				<label class="flex items-center gap-2 text-sm text-ash">
+					<input type="checkbox" bind:checked={modalAttributeIsPublished} class="accent-copper" />
+					Published
+				</label>
+
+				<div class="flex flex-wrap gap-3 pt-2">
+					<button
+						type="button"
+						onclick={saveAttributeModal}
+						class="px-4 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
+					>
+						{editingAttributeIndex !== null ? 'Save changes' : 'Add attribute'}
+					</button>
+					{#if editingAttributeIndex !== null}
+						<button
+							type="button"
+							onclick={() => {
+								if (editingAttributeIndex !== null) {
+									editAttributes = removeAttributeRow(editAttributes, editingAttributeIndex);
+								}
+								closeAttributeModal();
+							}}
+							class="px-4 py-2 rounded-full border border-red-200 text-sm text-red-600 hover:bg-red-50"
+						>
+							Delete
+						</button>
+					{/if}
+					<button
+						type="button"
+						class="px-4 py-2 rounded-full border border-walnut/20 text-sm text-ash hover:text-walnut"
+						onclick={closeAttributeModal}
+					>
+						Cancel
+					</button>
+				</div>
+			</div>
+		</div>
 	</div>
-</div>
+{/if}
+
+{#if showLinkCategoryModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+		<button
+			type="button"
+			class="absolute inset-0 bg-black/40"
+			onclick={closeLinkCategoryModal}
+			aria-label="Close link category modal"
+		></button>
+		<div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+			<div class="flex items-start justify-between gap-4 mb-4">
+				<div>
+					<p class="text-xs uppercase tracking-[0.25em] text-ash">Link Categories</p>
+					<h3 class="font-display text-2xl text-walnut mt-1">Select categories</h3>
+				</div>
+				<button
+					type="button"
+					class="text-xs uppercase tracking-wide text-ash hover:text-copper"
+					onclick={closeLinkCategoryModal}
+				>
+					Close
+				</button>
+			</div>
+
+			<div class="grid gap-3 max-h-96 overflow-y-auto">
+				{#each categories as category (category.id)}
+					{@const isSelected = editCategoryIds.includes(category.id)}
+					{@const isFocused = focusedCategoryId === category.id}
+					<button
+						type="button"
+						onclick={() => (editCategoryIds = toggleCategory(editCategoryIds, category.id))}
+						class={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
+							isFocused
+								? 'bg-walnut/10 border-walnut ring-2 ring-walnut/40'
+								: isSelected
+									? 'bg-copper/10 border-copper ring-2 ring-copper/40'
+									: 'border-walnut/20 hover:border-copper'
+						}`}
+					>
+						<div class="flex-1">
+							<p class={`text-sm font-medium ${isFocused ? 'text-walnut' : isSelected ? 'text-copper' : 'text-walnut'}`}>
+								{category.displayName}
+							</p>
+							<p class="text-xs text-ash">/{category.name}</p>
+						</div>
+						<div class="flex items-center gap-2">
+							<span
+								class={`text-[10px] uppercase tracking-wide px-2 py-1 rounded-full ${
+									category.isPublished
+										? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+										: 'bg-ash/10 text-ash border border-ash/20'
+								}`}
+							>
+								{category.isPublished ? 'Live' : 'Draft'}
+							</span>
+							{#if isSelected}
+								<svg
+									class="w-5 h-5 text-copper"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M5 13l4 4L19 7"
+									/>
+								</svg>
+							{/if}
+						</div>
+					</button>
+				{/each}
+			</div>
+
+			<div class="flex flex-wrap gap-3 pt-4 mt-4 border-t border-walnut/10">
+				{#if focusedCategoryId !== null}
+					<button
+						type="button"
+						onclick={unlinkFocusedCategory}
+						class="px-4 py-2 rounded-full bg-red-600 text-white text-sm hover:bg-red-700 transition-colors"
+					>
+						Unlink category
+					</button>
+				{/if}
+				<button
+					type="button"
+					onclick={closeLinkCategoryModal}
+					class="px-4 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
+				>
+					Done
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
