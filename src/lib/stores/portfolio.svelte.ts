@@ -9,9 +9,10 @@ class PortfolioStore {
   loading = $state(false);
 
   // Convert API projects to portfolio items format
+  // Offset IDs to avoid collisions with static items (ids 1-24)
   apiItems = $derived.by(() => {
     return this.projects.map(project => ({
-      id: project.id || 0,
+      id: (project.id || 0) + 100_000,
       name: project.name,
       category: project.category,
       subcategory: project.subcategory,
