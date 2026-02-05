@@ -45,6 +45,7 @@ export const GET: RequestHandler = async ({ request, locals, platform, params, u
 		});
 
 		const result = await listPickedMediaItems(accessToken, params.sessionId, pageToken, pageSize);
+		console.log('[google-photos-items] Raw Google response:', JSON.stringify(result));
 
 		// Proxy thumbnail URLs: replace baseUrl with our proxied version
 		// since baseUrls require OAuth auth headers that browsers can't send via <img src>

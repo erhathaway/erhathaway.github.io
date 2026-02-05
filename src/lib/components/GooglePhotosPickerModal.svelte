@@ -135,7 +135,8 @@
 	function startPopupCheck() {
 		popupCheckTimer = setInterval(() => {
 			if (popup && popup.closed) {
-				// Popup closed — give polling a few more seconds to catch the final state
+				// Popup closed — give polling more time to catch the final state.
+				// Google may need 10-15s after the popup closes to finalize the selection.
 				if (popupCheckTimer) clearInterval(popupCheckTimer);
 				popupCheckTimer = null;
 
@@ -145,7 +146,7 @@
 						stopPolling();
 						onClose();
 					}
-				}, 5000);
+				}, 30000);
 			}
 		}, 1000);
 	}
@@ -181,15 +182,18 @@
 				if (!response.ok) throw new Error('Failed to load items');
 
 				const data = await response.json();
+				console.log('[google-photos] Items response:', JSON.stringify(data));
 				if (data.mediaItems) {
 					allItems.push(...data.mediaItems);
 				}
 				pageToken = data.nextPageToken;
 			} while (pageToken);
 
+			console.log('[google-photos] Total items loaded:', allItems.length);
 			pickedItems = allItems;
 
 			if (pickedItems.length === 0) {
+				console.log('[google-photos] No items found, closing modal');
 				onClose();
 				return;
 			}
@@ -240,6 +244,8 @@
 	}
 
 	function handleCancel() {
+		console.log('[google-photos] handleCancel called, step =', step);
+		console.trace('[google-photos] handleCancel stack trace');
 		stopPolling();
 		if (popup && !popup.closed) {
 			popup.close();

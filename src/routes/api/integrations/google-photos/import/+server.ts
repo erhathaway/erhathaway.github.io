@@ -74,6 +74,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	// List all selected media items
 	const items = await listAllPickedMediaItems(accessToken, sessionId);
+	console.log(`[google-photos-import] Found ${items.length} items to import for project ${projectId}`);
 
 	const baseUrl = env.PUBLIC_R2_BASE_URL?.replace(/\/$/, '');
 	const created: ImportResult[] = [];
@@ -107,6 +108,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		// Non-critical cleanup failure
 	}
 
+	console.log(`[google-photos-import] Done: ${created.length} created, ${errors.length} errors`);
+	if (errors.length > 0) console.log('[google-photos-import] Errors:', JSON.stringify(errors));
 	return json({ created, errors }, { headers: corsHeaders });
 };
 
