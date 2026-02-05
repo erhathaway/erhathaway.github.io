@@ -12,12 +12,18 @@
 
 	let showCategoryModal = $state(false);
 	let showProjectModal = $state(false);
+	let showEditCategoryModal = $state(false);
 	let navError = $state('');
 	let navSuccess = $state('');
 
 	let newCategoryName = $state('');
 	let newCategoryDisplayName = $state('');
 	let newCategoryIsPublished = $state(false);
+
+	let editCategoryId = $state<number | null>(null);
+	let editCategoryName = $state('');
+	let editCategoryDisplayName = $state('');
+	let editCategoryIsPublished = $state(false);
 
 	let newProjectName = $state('');
 	let newProjectDisplayName = $state('');
@@ -217,6 +223,86 @@
 		navSuccess = 'Category created.';
 	}
 
+	function startEditCategory(category: { id: number; name: string; displayName: string; isPublished: boolean }) {
+		editCategoryId = category.id;
+		editCategoryName = category.name;
+		editCategoryDisplayName = category.displayName;
+		editCategoryIsPublished = category.isPublished;
+		showEditCategoryModal = true;
+	}
+
+	function cancelEditCategory() {
+		editCategoryId = null;
+		editCategoryName = '';
+		editCategoryDisplayName = '';
+		editCategoryIsPublished = false;
+		showEditCategoryModal = false;
+	}
+
+	async function handleEditCategory(event: Event) {
+		event.preventDefault();
+		if (editCategoryId === null) return;
+		navError = '';
+		navSuccess = '';
+
+		const token = await getToken();
+		if (!token) {
+			navError = 'Sign in to update categories.';
+			return;
+		}
+
+		const response = await fetch(`/api/categories/${editCategoryId}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify({
+				name: editCategoryName.trim(),
+				displayName: editCategoryDisplayName.trim(),
+				isPublished: editCategoryIsPublished
+			})
+		});
+
+		if (!response.ok) {
+			navError = 'Unable to update category.';
+			return;
+		}
+
+		const updated = await response.json();
+		adminStore.categories = adminStore.categories.map((c) => (c.id === updated.id ? updated : c));
+		cancelEditCategory();
+		navSuccess = 'Category updated.';
+	}
+
+	async function handleDeleteCategory() {
+		if (editCategoryId === null) return;
+		navError = '';
+		navSuccess = '';
+
+		const token = await getToken();
+		if (!token) {
+			navError = 'Sign in to delete categories.';
+			return;
+		}
+
+		const response = await fetch(`/api/categories/${editCategoryId}`, {
+			method: 'DELETE',
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		});
+
+		if (!response.ok) {
+			navError = 'Unable to delete category.';
+			return;
+		}
+
+		adminStore.categories = adminStore.categories.filter((c) => c.id !== editCategoryId);
+		cancelEditCategory();
+		navSuccess = 'Category deleted.';
+	}
+
 	async function handleCreateProject(event: Event) {
 		event.preventDefault();
 		navError = '';
@@ -317,7 +403,15 @@
 						{:else}
 							<ul class="space-y-0.5">
 								{#each adminStore.categories as category (category.id)}
-									<li class="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors duration-150">
+									<li
+										class="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors duration-150 cursor-pointer select-none"
+										ondblclick={() => startEditCategory(category)}
+										role="button"
+										tabindex="0"
+										onkeydown={(event) => {
+											if (event.key === 'Enter') startEditCategory(category);
+										}}
+									>
 										<span class="font-medium">{category.displayName || category.name}</span>
 										<div class="flex items-center gap-2">
 											<span class="text-[10px] font-mono text-slate-400">/{category.name}</span>

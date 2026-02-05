@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { SignedIn, SignedOut, UserButton, useClerkContext } from 'svelte-clerk';
+	import { SignedIn, SignedOut, useClerkContext } from 'svelte-clerk';
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
 	import ImageArtifactEditor from '$lib/schemas/artifacts/image-v1/Editor.svelte';
 	import ImageArtifactAdminList from '$lib/schemas/artifacts/image-v1/AdminList.svelte';
@@ -624,14 +624,6 @@
 	});
 </script>
 
-<header class="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-slate-200">
-	<div>
-		<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Project Editor</p>
-		<h1 class="text-xl font-semibold text-slate-900 mt-1">Manage Project</h1>
-	</div>
-	<UserButton />
-</header>
-
 <SignedIn>
 	{#if pageLoading}
 		<div class="flex items-center gap-3 py-12">
@@ -747,14 +739,11 @@
 					{categoryIds}
 					attributes={attributes}
 					onSave={handleSave}
-					onAddCategory={() => {
-						window.location.href = '/admin#categories';
-					}}
 				/>
 			{/key}
 		</section>
 
-		<section class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+		<section class="mt-6">
 			<div class="flex items-center justify-between gap-4 mb-6">
 				<div>
 					<h2 class="text-lg font-semibold text-slate-900">Artifacts</h2>

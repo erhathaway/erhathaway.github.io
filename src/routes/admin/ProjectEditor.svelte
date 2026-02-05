@@ -39,7 +39,6 @@
 		attributes: AttributeDraft[];
 		onSave: (payload: ProjectEditorPayload) => void | Promise<void>;
 		onCancel?: () => void;
-		onAddCategory?: () => void;
 	};
 
 	let {
@@ -49,8 +48,7 @@
 		categoryIds,
 		attributes,
 		onSave,
-		onCancel,
-		onAddCategory
+		onCancel
 	} = $props<Props>();
 
 	let editIsPublished = $state(project.isPublished);
@@ -303,19 +301,6 @@
 			{#if !categoriesLoaded}
 				<p class="text-sm text-slate-400">Loading categories...</p>
 			{:else}
-				{#if onAddCategory}
-					<button
-						type="button"
-						onclick={onAddCategory}
-						class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-150"
-					>
-						<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-						</svg>
-						New category
-					</button>
-				{/if}
-
 				{#if categories.length > 0}
 					<button
 						type="button"
@@ -341,7 +326,7 @@
 					</button>
 				{/each}
 
-				{#if categories.length === 0 && !onAddCategory}
+				{#if categories.length === 0}
 					<p class="text-sm text-slate-400">Create a category to start tagging projects.</p>
 				{/if}
 			{/if}

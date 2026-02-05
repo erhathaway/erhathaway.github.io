@@ -33,10 +33,7 @@
 </script>
 
 <header class="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-slate-200">
-	<div>
-		<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Dashboard</p>
-		<h1 class="text-xl font-semibold text-slate-900 mt-1">Admin Panel</h1>
-	</div>
+	<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Dashboard</p>
 	<UserButton />
 </header>
 
