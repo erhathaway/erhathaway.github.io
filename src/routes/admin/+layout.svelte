@@ -762,3 +762,88 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Edit Category Modal -->
+{#if showEditCategoryModal && editCategoryId !== null}
+	<div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+		<button
+			type="button"
+			class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+			aria-label="Close modal"
+			onclick={cancelEditCategory}
+		></button>
+		<div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+			<!-- Header -->
+			<div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
+				<h3 class="text-base font-semibold text-slate-900">Edit Category</h3>
+				<button
+					type="button"
+					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					onclick={cancelEditCategory}
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+
+			<!-- Body -->
+			<form class="px-6 py-5 grid gap-4" onsubmit={handleEditCategory}>
+				<label class="grid gap-1.5">
+					<span class="text-xs font-medium text-slate-600">URL slug</span>
+					<input
+						bind:value={editCategoryName}
+						required
+						class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 font-mono placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
+						placeholder="url-slug"
+					/>
+				</label>
+				<label class="grid gap-1.5">
+					<span class="text-xs font-medium text-slate-600">Display Name</span>
+					<input
+						bind:value={editCategoryDisplayName}
+						class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
+						placeholder="Display Name"
+					/>
+				</label>
+				<div class="flex items-center gap-3">
+					<button
+						type="button"
+						role="switch"
+						aria-checked={editCategoryIsPublished}
+						aria-label="Toggle published"
+						onclick={() => { editCategoryIsPublished = !editCategoryIsPublished; }}
+						class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editCategoryIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+					>
+						<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${editCategoryIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+					</button>
+					<span class="text-sm text-slate-600">Published</span>
+				</div>
+
+				<!-- Footer -->
+				<div class="flex items-center gap-2.5 pt-3 border-t border-slate-100 mt-1">
+					<button
+						type="submit"
+						class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150"
+					>
+						Save
+					</button>
+					<button
+						type="button"
+						onclick={handleDeleteCategory}
+						class="px-4 py-2 rounded-xl border border-red-200 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-150"
+					>
+						Delete
+					</button>
+					<button
+						type="button"
+						onclick={cancelEditCategory}
+						class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					>
+						Cancel
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
