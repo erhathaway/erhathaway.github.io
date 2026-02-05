@@ -92,6 +92,8 @@
 	let displayNameInput: HTMLInputElement | undefined = $state();
 	let descriptionInput: HTMLTextAreaElement | undefined = $state();
 
+	let isSavingBasicInfo = $state(false);
+
 	function handleSchemaChange(event: Event) {
 		const target = event.currentTarget as HTMLSelectElement | null;
 		const nextSchema = target?.value ?? '';
@@ -521,34 +523,47 @@
 	async function updateProjectBasicInfo() {
 		pageError = '';
 		pageSuccess = '';
-		const token = await getToken();
-		if (!token) {
-			pageError = 'Sign in to update projects.';
-			return;
+		isSavingBasicInfo = true;
+		const startTime = Date.now();
+
+		try {
+			const token = await getToken();
+			if (!token) {
+				pageError = 'Sign in to update projects.';
+				return;
+			}
+
+			const response = await fetch(`/api/projects/${projectId}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					name: editName.trim(),
+					displayName: editDisplayName.trim() || editName.trim(),
+					description: editDescription.trim() || null,
+					isPublished: project?.isPublished ?? false
+				})
+			});
+
+			if (!response.ok) {
+				pageError = 'Unable to update project.';
+				return;
+			}
+
+			project = await response.json();
+			editingField = null;
+			pageSuccess = 'Project updated.';
+
+			// Ensure spinner shows for at least 500ms
+			const elapsed = Date.now() - startTime;
+			if (elapsed < 500) {
+				await new Promise(resolve => setTimeout(resolve, 500 - elapsed));
+			}
+		} finally {
+			isSavingBasicInfo = false;
 		}
-
-		const response = await fetch(`/api/projects/${projectId}`, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`
-			},
-			body: JSON.stringify({
-				name: editName.trim(),
-				displayName: editDisplayName.trim() || editName.trim(),
-				description: editDescription.trim() || null,
-				isPublished: project?.isPublished ?? false
-			})
-		});
-
-		if (!response.ok) {
-			pageError = 'Unable to update project.';
-			return;
-		}
-
-		project = await response.json();
-		editingField = null;
-		pageSuccess = 'Project updated.';
 	}
 
 	onMount(() => {
@@ -621,8 +636,32 @@
 	{#if pageLoading}
 		<p class="text-ash text-sm">Loading project...</p>
 	{:else if project}
-		<section class="rounded-2xl border border-walnut/10 bg-white/70 p-6 shadow-sm">
+		<section class="relative rounded-2xl border border-walnut/10 bg-white/70 p-6 shadow-sm">
 			<div class="flex items-start justify-between gap-4 mb-6">
+				{#if isSavingBasicInfo}
+					<div class="absolute top-0 right-0 p-6">
+						<svg
+							class="animate-spin h-5 w-5 text-copper"
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<circle
+								class="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								stroke-width="4"
+							></circle>
+							<path
+								class="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+							></path>
+						</svg>
+					</div>
+				{/if}
 				<div class="flex-1">
 					<div class="flex items-baseline gap-2">
 						{#if editingField === 'displayName'}

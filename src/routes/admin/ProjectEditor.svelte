@@ -67,6 +67,10 @@
 	let showLinkCategoryModal = $state(false);
 	let focusedCategoryId = $state<number | null>(null);
 
+	let prevIsPublished = editIsPublished;
+	let prevCategoryIds = JSON.stringify(editCategoryIds);
+	let prevAttributes = JSON.stringify(editAttributes);
+
 	function toggleCategory(ids: number[], categoryId: number) {
 		if (ids.includes(categoryId)) {
 			return ids.filter((id) => id !== categoryId);
@@ -177,11 +181,30 @@
 	let hasUnsavedChanges = $state(false);
 	let isSaving = $state(false);
 
+	// Log when isSaving changes
+	$effect(() => {
+		console.log('isSaving changed to:', isSaving);
+	});
+
+	let saveStartTime = 0;
+
 	function triggerAutoSave() {
+		console.log('triggerAutoSave called');
 		hasUnsavedChanges = true;
-		if (saveTimeout) clearTimeout(saveTimeout);
-		saveTimeout = setTimeout(async () => {
+
+		// Show spinner immediately
+		if (!isSaving) {
 			isSaving = true;
+			saveStartTime = Date.now();
+		}
+
+		if (saveTimeout) {
+			console.log('Clearing existing timeout');
+			clearTimeout(saveTimeout);
+		}
+		console.log('Setting 3-second timeout for save');
+		saveTimeout = setTimeout(async () => {
+			console.log('Timeout fired, saving now...');
 			try {
 				await onSave({
 					name: project.name,
@@ -191,6 +214,13 @@
 					categoryIds: editCategoryIds,
 					attributes: editAttributes
 				});
+				console.log('Save completed');
+
+				// Ensure spinner shows for at least 500ms from when it first appeared
+				const elapsed = Date.now() - saveStartTime;
+				if (elapsed < 500) {
+					await new Promise(resolve => setTimeout(resolve, 500 - elapsed));
+				}
 			} finally {
 				isSaving = false;
 				hasUnsavedChanges = false;
@@ -199,9 +229,11 @@
 	}
 
 	async function saveImmediately() {
+		console.log('saveImmediately called, hasUnsavedChanges:', hasUnsavedChanges);
 		if (saveTimeout) clearTimeout(saveTimeout);
 		if (hasUnsavedChanges) {
 			isSaving = true;
+			const startTime = Date.now();
 			try {
 				await onSave({
 					name: project.name,
@@ -211,6 +243,13 @@
 					categoryIds: editCategoryIds,
 					attributes: editAttributes
 				});
+				console.log('Immediate save completed');
+
+				// Ensure spinner shows for at least 500ms
+				const elapsed = Date.now() - startTime;
+				if (elapsed < 500) {
+					await new Promise(resolve => setTimeout(resolve, 500 - elapsed));
+				}
 			} finally {
 				isSaving = false;
 				hasUnsavedChanges = false;
@@ -218,34 +257,34 @@
 		}
 	}
 
-	// Sync state when project changes (not on every update)
-	let lastProjectId = project.id;
-	$effect(() => {
-		if (project.id !== lastProjectId) {
-			editIsPublished = project.isPublished;
-			editCategoryIds = [...categoryIds];
-			editAttributes = attributes.map((attribute) => ({ ...attribute }));
-			lastProjectId = project.id;
-		}
-	});
-
 	// Watch for changes and trigger auto-save
-	let mounted = false;
 	$effect(() => {
-		// Track dependencies by reading them
 		const currentIsPublished = editIsPublished;
-		const currentCategoryIds = editCategoryIds.length;
-		const currentAttributes = editAttributes.length;
+		const currentCategoryIds = JSON.stringify(editCategoryIds);
+		const currentAttributes = JSON.stringify(editAttributes);
 
-		// Skip initial render
-		if (!mounted) {
-			mounted = true;
-			return;
+		// Check if anything actually changed
+		const isPublishedChanged = currentIsPublished !== prevIsPublished;
+		const categoryIdsChanged = currentCategoryIds !== prevCategoryIds;
+		const attributesChanged = currentAttributes !== prevAttributes;
+
+		if (isPublishedChanged || categoryIdsChanged || attributesChanged) {
+			console.log('Change detected!', {
+				isPublishedChanged,
+				categoryIdsChanged,
+				attributesChanged,
+				currentIsPublished,
+				prevIsPublished
+			});
+
+			// Update prev values
+			prevIsPublished = currentIsPublished;
+			prevCategoryIds = currentCategoryIds;
+			prevAttributes = currentAttributes;
+
+			// Trigger auto-save
+			triggerAutoSave();
 		}
-
-		// Trigger auto-save on change
-		console.log('Auto-save triggered:', { currentIsPublished, currentCategoryIds, currentAttributes });
-		triggerAutoSave();
 	});
 </script>
 
@@ -372,7 +411,14 @@
 		</div>
 	</div>
 	<label class="flex items-center gap-2 text-sm text-ash">
-		<input type="checkbox" bind:checked={editIsPublished} class="accent-copper" />
+		<input
+			type="checkbox"
+			bind:checked={editIsPublished}
+			class="accent-copper"
+			onchange={(e) => {
+				console.log('Checkbox changed!', 'new value:', (e.target as HTMLInputElement).checked, 'editIsPublished:', editIsPublished);
+			}}
+		/>
 		Published
 	</label>
 </div>
