@@ -18,6 +18,9 @@ declare global {
 				DB: D1Database;
 				ARTIFACTS?: R2Bucket;
 				PUBLIC_R2_BASE_URL?: string;
+				GOOGLE_CLIENT_ID?: string;
+				GOOGLE_CLIENT_SECRET?: string;
+				GOOGLE_TOKEN_ENCRYPTION_KEY?: string;
 			};
 		}
 	}

@@ -17,6 +17,7 @@
 	let showExportImportModal = $state(false);
 	let navError = $state('');
 	let navSuccess = $state('');
+	let googlePhotosConnected = $state(false);
 
 	let newCategoryName = $state('');
 	let newCategoryDisplayName = $state('');
@@ -69,10 +70,26 @@
 		adminStore.projectsLoaded = true;
 	}
 
+	async function fetchGooglePhotosStatus() {
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const response = await fetch('/api/integrations/google-photos/status', {
+				headers: { Authorization: `Bearer ${token}` }
+			});
+			if (response.ok) {
+				const data = await response.json();
+				googlePhotosConnected = data.connected;
+			}
+		} catch {
+			// Non-critical, leave as disconnected
+		}
+	}
+
 	async function loadNavData() {
 		navError = '';
 		try {
-			await Promise.all([fetchCategories(), fetchProjects()]);
+			await Promise.all([fetchCategories(), fetchProjects(), fetchGooglePhotosStatus()]);
 		} catch (err) {
 			console.error(err);
 			navError = err instanceof Error ? err.message : 'Unable to load admin data.';
@@ -468,6 +485,26 @@
 					{:else}
 						<p class="text-xs text-slate-400">Loading...</p>
 					{/if}
+				</div>
+
+				<!-- Integrations -->
+				<div>
+					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Integrations</p>
+					<ul class="space-y-0.5">
+						<li>
+							<a
+								href="/admin/integrations/google-photos"
+								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
+									$page.url.pathname === '/admin/integrations/google-photos'
+										? 'bg-slate-900 text-white'
+										: 'text-slate-600 hover:bg-slate-50'
+								}`}
+							>
+								<span class="font-medium">Google Photos</span>
+								<span class={`inline-block h-1.5 w-1.5 rounded-full ${googlePhotosConnected ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
+							</a>
+						</li>
+					</ul>
 				</div>
 			</div>
 

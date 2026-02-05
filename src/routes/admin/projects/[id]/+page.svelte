@@ -7,8 +7,10 @@
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
 	import ImageArtifactEditor from '$lib/schemas/artifacts/image-v1/Editor.svelte';
 	import ImageArtifactAdminList from '$lib/schemas/artifacts/image-v1/AdminList.svelte';
+	import VideoArtifactAdminList from '$lib/schemas/artifacts/video-v1/AdminList.svelte';
 	import { artifactSchemas, validateArtifactData } from '$lib/schemas/artifacts';
 	import { createImageV1Draft, type ImageV1Data } from '$lib/schemas/artifacts/image-v1/validator';
+	import GooglePhotosPickerModal from '$lib/components/GooglePhotosPickerModal.svelte';
 
 	type Category = {
 		id: number;
@@ -67,7 +69,7 @@
 	const initialSchema = artifactSchemas[0]?.name ?? 'image-v1';
 	const initialDraft = createImageV1Draft();
 	const initialValidation = validateArtifactData(initialSchema, initialDraft);
-	let artifactSchema = $state(initialSchema);
+	let artifactSchema: string = $state(initialSchema);
 	let artifactDraft = $state<ImageV1Data>(initialDraft);
 	let artifactDraftErrors = $state<string[]>(initialValidation.ok ? [] : initialValidation.errors);
 	let artifactIsPublished = $state(false);
@@ -87,6 +89,10 @@
 		error: null
 	});
 	let editArtifactIsCover = $state(false);
+
+	let addArtifactStep = $state<'idle' | 'pick-source'>('idle');
+	let googlePhotosConnected = $state(false);
+	let showGooglePhotosPickerModal = $state(false);
 
 	let editingArtifactIndex = $derived(
 		editingArtifactId !== null ? artifacts.findIndex((a) => a.id === editingArtifactId) : -1
@@ -206,6 +212,22 @@
 		artifacts = await response.json();
 	}
 
+	async function fetchGooglePhotosStatus() {
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const response = await fetch('/api/integrations/google-photos/status', {
+				headers: { Authorization: `Bearer ${token}` }
+			});
+			if (response.ok) {
+				const data = await response.json();
+				googlePhotosConnected = data.connected;
+			}
+		} catch {
+			// Non-critical
+		}
+	}
+
 	async function loadAllFor(id: number) {
 		pageError = '';
 		pageSuccess = '';
@@ -216,7 +238,8 @@
 				fetchCategories(),
 				fetchProjectCategories(id),
 				fetchProjectAttributes(id),
-				fetchProjectArtifacts(id)
+				fetchProjectArtifacts(id),
+				fetchGooglePhotosStatus()
 			]);
 		} catch (err) {
 			console.error(err);
@@ -953,36 +976,76 @@
 
 			<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 				<!-- New Artifact Card -->
-				<div
-					class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-3 min-h-[160px] hover:border-slate-400 hover:bg-slate-50 transition-all duration-150 cursor-pointer"
-					onclick={(event) => {
-						if ((event.target as HTMLElement).closest('select')) return;
-						showCreateArtifactModal = true;
-					}}
-					role="button"
-					tabindex="0"
-					onkeydown={(event) => {
-						if (event.key === 'Enter' || event.key === ' ') {
-							if ((event.target as HTMLElement).tagName === 'SELECT') return;
-							event.preventDefault();
-							showCreateArtifactModal = true;
-						}
-					}}
-				>
-					<select
-						class="text-[11px] font-mono text-slate-500 bg-white border border-slate-200 rounded-lg px-2 py-1 cursor-pointer hover:border-slate-300 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
-						value={artifactSchema}
-						onchange={handleSchemaChange}
+				{#if addArtifactStep === 'idle'}
+					<div
+						class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-3 min-h-[160px] hover:border-slate-400 hover:bg-slate-50 transition-all duration-150 cursor-pointer"
+						onclick={() => (addArtifactStep = 'pick-source')}
+						role="button"
+						tabindex="0"
+						onkeydown={(event) => {
+							if (event.key === 'Enter' || event.key === ' ') {
+								event.preventDefault();
+								addArtifactStep = 'pick-source';
+							}
+						}}
 					>
-						{#each artifactSchemas as schema}
-							<option value={schema.name}>{schema.label}</option>
-						{/each}
-					</select>
-					<svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
-					</svg>
-					<span class="text-xs font-medium text-slate-500">Add artifact</span>
-				</div>
+						<svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
+						</svg>
+						<span class="text-xs font-medium text-slate-500">Add artifact</span>
+					</div>
+				{:else}
+					<div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-3 min-h-[160px] transition-all duration-150">
+						<div class="flex gap-3">
+							<button
+								type="button"
+								class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-slate-400 hover:shadow-sm transition-all duration-150"
+								onclick={() => {
+									addArtifactStep = 'idle';
+									showCreateArtifactModal = true;
+								}}
+							>
+								<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+								</svg>
+								<span class="text-xs font-medium text-slate-600">Upload File</span>
+							</button>
+							<button
+								type="button"
+								class={`flex flex-col items-center gap-2 rounded-xl border px-5 py-4 transition-all duration-150 ${
+									googlePhotosConnected
+										? 'border-slate-200 bg-white hover:border-slate-400 hover:shadow-sm'
+										: 'border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed'
+								}`}
+								onclick={() => {
+									if (!googlePhotosConnected) return;
+									addArtifactStep = 'idle';
+									showGooglePhotosPickerModal = true;
+								}}
+								disabled={!googlePhotosConnected}
+							>
+								<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+								</svg>
+								<span class="text-xs font-medium text-slate-600">Google Photos</span>
+								{#if !googlePhotosConnected}
+									<a
+										href="/admin/integrations/google-photos"
+										class="text-[10px] text-slate-400 underline"
+										onclick={(e) => e.stopPropagation()}
+									>Not connected</a>
+								{/if}
+							</button>
+						</div>
+						<button
+							type="button"
+							class="text-[11px] text-slate-400 hover:text-slate-600 transition-colors duration-150"
+							onclick={() => (addArtifactStep = 'idle')}
+						>
+							&larr; Back
+						</button>
+					</div>
+				{/if}
 
 				<!-- Existing Artifacts -->
 				{#each artifacts as artifact (artifact.id)}
@@ -1057,6 +1120,8 @@
 						<div>
 							{#if artifact.schema === 'image-v1'}
 								<ImageArtifactAdminList data={artifact.dataBlob as ImageV1Data} />
+							{:else if artifact.schema === 'video-v1'}
+								<VideoArtifactAdminList data={artifact.dataBlob as import('$lib/schemas/artifacts/video-v1/validator').VideoV1Data} />
 							{:else}
 								<p class="text-xs text-slate-400">Unsupported schema.</p>
 							{/if}
@@ -1206,6 +1271,8 @@
 						</div>
 						{#if artifact.schema === 'image-v1'}
 							<ImageArtifactAdminList data={artifact.dataBlob as ImageV1Data} />
+						{:else if artifact.schema === 'video-v1'}
+							<VideoArtifactAdminList data={artifact.dataBlob as import('$lib/schemas/artifacts/video-v1/validator').VideoV1Data} />
 						{/if}
 					</div>
 				</button>
@@ -1377,6 +1444,20 @@
 			</svg>
 			<p class="text-sm text-emerald-700">{pageSuccess}</p>
 		</div>
+	{/if}
+
+	<!-- Google Photos Picker Modal -->
+	{#if showGooglePhotosPickerModal}
+		<GooglePhotosPickerModal
+			{projectId}
+			{getToken}
+			onImported={(imported) => {
+				artifacts = [...imported.map(a => ({ ...a, projectId, isCover: false })), ...artifacts];
+				showGooglePhotosPickerModal = false;
+				pageSuccess = `Imported ${imported.length} item${imported.length !== 1 ? 's' : ''} from Google Photos.`;
+			}}
+			onClose={() => (showGooglePhotosPickerModal = false)}
+		/>
 	{/if}
 </SignedIn>
 

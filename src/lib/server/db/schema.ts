@@ -1,4 +1,5 @@
 import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
 
 export const projects = sqliteTable('projects', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
@@ -55,4 +56,24 @@ export const projectCoverArtifact = sqliteTable('project_cover_artifact', {
 	artifactId: integer('artifact_id')
 		.notNull()
 		.references(() => projectArtifacts.id, { onDelete: 'cascade' })
+});
+
+export const integrations = sqliteTable('integrations', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	provider: text('provider').notNull().unique(),
+	userId: text('user_id').notNull(),
+	tokens: text('tokens').notNull(),
+	createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+	updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`)
+});
+
+export const artifactMetadata = sqliteTable('artifact_metadata', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	artifactId: integer('artifact_id')
+		.notNull()
+		.unique()
+		.references(() => projectArtifacts.id, { onDelete: 'cascade' }),
+	metadata: text('metadata', { mode: 'json' }).notNull(),
+	source: text('source').notNull(),
+	createdAt: text('created_at').notNull().default(sql`(datetime('now'))`)
 });
