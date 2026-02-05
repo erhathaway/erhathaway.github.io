@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { projects, projectArtifacts, projectCoverArtifact } from '$lib/server/db/schema';
+import { projects, projectArtifacts, projectCoverArtifact, categories, projectCategories, projectAttributes } from '$lib/server/db/schema';
 import { verifyClerkAuth } from '$lib/server/auth';
 
 const corsHeaders = {
@@ -48,6 +48,45 @@ export const GET: RequestHandler = async ({ request, locals, platform }) => {
 		.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id))
 		.where(isAuthed ? undefined : eq(projects.isPublished, true));
 
+	// Fetch categories and nav attributes for all projects
+	const projectIds = rows.map((r) => r.id);
+
+	const [catRows, attrRows] = await Promise.all([
+		projectIds.length > 0
+			? db
+				.select({
+					projectId: projectCategories.projectId,
+					categoryName: categories.displayName
+				})
+				.from(projectCategories)
+				.innerJoin(categories, eq(projectCategories.categoryId, categories.id))
+			: Promise.resolve([]),
+		projectIds.length > 0
+			? db
+				.select({
+					projectId: projectAttributes.projectId,
+					name: projectAttributes.name,
+					value: projectAttributes.value
+				})
+				.from(projectAttributes)
+				.where(eq(projectAttributes.showInNav, true))
+			: Promise.resolve([])
+	]);
+
+	const catsByProject = new Map<number, string[]>();
+	for (const row of catRows) {
+		const arr = catsByProject.get(row.projectId) ?? [];
+		arr.push(row.categoryName);
+		catsByProject.set(row.projectId, arr);
+	}
+
+	const attrsByProject = new Map<number, Array<{ name: string; value: string }>>();
+	for (const row of attrRows) {
+		const arr = attrsByProject.get(row.projectId) ?? [];
+		arr.push({ name: row.name, value: row.value });
+		attrsByProject.set(row.projectId, arr);
+	}
+
 	const result = rows.map((row) => {
 		let coverImageUrl: string | null = null;
 		if (row.coverArtifactDataBlob) {
@@ -62,7 +101,9 @@ export const GET: RequestHandler = async ({ request, locals, platform }) => {
 			displayName: row.displayName,
 			description: row.description,
 			isPublished: row.isPublished,
-			coverImageUrl
+			coverImageUrl,
+			categories: catsByProject.get(row.id) ?? [],
+			navAttributes: attrsByProject.get(row.id) ?? []
 		};
 	});
 
