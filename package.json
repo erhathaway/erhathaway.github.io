@@ -65,6 +65,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"jszip": "^3.10.1",
 		"svelte-clerk": "^0.20.3"
 	}
 }

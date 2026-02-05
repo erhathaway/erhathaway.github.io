@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { useClerkContext } from 'svelte-clerk';
 	import { adminStore } from '$lib/stores/admin.svelte';
+	import ExportImportModal from './ExportImportModal.svelte';
 	import type { AttributeDraft } from './ProjectEditor.svelte';
 
 	let { children } = $props();
@@ -13,6 +14,7 @@
 	let showCategoryModal = $state(false);
 	let showProjectModal = $state(false);
 	let showEditCategoryModal = $state(false);
+	let showExportImportModal = $state(false);
 	let navError = $state('');
 	let navSuccess = $state('');
 
@@ -390,6 +392,16 @@
 					</svg>
 					New Project
 				</button>
+				<button
+					type="button"
+					onclick={() => (showExportImportModal = true)}
+					class="w-full flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-150"
+				>
+					<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+					</svg>
+					Export / Import
+				</button>
 			</div>
 
 			<!-- Nav Lists -->
@@ -761,6 +773,24 @@
 			</form>
 		</div>
 	</div>
+{/if}
+
+<!-- Export / Import Modal -->
+{#if showExportImportModal}
+	<ExportImportModal
+		open={showExportImportModal}
+		categories={adminStore.categories}
+		projects={adminStore.projects}
+		{getToken}
+		onClose={() => {
+			showExportImportModal = false;
+		}}
+		onComplete={(message) => {
+			navSuccess = message;
+			showExportImportModal = false;
+			void loadNavData();
+		}}
+	/>
 {/if}
 
 <!-- Edit Category Modal -->
