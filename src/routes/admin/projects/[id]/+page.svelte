@@ -83,6 +83,23 @@
 		error: null
 	});
 
+	let editingArtifactIndex = $derived(
+		editingArtifactId !== null ? artifacts.findIndex((a) => a.id === editingArtifactId) : -1
+	);
+
+	let editNeighborArtifacts = $derived.by(() => {
+		if (editingArtifactIndex === -1) return [];
+		const neighbors: Array<{ artifact: ProjectArtifact; offset: number }> = [];
+		for (let d = -2; d <= 2; d++) {
+			if (d === 0) continue;
+			const idx = editingArtifactIndex + d;
+			if (idx >= 0 && idx < artifacts.length) {
+				neighbors.push({ artifact: artifacts[idx], offset: d });
+			}
+		}
+		return neighbors;
+	});
+
 	let editingField = $state<'name' | 'displayName' | 'description' | null>(null);
 	let editName = $state('');
 	let editDisplayName = $state('');
@@ -448,6 +465,16 @@
 		showEditArtifactModal = false;
 	}
 
+	function navigateToArtifact(artifact: ProjectArtifact) {
+		startArtifactEdit(artifact);
+	}
+
+	function getArtifactImageUrl(artifact: ProjectArtifact): string {
+		if (artifact.schema !== 'image-v1') return '';
+		const data = artifact.dataBlob as ImageV1Data;
+		return data?.imageUrl ?? '';
+	}
+
 	function handleEditArtifactDraftChange(next: ImageV1Data) {
 		editArtifactDraft = next;
 		const validation = validateArtifactData('image-v1', next);
@@ -622,6 +649,28 @@
 			descriptionInput.select();
 		}
 	});
+
+	$effect(() => {
+		if (!showEditArtifactModal) return;
+
+		function handleKeydown(event: KeyboardEvent) {
+			const tag = (document.activeElement as HTMLElement)?.tagName;
+			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+			if (event.key === 'ArrowLeft') {
+				event.preventDefault();
+				const prevIdx = editingArtifactIndex - 1;
+				if (prevIdx >= 0) navigateToArtifact(artifacts[prevIdx]);
+			} else if (event.key === 'ArrowRight') {
+				event.preventDefault();
+				const nextIdx = editingArtifactIndex + 1;
+				if (nextIdx < artifacts.length) navigateToArtifact(artifacts[nextIdx]);
+			}
+		}
+
+		window.addEventListener('keydown', handleKeydown);
+		return () => window.removeEventListener('keydown', handleKeydown);
+	});
 </script>
 
 <SignedIn>
@@ -753,16 +802,36 @@
 
 			<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 				<!-- New Artifact Card -->
-				<button
-					type="button"
-					class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-2 min-h-[160px] hover:border-slate-400 hover:bg-slate-50 transition-all duration-150 cursor-pointer"
-					onclick={() => (showCreateArtifactModal = true)}
+				<div
+					class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-3 min-h-[160px] hover:border-slate-400 hover:bg-slate-50 transition-all duration-150 cursor-pointer"
+					onclick={(event) => {
+						if ((event.target as HTMLElement).closest('select')) return;
+						showCreateArtifactModal = true;
+					}}
+					role="button"
+					tabindex="0"
+					onkeydown={(event) => {
+						if (event.key === 'Enter' || event.key === ' ') {
+							if ((event.target as HTMLElement).tagName === 'SELECT') return;
+							event.preventDefault();
+							showCreateArtifactModal = true;
+						}
+					}}
 				>
+					<select
+						class="text-[11px] font-mono text-slate-500 bg-white border border-slate-200 rounded-lg px-2 py-1 cursor-pointer hover:border-slate-300 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
+						value={artifactSchema}
+						onchange={handleSchemaChange}
+					>
+						{#each artifactSchemas as schema}
+							<option value={schema.name}>{schema.label}</option>
+						{/each}
+					</select>
 					<svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
 					</svg>
 					<span class="text-xs font-medium text-slate-500">Add artifact</span>
-				</button>
+				</div>
 
 				<!-- Existing Artifacts -->
 				{#each artifacts as artifact (artifact.id)}
@@ -894,18 +963,72 @@
 
 	<!-- Edit Artifact Modal -->
 	{#if showEditArtifactModal && editingArtifactId !== null}
-		<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
+		<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-10 overflow-hidden">
 			<button
 				type="button"
-				class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+				class="absolute inset-0 bg-black/50 backdrop-blur-2xl backdrop-saturate-150"
 				onclick={cancelArtifactEdit}
 				aria-label="Close edit artifact modal"
 			></button>
-			<div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
+
+			<!-- Neighbor artifact images -->
+			{#each editNeighborArtifacts as { artifact, offset } (artifact.id)}
+				{@const absOffset = Math.abs(offset)}
+				{@const sign = offset > 0 ? 1 : -1}
+				{@const scale = absOffset === 1 ? 0.75 : 0.5}
+				{@const opacity = absOffset === 1 ? 0.8 : 0.5}
+				{@const translateX = sign * (absOffset === 1 ? 340 : 540)}
+				{@const imageUrl = getArtifactImageUrl(artifact)}
+				{#if imageUrl}
+					<button
+						type="button"
+						class="absolute top-1/2 left-1/2 z-40 cursor-pointer rounded-xl overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/40 transition-all duration-300"
+						style="transform: translate(-50%, -50%) translateX({translateX}px) scale({scale}); opacity: {opacity};"
+						onclick={() => navigateToArtifact(artifact)}
+						aria-label="Go to artifact"
+					>
+						<img
+							src={imageUrl}
+							alt=""
+							class="h-64 w-48 object-cover"
+							loading="lazy"
+						/>
+					</button>
+				{/if}
+			{/each}
+
+			<!-- Navigation arrows -->
+			{#if editingArtifactIndex > 0}
+				<button
+					type="button"
+					class="absolute left-4 top-1/2 -translate-y-1/2 z-[60] rounded-full bg-white/90 p-2 shadow-lg hover:bg-white transition-colors duration-150"
+					onclick={() => navigateToArtifact(artifacts[editingArtifactIndex - 1])}
+					aria-label="Previous artifact"
+				>
+					<svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+					</svg>
+				</button>
+			{/if}
+			{#if editingArtifactIndex < artifacts.length - 1}
+				<button
+					type="button"
+					class="absolute right-4 top-1/2 -translate-y-1/2 z-[60] rounded-full bg-white/90 p-2 shadow-lg hover:bg-white transition-colors duration-150"
+					onclick={() => navigateToArtifact(artifacts[editingArtifactIndex + 1])}
+					aria-label="Next artifact"
+				>
+					<svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+					</svg>
+				</button>
+			{/if}
+
+			<!-- Main edit modal -->
+			<div class="relative z-50 w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
 				<div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
 					<div class="flex items-center gap-2">
 						<h3 class="text-sm font-semibold text-slate-900">Edit Artifact</h3>
-						<span class="text-[11px] font-mono text-slate-400">{artifactSchema}</span>
+						<span class="text-[11px] font-mono text-slate-400">{editingArtifactIndex + 1} / {artifacts.length}</span>
 					</div>
 					<button
 						type="button"
