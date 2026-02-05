@@ -51,12 +51,13 @@
 		onCancel
 	} = $props<Props>();
 
-	let editName = $state(project.name);
-	let editDisplayName = $state(project.displayName);
-	let editDescription = $state(project.description ?? '');
-	let editIsPublished = $state(project.isPublished);
-	let editCategoryIds = $state<number[]>([...categoryIds]);
-	let editAttributes = $state<AttributeDraft[]>(attributes.map((attribute) => ({ ...attribute })));
+	let editName = $derived(project.name);
+	let editDisplayName = $derived(project.displayName);
+	let editDescription = $derived(project.description ?? '');
+	let editIsPublished = $derived(project.isPublished);
+	let editCategoryIds = $derived([...categoryIds]);
+	let editAttributes = $derived(attributes.map((attribute) => ({ ...attribute })));
+	let editingField = $state<'name' | 'displayName' | 'description' | null>(null);
 
 	function toggleCategory(ids: number[], categoryId: number) {
 		if (ids.includes(categoryId)) {
@@ -103,22 +104,86 @@
 </script>
 
 <div class="flex flex-col gap-3 flex-1 min-w-[240px]">
-	<div class="flex flex-wrap gap-3">
-		<input
-			bind:value={editName}
-			class="w-40 rounded-md border border-walnut/20 px-3 py-2 text-sm"
-		/>
-		<input
-			bind:value={editDisplayName}
-			class="w-56 rounded-md border border-walnut/20 px-3 py-2 text-sm"
-			placeholder={editName}
-		/>
+	<div class="grid gap-3 sm:grid-cols-[140px_1fr] items-start">
+		<p class="text-xs uppercase tracking-[0.2em] text-ash">Name</p>
+		{#if editingField === 'displayName'}
+			<input
+				bind:value={editDisplayName}
+				class="w-full rounded-md border border-walnut/20 px-3 py-2 text-sm"
+				onblur={() => (editingField = null)}
+				onkeydown={(event) => {
+					if (event.key === 'Enter') {
+						editingField = null;
+					}
+					if (event.key === 'Escape') {
+						editingField = null;
+					}
+				}}
+			/>
+		{:else}
+			<button
+				type="button"
+				class={`text-left text-lg font-display ${
+					editDisplayName.trim() ? 'text-walnut' : 'text-ash/70 italic'
+				}`}
+				ondblclick={() => (editingField = 'displayName')}
+			>
+				{editDisplayName.trim() || 'Double click to add a name'}
+			</button>
+		{/if}
+
+		<p class="text-xs uppercase tracking-[0.2em] text-ash">URL</p>
+		{#if editingField === 'name'}
+			<input
+				bind:value={editName}
+				class="w-full rounded-md border border-walnut/20 px-3 py-2 text-sm"
+				onblur={() => (editingField = null)}
+				onkeydown={(event) => {
+					if (event.key === 'Enter') {
+						editingField = null;
+					}
+					if (event.key === 'Escape') {
+						editingField = null;
+					}
+				}}
+			/>
+		{:else}
+			<button
+				type="button"
+				class={`text-left text-sm ${
+					editName.trim() ? 'text-ash' : 'text-ash/70 italic'
+				}`}
+				ondblclick={() => (editingField = 'name')}
+			>
+				{editName.trim() ? `/${editName.trim()}` : 'Double click to add a url slug'}
+			</button>
+		{/if}
+
+		<p class="text-xs uppercase tracking-[0.2em] text-ash">Description</p>
+		{#if editingField === 'description'}
+			<textarea
+				bind:value={editDescription}
+				rows="3"
+				class="w-full rounded-md border border-walnut/20 px-3 py-2 text-sm"
+				onblur={() => (editingField = null)}
+				onkeydown={(event) => {
+					if (event.key === 'Escape') {
+						editingField = null;
+					}
+				}}
+			></textarea>
+		{:else}
+			<button
+				type="button"
+				class={`text-left text-sm leading-relaxed ${
+					editDescription.trim() ? 'text-ash' : 'text-ash/70 italic'
+				}`}
+				ondblclick={() => (editingField = 'description')}
+			>
+				{editDescription.trim() || 'Double click to add a description'}
+			</button>
+		{/if}
 	</div>
-	<textarea
-		bind:value={editDescription}
-		rows="3"
-		class="w-full rounded-md border border-walnut/20 px-3 py-2 text-sm"
-	></textarea>
 	<div>
 		<p class="text-sm text-ash">Categories</p>
 		{#if !categoriesLoaded}

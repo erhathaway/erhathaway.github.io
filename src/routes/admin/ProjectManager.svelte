@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from './ProjectEditor.svelte';
+	import { adminStore } from '$lib/stores/admin.svelte';
 
 	type Category = {
 		id: number;
@@ -33,18 +34,11 @@
 
 	let { categories, categoriesLoaded, getToken } = $props<Props>();
 
-	let projects = $state<Project[]>([]);
+	const projects = $derived(adminStore.projects);
 	let projectsFilter = $state<'all' | 'published' | 'unpublished'>('all');
 	let projectsLoading = $state(false);
 	let projectsError = $state('');
 	let projectsSuccess = $state('');
-
-	let newProjectName = $state('');
-	let newProjectDisplayName = $state('');
-	let newProjectDescription = $state('');
-	let newProjectIsPublished = $state(false);
-	let newProjectCategoryIds = $state<number[]>([]);
-	let newProjectAttributes = $state<AttributeDraft[]>([]);
 
 	let editingProjectId = $state<number | null>(null);
 
@@ -80,10 +74,11 @@
 				}
 				throw new Error('Failed to load projects');
 			}
-			projects = await response.json();
+			adminStore.projects = await response.json();
+			adminStore.projectsLoaded = true;
 			projectCategoryIds = {};
 			projectAttributes = {};
-			for (const project of projects) {
+			for (const project of adminStore.projects) {
 				await fetchProjectCategories(project.id);
 				await fetchProjectAttributes(project.id);
 			}
@@ -95,48 +90,6 @@
 		}
 	}
 
-	async function createProject(event: Event) {
-		event.preventDefault();
-		projectsError = '';
-		projectsSuccess = '';
-
-		const token = await getToken();
-		if (!token) {
-			projectsError = 'Sign in to create projects.';
-			return;
-		}
-
-		const response = await fetch('/api/projects', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`
-			},
-			body: JSON.stringify({
-				name: newProjectName.trim(),
-				displayName: newProjectDisplayName.trim(),
-				description: newProjectDescription.trim(),
-				isPublished: newProjectIsPublished
-			})
-		});
-
-		if (!response.ok) {
-			projectsError = 'Unable to create project.';
-			return;
-		}
-
-		const created = await response.json();
-		projects = [created, ...projects];
-		await updateProjectCategories(created.id, newProjectCategoryIds);
-		await createProjectAttributes(created.id, newProjectAttributes);
-		newProjectName = '';
-		newProjectDisplayName = '';
-		newProjectDescription = '';
-		newProjectIsPublished = false;
-		newProjectCategoryIds = [];
-		newProjectAttributes = [];
-		projectsSuccess = 'Project created.';
-	}
 
 	function startProjectEdit(project: Project) {
 		editingProjectId = project.id;
@@ -181,7 +134,9 @@
 		}
 
 		const updated = await response.json();
-		projects = projects.map((project) => (project.id === updated.id ? updated : project));
+		adminStore.projects = adminStore.projects.map((project) =>
+			project.id === updated.id ? updated : project
+		);
 		await updateProjectCategories(editingProjectId, payload.categoryIds);
 		await updateProjectAttributes(editingProjectId, payload.attributes);
 		cancelProjectEdit();
@@ -210,19 +165,12 @@
 			return;
 		}
 
-		projects = projects.filter((project) => project.id !== projectId);
+		adminStore.projects = adminStore.projects.filter((project) => project.id !== projectId);
 		const { [projectId]: _removed, ...rest } = projectCategoryIds;
 		projectCategoryIds = rest;
 		const { [projectId]: _removedAttributes, ...restAttributes } = projectAttributes;
 		projectAttributes = restAttributes;
 		projectsSuccess = 'Project deleted.';
-	}
-
-	function toggleCategory(ids: number[], categoryId: number) {
-		if (ids.includes(categoryId)) {
-			return ids.filter((id) => id !== categoryId);
-		}
-		return [...ids, categoryId];
 	}
 
 	async function fetchProjectCategories(projectId: number) {
@@ -328,38 +276,6 @@
 		return cleaned;
 	}
 
-	async function createProjectAttributes(projectId: number, attributes: AttributeDraft[]) {
-		const token = await getToken();
-		if (!token) {
-			projectsError = 'Sign in to add project attributes.';
-			return;
-		}
-
-		const cleaned = sanitizeAttributes(attributes);
-		if (!cleaned) {
-			return;
-		}
-		if (cleaned.length === 0) {
-			projectAttributes = { ...projectAttributes, [projectId]: [] };
-			return;
-		}
-
-		const response = await fetch(`/api/projects/${projectId}/attributes`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`
-			},
-			body: JSON.stringify({ attributes: cleaned })
-		});
-		if (!response.ok) {
-			projectsError = 'Unable to add project attributes.';
-			return;
-		}
-		const created = (await response.json()) as ProjectAttribute[];
-		projectAttributes = { ...projectAttributes, [projectId]: created };
-	}
-
 	async function updateProjectAttributes(projectId: number, attributes: AttributeDraft[]) {
 		const token = await getToken();
 		if (!token) {
@@ -392,31 +308,6 @@
 		return categories.find((category) => category.id === categoryId);
 	}
 
-	function createAttributeDraft(): AttributeDraft {
-		return {
-			name: '',
-			value: '',
-			showInNav: false,
-			isPublished: false
-		};
-	}
-
-	function addAttributeRow(list: AttributeDraft[]) {
-		return [...list, createAttributeDraft()];
-	}
-
-	function updateAttributeRow(
-		list: AttributeDraft[],
-		index: number,
-		patch: Partial<AttributeDraft>
-	) {
-		return list.map((attribute, i) => (i === index ? { ...attribute, ...patch } : attribute));
-	}
-
-	function removeAttributeRow(list: AttributeDraft[], index: number) {
-		return list.filter((_, i) => i !== index);
-	}
-
 	onMount(fetchProjects);
 </script>
 
@@ -447,150 +338,9 @@
 		</div>
 	</div>
 
-	<form class="space-y-4 mb-6 pb-6 border-b border-walnut/5" onsubmit={createProject}>
-		<div class="flex flex-wrap gap-3">
-			<input
-				bind:value={newProjectName}
-				required
-				class="w-32 px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/50 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
-				placeholder="url-slug"
-			/>
-			<input
-				bind:value={newProjectDisplayName}
-				class="w-40 px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/50 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
-				placeholder="Display Name"
-			/>
-		</div>
-		<div>
-			<textarea
-				bind:value={newProjectDescription}
-				rows="2"
-				class="w-full px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/50 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
-				placeholder="Brief description..."
-			></textarea>
-		</div>
-		<div>
-			<p class="text-xs text-ash mb-2">Categories</p>
-			{#if !categoriesLoaded}
-				<p class="mt-2 text-xs text-ash">Loading categories...</p>
-			{:else if categories.length === 0}
-				<p class="mt-2 text-xs text-ash">Create a category to start tagging projects.</p>
-				{:else}
-					<div class="mt-2 flex flex-wrap gap-2">
-						{#each categories as category (category.id)}
-							{@const isSelected = newProjectCategoryIds.includes(category.id)}
-							<button
-								type="button"
-								onclick={() =>
-									(newProjectCategoryIds = toggleCategory(newProjectCategoryIds, category.id))}
-								class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
-									isSelected
-										? 'bg-copper/90 text-cream border-copper ring-2 ring-copper/40'
-										: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
-								}`}
-							>
-								<span class={isSelected ? 'font-semibold' : ''}>{category.displayName}</span>
-								<span
-									class={`text-[10px] uppercase tracking-wide ${
-										isSelected
-											? 'text-cream/80'
-											: category.isPublished
-												? 'text-emerald-200'
-												: 'text-ash'
-									}`}
-								>
-									{isSelected ? 'Selected' : category.isPublished ? 'Live' : 'Draft'}
-								</span>
-							</button>
-						{/each}
-					</div>
-				{/if}
-		</div>
-		<div>
-			<div class="flex items-center justify-between mb-2">
-				<p class="text-xs text-ash">Attributes</p>
-				<button
-					type="button"
-					onclick={() => (newProjectAttributes = addAttributeRow(newProjectAttributes))}
-					class="text-xs text-copper hover:text-walnut"
-				>
-					Add attribute
-				</button>
-			</div>
-			{#if newProjectAttributes.length === 0}
-				<p class="mt-2 text-xs text-ash">No attributes yet.</p>
-			{:else}
-				<div class="mt-2 grid gap-2">
-					{#each newProjectAttributes as attribute, index (index)}
-						<div class="flex flex-wrap items-center gap-2 rounded-lg border border-walnut/10 bg-cream/60 p-2">
-							<input
-								class="flex-1 min-w-[160px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
-								placeholder="Name"
-								value={attribute.name}
-								oninput={(event) =>
-									(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
-										name: (event.target as HTMLInputElement).value
-									}))}
-							/>
-							<input
-								class="flex-1 min-w-[200px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
-								placeholder="Value"
-								value={attribute.value}
-								oninput={(event) =>
-									(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
-										value: (event.target as HTMLInputElement).value
-									}))}
-							/>
-							<label class="flex items-center gap-1 text-[11px] text-ash">
-								<input
-									type="checkbox"
-									checked={attribute.showInNav}
-									onchange={(event) =>
-										(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
-											showInNav: (event.target as HTMLInputElement).checked
-										}))}
-									class="accent-copper"
-								/>
-								Show in nav
-							</label>
-							<label class="flex items-center gap-1 text-[11px] text-ash">
-								<input
-									type="checkbox"
-									checked={attribute.isPublished}
-									onchange={(event) =>
-										(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
-											isPublished: (event.target as HTMLInputElement).checked
-										}))}
-									class="accent-copper"
-								/>
-								Published
-							</label>
-							<button
-								type="button"
-								onclick={() =>
-									(newProjectAttributes = removeAttributeRow(newProjectAttributes, index))}
-								class="text-xs text-red-600 hover:text-red-700"
-							>
-								Remove
-							</button>
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</div>
-		<div class="flex items-center gap-4">
-			<label class="flex items-center gap-2 text-xs text-ash cursor-pointer hover:text-walnut">
-				<input type="checkbox" bind:checked={newProjectIsPublished} class="w-3.5 h-3.5 rounded border-walnut/30 text-copper focus:ring-0 focus:ring-offset-0" />
-				Publish
-			</label>
-			<button
-				type="submit"
-				class="px-4 py-1.5 text-xs bg-[#F5F1EB] text-walnut border border-walnut/20 rounded-full hover:bg-walnut hover:text-cream hover:border-walnut transition-colors"
-			>
-				Add Project
-			</button>
-		</div>
-	</form>
+	<p class="text-xs text-ash mb-6 pb-6 border-b border-walnut/5">
+		Add projects from the left panel.
+	</p>
 
 	{#if projectsError}
 		<p class="text-xs text-red-600 mb-3">{projectsError}</p>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 	import { SignedIn, SignedOut, UserButton, useClerkContext } from 'svelte-clerk';
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
 	import ImageArtifactEditor from '$lib/schemas/artifacts/image-v1/Editor.svelte';
@@ -45,7 +46,7 @@
 	};
 
 	let { data }: PageProps = $props();
-	const projectId = Number(data.projectId);
+	const projectId = $derived(Number(data.projectId));
 
 	const ctx = useClerkContext();
 
@@ -67,11 +68,13 @@
 	let artifactDraft = $state<ImageV1Data>(initialDraft);
 	let artifactDraftErrors = $state<string[]>(initialValidation.ok ? [] : initialValidation.errors);
 	let artifactIsPublished = $state(false);
+	let showCreateArtifactModal = $state(false);
 	let artifactUploadState = $state<{ uploading: boolean; error: string | null }>({
 		uploading: false,
 		error: null
 	});
 	let editingArtifactId = $state<number | null>(null);
+	let showEditArtifactModal = $state(false);
 	let editArtifactDraft = $state<ImageV1Data>(createImageV1Draft());
 	let editArtifactErrors = $state<string[]>([]);
 	let editArtifactIsPublished = $state(false);
@@ -101,13 +104,13 @@
 		return session.getToken();
 	}
 
-	async function fetchProject() {
+	async function fetchProject(id = projectId) {
 		const token = await getToken();
 		const headers: Record<string, string> = {};
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch(`/api/projects/${projectId}`, { headers });
+		const response = await fetch(`/api/projects/${id}`, { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load project');
 		}
@@ -128,13 +131,13 @@
 		categoriesLoaded = true;
 	}
 
-	async function fetchProjectCategories() {
+	async function fetchProjectCategories(id = projectId) {
 		const token = await getToken();
 		const headers: Record<string, string> = {};
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch(`/api/projects/${projectId}/categories`, { headers });
+		const response = await fetch(`/api/projects/${id}/categories`, { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load project categories');
 		}
@@ -142,43 +145,43 @@
 		categoryIds = rows.map((row) => row.id);
 	}
 
-	async function fetchProjectAttributes() {
+	async function fetchProjectAttributes(id = projectId) {
 		const token = await getToken();
 		const headers: Record<string, string> = {};
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch(`/api/projects/${projectId}/attributes`, { headers });
+		const response = await fetch(`/api/projects/${id}/attributes`, { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load project attributes');
 		}
 		attributes = await response.json();
 	}
 
-	async function fetchProjectArtifacts() {
+	async function fetchProjectArtifacts(id = projectId) {
 		const token = await getToken();
 		const headers: Record<string, string> = {};
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch(`/api/projects/${projectId}/artifacts`, { headers });
+		const response = await fetch(`/api/projects/${id}/artifacts`, { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load project artifacts');
 		}
 		artifacts = await response.json();
 	}
 
-	async function loadAll() {
+	async function loadAllFor(id: number) {
 		pageError = '';
 		pageSuccess = '';
 		pageLoading = true;
 		try {
 			await Promise.all([
-				fetchProject(),
+				fetchProject(id),
 				fetchCategories(),
-				fetchProjectCategories(),
-				fetchProjectAttributes(),
-				fetchProjectArtifacts()
+				fetchProjectCategories(id),
+				fetchProjectAttributes(id),
+				fetchProjectArtifacts(id)
 			]);
 		} catch (err) {
 			console.error(err);
@@ -187,6 +190,7 @@
 			pageLoading = false;
 		}
 	}
+
 
 	function sanitizeAttributes(input: AttributeDraft[]) {
 		const cleaned: AttributeDraft[] = [];
@@ -368,6 +372,7 @@
 		artifactDraft = createImageV1Draft();
 		artifactDraftErrors = [];
 		artifactIsPublished = false;
+		showCreateArtifactModal = false;
 		pageSuccess = 'Artifact created.';
 	}
 
@@ -420,6 +425,7 @@
 		editArtifactErrors = validation.ok ? [] : validation.errors;
 		editArtifactIsPublished = artifact.isPublished;
 		editArtifactUploadState = { uploading: false, error: null };
+		showEditArtifactModal = true;
 	}
 
 	function cancelArtifactEdit() {
@@ -428,6 +434,7 @@
 		editArtifactErrors = [];
 		editArtifactIsPublished = false;
 		editArtifactUploadState = { uploading: false, error: null };
+		showEditArtifactModal = false;
 	}
 
 	function handleEditArtifactDraftChange(next: ImageV1Data) {
@@ -502,205 +509,293 @@
 		pageSuccess = 'Artifact deleted.';
 	}
 
-	onMount(loadAll);
+	onMount(() => {
+		let currentId = Number.isNaN(projectId) ? null : projectId;
+		if (currentId !== null) {
+			void loadAllFor(currentId);
+		}
+		const unsubscribe = page.subscribe(($page) => {
+			const nextId = Number($page.params?.id ?? data.projectId);
+			if (!Number.isNaN(nextId) && nextId !== currentId) {
+				currentId = nextId;
+				void loadAllFor(nextId);
+			}
+		});
+		return () => {
+			unsubscribe();
+		};
+	});
 </script>
 
-<div class="h-screen bg-cream text-walnut p-8 pb-16">
-	<div class="max-w-5xl mx-auto h-full overflow-y-auto pr-2">
-		<header class="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-walnut/10">
-			<div>
-				<p class="text-xs uppercase tracking-[0.25em] text-ash">Project editor</p>
-				<h1 class="font-display text-3xl text-walnut mt-2">Manage project</h1>
+<header class="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-walnut/10">
+	<div>
+		<p class="text-xs uppercase tracking-[0.25em] text-ash">Project editor</p>
+		<h1 class="font-display text-3xl text-walnut mt-2">Manage project</h1>
+	</div>
+	<UserButton />
+</header>
+
+<SignedIn>
+	{#if pageLoading}
+		<p class="text-ash text-sm">Loading project...</p>
+	{:else if project}
+		<section class="rounded-2xl border border-walnut/10 bg-white/70 p-6 shadow-sm">
+			<div class="flex items-start justify-between gap-4 mb-6">
+				<div>
+					<h2 class="font-display text-2xl text-walnut">{project.displayName}</h2>
+					<p class="text-xs text-ash">/{project.name}</p>
+				</div>
+				<a
+					href="/admin"
+					class="text-xs uppercase tracking-wide text-ash hover:text-copper"
+				>
+					Back to admin
+				</a>
 			</div>
-			<UserButton />
-		</header>
 
-		<SignedIn>
-			{#if pageLoading}
-				<p class="text-ash text-sm">Loading project...</p>
-			{:else if project}
-				<section class="rounded-2xl border border-walnut/10 bg-white/70 p-6 shadow-sm">
-					<div class="flex items-start justify-between gap-4 mb-6">
-						<div>
-							<h2 class="font-display text-2xl text-walnut">{project.displayName}</h2>
-							<p class="text-xs text-ash">/{project.name}</p>
-						</div>
-						<a
-							href="/admin"
-							class="text-xs uppercase tracking-wide text-ash hover:text-copper"
+			{#key project.id}
+				<ProjectEditor
+					project={project}
+					{categories}
+					{categoriesLoaded}
+					{categoryIds}
+					attributes={attributes}
+					onSave={handleSave}
+				/>
+			{/key}
+		</section>
+
+		<section class="mt-8 rounded-2xl border border-walnut/10 bg-white/70 p-6 shadow-sm">
+			<div class="flex items-center justify-between gap-4 mb-6">
+				<div>
+					<h2 class="font-display text-2xl text-walnut">Artifacts</h2>
+					<p class="text-ash text-sm">Versioned data snapshots for the project.</p>
+				</div>
+			</div>
+
+			<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+				<div class="rounded-2xl border border-dashed border-walnut/30 bg-cream/60 p-4 flex flex-col gap-4">
+					<p class="text-xs uppercase tracking-[0.25em] text-ash">New Artifact</p>
+					<label class="text-sm">
+						<span class="text-ash">Schema</span>
+						<select
+							value={artifactSchema}
+							onchange={handleSchemaChange}
+							class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
 						>
-							Back to admin
-						</a>
-					</div>
+							{#each artifactSchemas as schemaOption (schemaOption.name)}
+								<option value={schemaOption.name}>{schemaOption.label}</option>
+							{/each}
+						</select>
+					</label>
+					<button
+						type="button"
+						class="px-3 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
+						onclick={() => (showCreateArtifactModal = true)}
+					>
+						Add artifact
+					</button>
+				</div>
 
-					{#key project.id}
-						<ProjectEditor
-							project={project}
-							{categories}
-							{categoriesLoaded}
-							{categoryIds}
-							attributes={attributes}
-							onSave={handleSave}
-						/>
-					{/key}
-				</section>
-
-				<section class="mt-8 rounded-2xl border border-walnut/10 bg-white/70 p-6 shadow-sm">
-					<div class="flex items-center justify-between gap-4 mb-6">
-						<div>
-							<h2 class="font-display text-2xl text-walnut">Artifacts</h2>
-							<p class="text-ash text-sm">Versioned data snapshots for the project.</p>
-						</div>
-					</div>
-
-					<form class="grid gap-4 md:grid-cols-[160px_1fr] items-start" onsubmit={createArtifact}>
-						<label class="text-sm">
-							<span class="text-ash">Schema</span>
-							<select
-								value={artifactSchema}
-								onchange={handleSchemaChange}
-								class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
+				{#each artifacts as artifact (artifact.id)}
+					<div
+						class="rounded-2xl border border-walnut/10 bg-cream/60 p-4 flex flex-col gap-3 cursor-pointer hover:border-copper/40"
+						onclick={() => startArtifactEdit(artifact)}
+					>
+						<div class="flex flex-wrap items-center gap-3 text-xs text-ash">
+							<span class="uppercase tracking-wide">Schema {artifact.schema}</span>
+							<span
+								class={`rounded-full border px-2 py-0.5 ${
+									artifact.isPublished
+										? 'border-emerald-200/60 text-emerald-700 bg-emerald-50/60'
+										: 'border-walnut/10 text-ash bg-cream/60'
+								}`}
 							>
-								{#each artifactSchemas as schemaOption (schemaOption.name)}
-									<option value={schemaOption.name}>{schemaOption.label}</option>
-								{/each}
-							</select>
-						</label>
-						<div class="md:col-span-1">
-							<ImageArtifactEditor
-								value={artifactDraft}
-								onChange={handleArtifactDraftChange}
-								onUpload={handleArtifactUpload}
-								onUploadStateChange={handleArtifactUploadStateChange}
-							/>
+								{artifact.isPublished ? 'Live' : 'Draft'}
+							</span>
+							<div class="ml-auto flex gap-2">
+								<button
+									type="button"
+									class="text-xs uppercase tracking-wide text-ash hover:text-red-600"
+									onclick={(event) => {
+										event.stopPropagation();
+										void deleteArtifact(artifact.id);
+									}}
+								>
+									Delete
+								</button>
+							</div>
 						</div>
-						<label class="flex items-center gap-2 text-sm text-ash md:col-span-2">
-							<input type="checkbox" bind:checked={artifactIsPublished} class="accent-copper" />
-							Published
-						</label>
-						{#if artifactDraftErrors.length > 0}
-							<p class="text-xs text-red-700 md:col-span-2">
-								{artifactDraftErrors.join('; ')}
-							</p>
-						{/if}
-						{#if artifactUploadState.error}
-							<p class="text-xs text-red-700 md:col-span-2">
-								{artifactUploadState.error}
-							</p>
-						{/if}
-						{#if artifactUploadState.uploading}
-							<p class="text-xs text-ash md:col-span-2">Uploading image...</p>
-						{/if}
+						<div>
+							{#if artifact.schema === 'image-v1'}
+								<ImageArtifactAdminList data={artifact.dataBlob as ImageV1Data} />
+							{:else}
+								<p class="text-xs text-ash">Unsupported schema.</p>
+							{/if}
+						</div>
+						<p class="text-[11px] text-ash">Click to edit details.</p>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{:else}
+		<p class="text-ash text-sm">Project not found.</p>
+	{/if}
+
+	{#if showCreateArtifactModal}
+		<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
+			<button
+				type="button"
+				class="absolute inset-0 bg-black/40"
+				onclick={() => (showCreateArtifactModal = false)}
+				aria-label="Close create artifact modal"
+			></button>
+			<div class="relative w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl">
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<p class="text-xs uppercase tracking-[0.25em] text-ash">New Artifact</p>
+						<h3 class="font-display text-2xl text-walnut mt-2">Add details</h3>
+					</div>
+					<button
+						type="button"
+						class="text-xs uppercase tracking-wide text-ash hover:text-copper"
+						onclick={() => (showCreateArtifactModal = false)}
+					>
+						Close
+					</button>
+				</div>
+
+				<form class="mt-6 grid gap-4" onsubmit={createArtifact}>
+					<label class="text-sm">
+						<span class="text-ash">Schema</span>
+						<select
+							value={artifactSchema}
+							onchange={handleSchemaChange}
+							class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
+						>
+							{#each artifactSchemas as schemaOption (schemaOption.name)}
+								<option value={schemaOption.name}>{schemaOption.label}</option>
+							{/each}
+						</select>
+					</label>
+					<ImageArtifactEditor
+						value={artifactDraft}
+						onChange={handleArtifactDraftChange}
+						onUpload={handleArtifactUpload}
+						onUploadStateChange={handleArtifactUploadStateChange}
+					/>
+					<label class="flex items-center gap-2 text-sm text-ash">
+						<input type="checkbox" bind:checked={artifactIsPublished} class="accent-copper" />
+						Published
+					</label>
+					{#if artifactDraftErrors.length > 0}
+						<p class="text-xs text-red-700">{artifactDraftErrors.join('; ')}</p>
+					{/if}
+					{#if artifactUploadState.error}
+						<p class="text-xs text-red-700">{artifactUploadState.error}</p>
+					{/if}
+					{#if artifactUploadState.uploading}
+						<p class="text-xs text-ash">Uploading image...</p>
+					{/if}
+					<div class="flex flex-wrap gap-3">
 						<button
 							type="submit"
 							class="px-4 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
 						>
 							Create artifact
 						</button>
-					</form>
-
-					{#if artifacts.length === 0}
-						<p class="mt-6 text-sm text-ash">No artifacts yet.</p>
-					{:else}
-						<div class="mt-6 grid gap-4">
-							{#each artifacts as artifact (artifact.id)}
-								<div class="rounded-xl border border-walnut/10 bg-cream/60 p-4">
-									<div class="flex flex-wrap items-center gap-3 text-xs text-ash">
-										<span class="uppercase tracking-wide">Schema {artifact.schema}</span>
-										<span
-											class={`rounded-full border px-2 py-0.5 ${
-												artifact.isPublished
-													? 'border-emerald-200/60 text-emerald-700 bg-emerald-50/60'
-													: 'border-walnut/10 text-ash bg-cream/60'
-											}`}
-										>
-											{artifact.isPublished ? 'Live' : 'Draft'}
-										</span>
-										<div class="ml-auto flex gap-2">
-											<button
-												type="button"
-												class="text-xs uppercase tracking-wide text-ash hover:text-copper"
-												onclick={() => startArtifactEdit(artifact)}
-											>
-												Edit
-											</button>
-											<button
-												type="button"
-												class="text-xs uppercase tracking-wide text-ash hover:text-red-600"
-												onclick={() => deleteArtifact(artifact.id)}
-											>
-												Delete
-											</button>
-										</div>
-									</div>
-									<div class="mt-3">
-										{#if editingArtifactId === artifact.id}
-											<div class="grid gap-4">
-												<ImageArtifactEditor
-													value={editArtifactDraft}
-													onChange={handleEditArtifactDraftChange}
-													onUpload={handleArtifactUpload}
-													onUploadStateChange={handleEditArtifactUploadStateChange}
-												/>
-												<label class="flex items-center gap-2 text-sm text-ash">
-													<input type="checkbox" bind:checked={editArtifactIsPublished} class="accent-copper" />
-													Published
-												</label>
-												{#if editArtifactErrors.length > 0}
-													<p class="text-xs text-red-700">{editArtifactErrors.join('; ')}</p>
-												{/if}
-												{#if editArtifactUploadState.error}
-													<p class="text-xs text-red-700">{editArtifactUploadState.error}</p>
-												{/if}
-												{#if editArtifactUploadState.uploading}
-													<p class="text-xs text-ash">Uploading image...</p>
-												{/if}
-												<div class="flex gap-3">
-													<button
-														type="button"
-														class="px-3 py-1 rounded-full bg-walnut text-cream text-xs hover:bg-copper transition-colors"
-														onclick={saveArtifactEdit}
-													>
-														Save
-													</button>
-													<button
-														type="button"
-														class="px-3 py-1 rounded-full border border-walnut/20 text-xs text-ash hover:text-walnut"
-														onclick={cancelArtifactEdit}
-													>
-														Cancel
-													</button>
-												</div>
-											</div>
-										{:else if artifact.schema === 'image-v1'}
-											<ImageArtifactAdminList data={artifact.dataBlob as ImageV1Data} />
-										{:else}
-											<p class="text-xs text-ash">Unsupported schema.</p>
-										{/if}
-									</div>
-								</div>
-							{/each}
-						</div>
-					{/if}
-				</section>
-			{:else}
-				<p class="text-ash text-sm">Project not found.</p>
-			{/if}
-
-			{#if pageError}
-				<div class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-					{pageError}
-				</div>
-			{/if}
-			{#if pageSuccess}
-				<p class="mt-4 text-sm text-emerald-700">{pageSuccess}</p>
-			{/if}
-		</SignedIn>
-
-		<SignedOut>
-			<div class="mt-8 p-4 bg-red-50 border border-red-200 rounded">
-				<p class="text-red-700">You need to be signed in to access this page.</p>
+						<button
+							type="button"
+							class="px-4 py-2 rounded-full border border-walnut/20 text-sm text-ash hover:text-walnut"
+							onclick={() => (showCreateArtifactModal = false)}
+						>
+							Cancel
+						</button>
+					</div>
+				</form>
 			</div>
-		</SignedOut>
+		</div>
+	{/if}
+
+	{#if showEditArtifactModal && editingArtifactId !== null}
+		<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
+			<button
+				type="button"
+				class="absolute inset-0 bg-black/40"
+				onclick={cancelArtifactEdit}
+				aria-label="Close edit artifact modal"
+			></button>
+			<div class="relative w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl">
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<p class="text-xs uppercase tracking-[0.25em] text-ash">Edit Artifact</p>
+						<h3 class="font-display text-2xl text-walnut mt-2">Artifact details</h3>
+					</div>
+					<button
+						type="button"
+						class="text-xs uppercase tracking-wide text-ash hover:text-copper"
+						onclick={cancelArtifactEdit}
+					>
+						Close
+					</button>
+				</div>
+
+				<div class="mt-6 grid gap-4">
+					<p class="text-xs uppercase tracking-[0.2em] text-ash">
+						Schema <span class="text-walnut">{'image-v1'}</span>
+					</p>
+					<ImageArtifactEditor
+						value={editArtifactDraft}
+						onChange={handleEditArtifactDraftChange}
+						onUpload={handleArtifactUpload}
+						onUploadStateChange={handleEditArtifactUploadStateChange}
+					/>
+					<label class="flex items-center gap-2 text-sm text-ash">
+						<input type="checkbox" bind:checked={editArtifactIsPublished} class="accent-copper" />
+						Published
+					</label>
+					{#if editArtifactErrors.length > 0}
+						<p class="text-xs text-red-700">{editArtifactErrors.join('; ')}</p>
+					{/if}
+					{#if editArtifactUploadState.error}
+						<p class="text-xs text-red-700">{editArtifactUploadState.error}</p>
+					{/if}
+					{#if editArtifactUploadState.uploading}
+						<p class="text-xs text-ash">Uploading image...</p>
+					{/if}
+					<div class="flex flex-wrap gap-3">
+						<button
+							type="button"
+							class="px-4 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
+							onclick={saveArtifactEdit}
+						>
+							Save changes
+						</button>
+						<button
+							type="button"
+							class="px-4 py-2 rounded-full border border-walnut/20 text-sm text-ash hover:text-walnut"
+							onclick={cancelArtifactEdit}
+						>
+							Cancel
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	{#if pageError}
+		<div class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+			{pageError}
+		</div>
+	{/if}
+	{#if pageSuccess}
+		<p class="mt-4 text-sm text-emerald-700">{pageSuccess}</p>
+	{/if}
+</SignedIn>
+
+<SignedOut>
+	<div class="mt-8 p-4 bg-red-50 border border-red-200 rounded">
+		<p class="text-red-700">You need to be signed in to access this page.</p>
 	</div>
-</div>
+</SignedOut>

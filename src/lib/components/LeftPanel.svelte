@@ -6,7 +6,6 @@
   let { isMobile = false, onItemClick }: { isMobile?: boolean, onItemClick?: () => void } = $props();
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
-  const isAdminPage = $derived($page.route.id?.includes('/admin'));
   let navEl = $state<HTMLElement | null>(null);
 
   function storeNav(node: HTMLElement) {
@@ -25,6 +24,13 @@
   <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent" style="view-transition-name: header-name">
     <a href="/" class="text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block animate-slide-up" style="animation-delay: 0.1s; view-transition-name: site-name; font-family: 'Times New Roman', Times, serif;">
       Ethan<br>Hathaway
+    </a>
+    <a
+      href="/admin"
+      class="mt-6 inline-flex items-center gap-3 text-[11px] tracking-[0.32em] uppercase text-walnut/70 hover:text-copper transition-colors"
+    >
+      Admin
+      <span class="text-ash/60">Dashboard</span>
     </a>
   </div>
 

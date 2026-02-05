@@ -24,10 +24,6 @@
 	let error = $state('');
 	let success = $state('');
 
-	let newName = $state('');
-	let newDisplayName = $state('');
-	let newIsPublished = $state(false);
-
 	let editingId = $state<number | null>(null);
 	let editName = $state('');
 	let editDisplayName = $state('');
@@ -72,42 +68,6 @@
 		}
 	}
 
-	async function createCategory(event: Event) {
-		event.preventDefault();
-		error = '';
-		success = '';
-
-		const token = await getToken();
-		if (!token) {
-			error = 'Sign in to create categories.';
-			return;
-		}
-
-		const response = await fetch('/api/categories', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`
-			},
-			body: JSON.stringify({
-				name: newName.trim(),
-				displayName: newDisplayName.trim(),
-				isPublished: newIsPublished
-			})
-		});
-
-		if (!response.ok) {
-			error = 'Unable to create category.';
-			return;
-		}
-
-		const created = await response.json();
-		setCategories([created, ...categories]);
-		newName = '';
-		newDisplayName = '';
-		newIsPublished = false;
-		success = 'Category created.';
-	}
 
 	function startEdit(category: Category) {
 		editingId = category.id;
@@ -216,31 +176,9 @@
 		</div>
 	</div>
 
-	<form class="flex flex-wrap items-end gap-3 mb-6 pb-6 border-b border-walnut/5" onsubmit={createCategory}>
-		<div class="flex gap-3">
-			<input
-				bind:value={newName}
-				required
-				class="w-32 px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/50 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
-				placeholder="url-slug"
-			/>
-			<input
-				bind:value={newDisplayName}
-				class="w-40 px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/50 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
-				placeholder="Display Name"
-			/>
-		</div>
-		<label class="flex items-center gap-2 text-xs text-ash cursor-pointer hover:text-walnut">
-			<input type="checkbox" bind:checked={newIsPublished} class="w-3.5 h-3.5 rounded border-walnut/30 text-copper focus:ring-0 focus:ring-offset-0" />
-			Publish
-		</label>
-		<button
-			type="submit"
-			class="px-4 py-1.5 text-xs bg-[#F5F1EB] text-walnut border border-walnut/20 rounded-full hover:bg-walnut hover:text-cream hover:border-walnut transition-colors"
-		>
-			Add Category
-		</button>
-	</form>
+	<p class="text-xs text-ash mb-6 pb-6 border-b border-walnut/5">
+		Add categories from the left panel.
+	</p>
 
 	{#if error}
 		<p class="text-xs text-red-600 mb-3">{error}</p>
