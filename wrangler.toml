@@ -12,9 +12,11 @@ workers_dev = true
 ENVIRONMENT = "production"
 PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_cG9zaXRpdmUtd29tYmF0LTUyLmNsZXJrLmFjY291bnRzLmRldiQ"
 PUBLIC_R2_BASE_URL = "https://9775094dc19ae9b19f8cc75e2f2b3e5c.r2.cloudflarestorage.com/portfolio-artifacts-22"
-GOOGLE_CLIENT_ID = ""
+GOOGLE_CLIENT_ID = "648168811690-uj83q8al9j4dhblbbkqfrg7f90e1kko4.apps.googleusercontent.com"
 
 # Add CLERK_SECRET_KEY as a secret (use: wrangler secret put CLERK_SECRET_KEY)
+# Add GOOGLE_CLIENT_SECRET as a secret (use: wrangler secret put GOOGLE_CLIENT_SECRET)
+# Add GOOGLE_TOKEN_ENCRYPTION_KEY as a secret (use: wrangler secret put GOOGLE_TOKEN_ENCRYPTION_KEY)
 
 [[d1_databases]]
 binding = "DB"
