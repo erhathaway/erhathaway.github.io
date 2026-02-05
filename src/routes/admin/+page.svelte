@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SignedIn, SignedOut, UserButton, useClerkContext } from 'svelte-clerk';
+	import { SignedIn, SignedOut, useClerkContext } from 'svelte-clerk';
 	import CategoryManager from './CategoryManager.svelte';
 	import ProjectManager from './ProjectManager.svelte';
 	import { adminStore } from '$lib/stores/admin.svelte';
@@ -32,9 +32,8 @@
 	}
 </script>
 
-<header class="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-slate-200">
+<header class="mb-8 pb-5 border-b border-slate-200">
 	<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Dashboard</p>
-	<UserButton />
 </header>
 
 <SignedIn>

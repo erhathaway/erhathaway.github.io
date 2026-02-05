@@ -29,6 +29,8 @@ export interface ExportAttribute {
 }
 
 export interface ExportArtifact {
+	id?: number;
+	imageHash?: string;
 	schema: string;
 	dataBlob: Record<string, unknown>;
 	isPublished: boolean;
@@ -53,6 +55,7 @@ export interface ImportSummary {
 	projectsMerged: number;
 	projectsSkipped: number;
 	artifactsCreated: number;
+	artifactsSkipped: number;
 	imagesUploaded: number;
 	warnings: string[];
 }

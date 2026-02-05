@@ -226,7 +226,13 @@
 			if (s.projectsClobbered) parts.push(`${s.projectsClobbered} replaced`);
 			if (s.projectsSkipped) parts.push(`${s.projectsSkipped} skipped`);
 
-			onComplete(`Import complete: ${parts.join(', ') || 'no changes'}.`);
+			const artifactParts: string[] = [];
+			if (s.artifactsCreated) artifactParts.push(`${s.artifactsCreated} new`);
+			if (s.artifactsSkipped) artifactParts.push(`${s.artifactsSkipped} existing`);
+			const artifactDetail =
+				artifactParts.length > 0 ? ` (${artifactParts.join(', ')} artifacts)` : '';
+
+			onComplete(`Import complete: ${parts.join(', ') || 'no changes'}${artifactDetail}.`);
 		} catch (err) {
 			importError = err instanceof Error ? err.message : 'Import failed.';
 		} finally {

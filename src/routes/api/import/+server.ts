@@ -43,6 +43,52 @@ function mimeFromExtension(ext: string): string {
 	return map[ext.toLowerCase()] ?? 'application/octet-stream';
 }
 
+function extractR2Key(url: string, publicBaseUrl?: string): string | null {
+	if (publicBaseUrl) {
+		const base = publicBaseUrl.replace(/\/$/, '');
+		if (url.startsWith(base)) {
+			return url.slice(base.length + 1);
+		}
+	}
+	try {
+		const parsed = new URL(url, 'http://localhost');
+		if (parsed.pathname === '/api/uploads/artifacts') {
+			return parsed.searchParams.get('key');
+		}
+	} catch {
+		/* ignore */
+	}
+	if (url.startsWith('artifacts/')) {
+		return url;
+	}
+	return null;
+}
+
+async function computeSha256Hex(buffer: ArrayBuffer): Promise<string> {
+	const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+	return Array.from(new Uint8Array(hashBuffer))
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
+}
+
+async function computeR2ImageHash(
+	imageUrl: string,
+	bucket: import('@cloudflare/workers-types').R2Bucket | undefined,
+	publicBaseUrl: string | undefined
+): Promise<string | null> {
+	if (!bucket) return null;
+	const key = extractR2Key(imageUrl, publicBaseUrl);
+	if (!key) return null;
+	try {
+		const obj = await bucket.get(key);
+		if (!obj) return null;
+		const buffer = await obj.arrayBuffer();
+		return computeSha256Hex(buffer);
+	} catch {
+		return null;
+	}
+}
+
 export const OPTIONS: RequestHandler = async () => {
 	return new Response(null, { status: 200, headers: corsHeaders });
 };
@@ -111,6 +157,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		projectsMerged: 0,
 		projectsSkipped: 0,
 		artifactsCreated: 0,
+		artifactsSkipped: 0,
 		imagesUploaded: 0,
 		warnings: []
 	};
@@ -299,6 +346,11 @@ async function createProject(
 			}
 		}
 
+		// Persist imageHash in dataBlob for future dedup
+		if (artifact.imageHash) {
+			dataBlob.imageHash = artifact.imageHash;
+		}
+
 		const [created] = await db.insert(projectArtifacts).values({
 			projectId,
 			schema: artifact.schema,
@@ -390,24 +442,120 @@ async function mergeProject(
 		}
 	}
 
-	// Add new artifacts (don't remove existing)
+	// Deduplicate artifacts: only add ones that don't already exist
+	const existingArtifacts = await db
+		.select({
+			id: projectArtifacts.id,
+			schema: projectArtifacts.schema,
+			dataBlob: projectArtifacts.dataBlob,
+			isPublished: projectArtifacts.isPublished
+		})
+		.from(projectArtifacts)
+		.where(eq(projectArtifacts.projectId, existingProjectId));
+
+	const existingIdSet = new Set(existingArtifacts.map((a) => a.id));
+
+	// Build hash → artifactId map from existing artifacts' stored imageHash
+	const existingHashMap = new Map<string, number>();
+	for (const existing of existingArtifacts) {
+		const blob =
+			typeof existing.dataBlob === 'string'
+				? JSON.parse(existing.dataBlob)
+				: existing.dataBlob;
+		if (blob?.imageHash) {
+			existingHashMap.set(blob.imageHash, existing.id);
+		}
+	}
+
 	let coverArtifactId: number | null = null;
+
 	for (const artifact of proj.artifacts) {
+		// Match by artifact ID
+		if (artifact.id && existingIdSet.has(artifact.id)) {
+			summary.artifactsSkipped++;
+			if (artifact.isCover) {
+				coverArtifactId = artifact.id;
+			}
+			continue;
+		}
+
+		// Match by image hash (fast path: stored hashes)
+		if (artifact.imageHash) {
+			const matchedId = existingHashMap.get(artifact.imageHash);
+			if (matchedId) {
+				summary.artifactsSkipped++;
+				if (artifact.isCover) {
+					coverArtifactId = matchedId;
+				}
+				continue;
+			}
+
+			// Slow path: compute hash from R2 for existing artifacts without stored hash
+			let foundByR2Hash = false;
+			for (const existing of existingArtifacts) {
+				const blob =
+					typeof existing.dataBlob === 'string'
+						? JSON.parse(existing.dataBlob)
+						: existing.dataBlob;
+				if (blob?.imageHash) continue; // Already checked above
+				if (existing.schema !== 'image-v1' || !blob?.imageUrl) continue;
+
+				const existingHash = await computeR2ImageHash(
+					String(blob.imageUrl),
+					bucket,
+					publicBaseUrl
+				);
+				if (existingHash) {
+					// Backfill hash into existing artifact for future fast lookups
+					existingHashMap.set(existingHash, existing.id);
+					await db
+						.update(projectArtifacts)
+						.set({ dataBlob: { ...blob, imageHash: existingHash } })
+						.where(eq(projectArtifacts.id, existing.id));
+
+					if (existingHash === artifact.imageHash) {
+						summary.artifactsSkipped++;
+						if (artifact.isCover) {
+							coverArtifactId = existing.id;
+						}
+						foundByR2Hash = true;
+						break;
+					}
+				}
+			}
+			if (foundByR2Hash) continue;
+		}
+
+		// No match found: insert as new artifact
 		const dataBlob = { ...artifact.dataBlob };
 
 		if (artifact._localImagePath && artifact.schema === 'image-v1') {
-			const newUrl = await uploadImage(zip, artifact._localImagePath, bucket, publicBaseUrl, summary);
+			const newUrl = await uploadImage(
+				zip,
+				artifact._localImagePath,
+				bucket,
+				publicBaseUrl,
+				summary
+			);
 			if (newUrl) {
 				dataBlob.imageUrl = newUrl;
 			}
 		}
 
-		const [created] = await db.insert(projectArtifacts).values({
-			projectId: existingProjectId,
-			schema: artifact.schema,
-			dataBlob,
-			isPublished: artifact.isPublished
-		}).returning();
+		// Persist imageHash in dataBlob for future dedup
+		if (artifact.imageHash) {
+			dataBlob.imageHash = artifact.imageHash;
+		}
+
+		const [created] = await db
+			.insert(projectArtifacts)
+			.values({
+				projectId: existingProjectId,
+				schema: artifact.schema,
+				dataBlob,
+				isPublished: artifact.isPublished
+			})
+			.returning();
 		summary.artifactsCreated++;
 
 		if (artifact.isCover) {
@@ -416,7 +564,11 @@ async function mergeProject(
 	}
 
 	if (coverArtifactId !== null) {
-		await db.delete(projectCoverArtifact).where(eq(projectCoverArtifact.projectId, existingProjectId));
-		await db.insert(projectCoverArtifact).values({ projectId: existingProjectId, artifactId: coverArtifactId });
+		await db
+			.delete(projectCoverArtifact)
+			.where(eq(projectCoverArtifact.projectId, existingProjectId));
+		await db
+			.insert(projectCoverArtifact)
+			.values({ projectId: existingProjectId, artifactId: coverArtifactId });
 	}
 }

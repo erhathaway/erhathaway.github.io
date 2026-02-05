@@ -89,6 +89,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const publicBaseUrl = platform?.env?.PUBLIC_R2_BASE_URL;
 	const zip = new JSZip();
 	const imageMap = new Map<string, ArrayBuffer>();
+	const imageHashMap = new Map<string, string>();
 
 	// Build export projects with related data
 	const exportProjects: ExportProject[] = [];
@@ -140,6 +141,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			dataBlob = { ...dataBlob };
 
 			const exportArtifact: ExportArtifact = {
+				id: artifact.id,
 				schema: artifact.schema,
 				dataBlob,
 				isPublished: artifact.isPublished,
@@ -155,6 +157,11 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 						if (obj) {
 							const buffer = await obj.arrayBuffer();
 							imageMap.set(key, buffer);
+							const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+							const hashHex = Array.from(new Uint8Array(hashBuffer))
+								.map((b) => b.toString(16).padStart(2, '0'))
+								.join('');
+							imageHashMap.set(key, hashHex);
 						}
 					} catch {
 						// Skip image if fetch fails
@@ -164,6 +171,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 					const localPath = `images/${key.replace(/^artifacts\//, '')}`;
 					exportArtifact._localImagePath = localPath;
 					exportArtifact.dataBlob = { ...dataBlob, imageUrl: localPath };
+					exportArtifact.imageHash = imageHashMap.get(key);
 				}
 			}
 

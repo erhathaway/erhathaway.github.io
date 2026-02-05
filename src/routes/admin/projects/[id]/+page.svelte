@@ -1168,30 +1168,47 @@
 				aria-label="Close edit artifact modal"
 			></button>
 
-			<!-- Neighbor artifact images -->
+			<!-- Neighbor artifact cards -->
 			{#each editNeighborArtifacts as { artifact, offset } (artifact.id)}
 				{@const absOffset = Math.abs(offset)}
 				{@const sign = offset > 0 ? 1 : -1}
 				{@const scale = absOffset === 1 ? 0.75 : 0.5}
 				{@const opacity = absOffset === 1 ? 0.8 : 0.5}
-				{@const translateX = sign * (absOffset === 1 ? 340 : 540)}
-				{@const imageUrl = getArtifactImageUrl(artifact)}
-				{#if imageUrl}
-					<button
-						type="button"
-						class="absolute top-1/2 left-1/2 z-40 cursor-pointer rounded-xl overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/40 transition-all duration-300"
-						style="transform: translate(-50%, -50%) translateX({translateX}px) scale({scale}); opacity: {opacity};"
-						onclick={() => navigateToArtifact(artifact)}
-						aria-label="Go to artifact"
-					>
-						<img
-							src={imageUrl}
-							alt=""
-							class="h-64 w-48 object-cover"
-							loading="lazy"
-						/>
-					</button>
-				{/if}
+				{@const translateX = sign * (absOffset === 1 ? 380 : 600)}
+				<button
+					type="button"
+					class="absolute top-1/2 left-1/2 z-40 cursor-pointer rounded-2xl bg-white shadow-lg ring-1 ring-white/10 hover:ring-white/40 transition-all duration-300 overflow-hidden w-64 text-left"
+					style="transform: translate(-50%, -50%) translateX({translateX}px) scale({scale}); opacity: {opacity};"
+					onclick={() => navigateToArtifact(artifact)}
+					aria-label="Go to artifact"
+				>
+					<div class="p-4 flex flex-col gap-2.5">
+						<div class="flex flex-wrap items-center gap-2 text-xs">
+							<span class="font-mono text-slate-400">{artifact.schema}</span>
+							<span
+								class={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium ${
+									artifact.isPublished
+										? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+										: 'bg-slate-100 text-slate-500 border border-slate-200'
+								}`}
+							>
+								<span class={`inline-block h-1.5 w-1.5 rounded-full ${artifact.isPublished ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+								{artifact.isPublished ? 'Live' : 'Draft'}
+							</span>
+							{#if artifact.isCover}
+								<span class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+									<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+										<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+									</svg>
+									Cover
+								</span>
+							{/if}
+						</div>
+						{#if artifact.schema === 'image-v1'}
+							<ImageArtifactAdminList data={artifact.dataBlob as ImageV1Data} />
+						{/if}
+					</div>
+				</button>
 			{/each}
 
 			<!-- Navigation arrows -->
