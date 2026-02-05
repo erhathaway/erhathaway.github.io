@@ -99,7 +99,10 @@
   .hover-inline-card {
     display: block;
     position: relative;
-    background-color: #F5F1EB;
+    background: radial-gradient(circle at bottom right, rgba(120, 180, 220, 0.25), rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.1));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(160, 190, 210, 0.2);
     width: 100%;
     box-sizing: border-box;
   }

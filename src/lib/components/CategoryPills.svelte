@@ -13,7 +13,8 @@
 <div class="flex flex-wrap gap-2">
   {#each categories as category (category.value)}
     <button
-      class="pill px-3 py-1.5 text-sm tracking-[0.2em] uppercase border border-walnut/2 rounded-[3px] transition-all duration-300 bg-white/50 text-ash/70 backdrop-blur-md hover:bg-walnut hover:text-cream"
+      class="pill px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] transition-all duration-300 text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream"
+      style="background: radial-gradient(circle at bottom right, rgba(253, 218, 130, 0.3), rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.1)); border: 1px solid rgba(160, 190, 210, 0.2);"
       class:active={portfolio.selectedCategory === category.value}
       onclick={() => portfolio.setCategory(category.value)}
     >

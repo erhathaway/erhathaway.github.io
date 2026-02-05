@@ -81,10 +81,13 @@ bunx wrangler secret put GOOGLE_CLIENT_SECRET
 bunx wrangler secret put GOOGLE_TOKEN_ENCRYPTION_KEY
 ```
 
-For local dev, add these to both `.env` and `.dev.vars`:
+For local dev, add secrets to both `.env` and `.dev.vars`.
+
+Example `.dev.vars`:
 
 ```
 CLERK_SECRET_KEY=sk_test_...
+GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 GOOGLE_TOKEN_ENCRYPTION_KEY=...
 ```
