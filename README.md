@@ -71,6 +71,53 @@ bunx wrangler dev --port 8787
 E2E_BASE_URL=http://localhost:8787 CLERK_TEST_TOKEN=... bunx playwright test e2e/categories.api.spec.ts
 ```
 
+## Cloudflare Secrets
+
+Secrets must be set via `wrangler secret put` — never in `wrangler.toml`.
+
+```sh
+bunx wrangler secret put CLERK_SECRET_KEY
+bunx wrangler secret put GOOGLE_CLIENT_SECRET
+bunx wrangler secret put GOOGLE_TOKEN_ENCRYPTION_KEY
+```
+
+For local dev, add these to both `.env` and `.dev.vars`:
+
+```
+CLERK_SECRET_KEY=sk_test_...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_TOKEN_ENCRYPTION_KEY=...
+```
+
+`GOOGLE_TOKEN_ENCRYPTION_KEY` is a self-generated key for encrypting Google OAuth tokens in D1. Generate one with:
+
+```sh
+openssl rand -base64 32
+```
+
+## Google Photos Integration
+
+Imports photos and videos from Google Photos into projects via the [Picker API](https://developers.google.com/photos/picker/guides/get-started-picker).
+
+### Google Cloud Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create or select a project
+3. Enable the **Photos Picker API** (APIs & Services > Library > search "Photos Picker API")
+4. Go to **APIs & Services > Credentials** and create an **OAuth 2.0 Client ID** (type: Web application)
+5. Add authorized redirect URIs:
+   - Local: `http://localhost:8788/api/integrations/google-photos/callback`
+   - Production: `https://erhathaway.com/api/integrations/google-photos/callback`
+6. Set `GOOGLE_CLIENT_ID` in `wrangler.toml` `[vars]`
+7. Set `GOOGLE_CLIENT_SECRET` and `GOOGLE_TOKEN_ENCRYPTION_KEY` as secrets (see above)
+
+### Usage
+
+1. Navigate to **Admin > Integrations > Google Photos** and click **Connect**
+2. Authorize with your Google account
+3. In any project editor, click **Add Artifact** > **Google Photos**
+4. Select photos/videos in the picker, then confirm the import
+
 ## API Notes
 
 - Client API calls use same-origin `/api` endpoints (no cross-origin).
