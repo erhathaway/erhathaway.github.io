@@ -29,9 +29,10 @@ function getGoogleEnv(env: App.Platform['env'] | undefined) {
 	};
 }
 
-export const GET: RequestHandler = async ({ request, platform, params }) => {
+export const GET: RequestHandler = async ({ request, locals, platform, params }) => {
 	const userId = await verifyClerkAuth(request, platform?.env);
-	if (!userId) {
+	const authUserId = locals.auth?.()?.userId ?? null;
+	if (!userId && !authUserId) {
 		throw error(401, 'Unauthorized');
 	}
 
@@ -62,9 +63,10 @@ export const GET: RequestHandler = async ({ request, platform, params }) => {
 	}
 };
 
-export const DELETE: RequestHandler = async ({ request, platform, params }) => {
+export const DELETE: RequestHandler = async ({ request, locals, platform, params }) => {
 	const userId = await verifyClerkAuth(request, platform?.env);
-	if (!userId) {
+	const authUserId = locals.auth?.()?.userId ?? null;
+	if (!userId && !authUserId) {
 		throw error(401, 'Unauthorized');
 	}
 

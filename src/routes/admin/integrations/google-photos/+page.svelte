@@ -75,7 +75,19 @@
 		if (urlConnected === 'true') {
 			success = 'Google Photos connected successfully.';
 		}
+
+		// Wait for Clerk to be ready before fetching status
+		const interval = setInterval(async () => {
+			if (ctx.clerk?.session) {
+				clearInterval(interval);
+				fetchStatus();
+			}
+		}, 100);
+
+		// Fallback: try immediately in case already ready
 		fetchStatus();
+
+		return () => clearInterval(interval);
 	});
 </script>
 

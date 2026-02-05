@@ -4,9 +4,10 @@ import { verifyClerkAuth } from '$lib/server/auth';
 import { getDb } from '$lib/server/db';
 import { getValidAccessToken } from '$lib/server/integrations/google-photos';
 
-export const GET: RequestHandler = async ({ request, platform, url }) => {
+export const GET: RequestHandler = async ({ request, locals, platform, url }) => {
 	const userId = await verifyClerkAuth(request, platform?.env);
-	if (!userId) {
+	const authUserId = locals.auth?.()?.userId ?? null;
+	if (!userId && !authUserId) {
 		throw error(401, 'Unauthorized');
 	}
 

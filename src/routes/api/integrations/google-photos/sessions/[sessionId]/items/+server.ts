@@ -17,9 +17,10 @@ export const OPTIONS: RequestHandler = async () => {
 	return new Response(null, { status: 200, headers: corsHeaders });
 };
 
-export const GET: RequestHandler = async ({ request, platform, params, url }) => {
+export const GET: RequestHandler = async ({ request, locals, platform, params, url }) => {
 	const userId = await verifyClerkAuth(request, platform?.env);
-	if (!userId) {
+	const authUserId = locals.auth?.()?.userId ?? null;
+	if (!userId && !authUserId) {
 		throw error(401, 'Unauthorized');
 	}
 
