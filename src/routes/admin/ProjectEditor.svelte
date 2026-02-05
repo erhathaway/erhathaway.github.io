@@ -288,288 +288,291 @@
 	});
 </script>
 
-<div class="relative flex flex-col gap-3 flex-1 min-w-[240px]">
+<div class="relative flex flex-col gap-6 flex-1 min-w-[240px]">
 	{#if isSaving}
-		<div class="absolute top-0 right-0">
-			<svg
-				class="animate-spin h-5 w-5 text-copper"
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-			>
-				<circle
-					class="opacity-25"
-					cx="12"
-					cy="12"
-					r="10"
-					stroke="currentColor"
-					stroke-width="4"
-				></circle>
-				<path
-					class="opacity-75"
-					fill="currentColor"
-					d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-				></path>
-			</svg>
+		<div class="absolute top-0 right-0 flex items-center gap-2">
+			<span class="text-xs text-slate-400 font-medium">Saving</span>
+			<div class="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-600"></div>
 		</div>
 	{/if}
+
+	<!-- Categories -->
 	<div>
-		<p class="text-sm text-ash mb-2">Categories</p>
+		<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Categories</p>
 		<div class="flex flex-wrap gap-2">
 			{#if !categoriesLoaded}
-				<p class="text-xs text-ash">Loading categories...</p>
+				<p class="text-sm text-slate-400">Loading categories...</p>
 			{:else}
-				<!-- Add new category button pill -->
 				{#if onAddCategory}
 					<button
 						type="button"
 						onclick={onAddCategory}
-						class="inline-flex items-center rounded-full border-2 border-dashed border-walnut/30 bg-cream/60 hover:border-copper hover:bg-copper/10 transition-colors"
+						class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-150"
 					>
-						<span class="px-3 py-1 text-xs text-copper font-medium">+ Add new category</span>
+						<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+						</svg>
+						New category
 					</button>
 				{/if}
 
-				<!-- Link category button pill -->
 				{#if categories.length > 0}
 					<button
 						type="button"
 						onclick={() => openLinkCategoryModal()}
-						class="inline-flex items-center rounded-full border-2 border-dashed border-walnut/30 bg-cream/60 hover:border-copper hover:bg-copper/10 transition-colors"
+						class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-150"
 					>
-						<span class="px-3 py-1 text-xs text-copper font-medium">Link category</span>
+						<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101" />
+						</svg>
+						Link
 					</button>
 				{/if}
 
-				<!-- Selected category pills -->
 				{#each categories.filter((c) => editCategoryIds.includes(c.id)) as category (category.id)}
 					<button
 						type="button"
 						onclick={() => openLinkCategoryModal(category.id)}
-						class="flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors bg-copper/90 text-cream border-copper ring-2 ring-copper/40 hover:bg-copper"
+						class="inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white px-3.5 py-1.5 text-xs font-medium hover:bg-slate-800 transition-colors duration-150"
 					>
-						<span class="font-semibold">{category.displayName}</span>
-						<span
-							class={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full ${
-								category.isPublished
-									? 'bg-emerald-500 text-white'
-									: 'bg-cream/20 text-cream/70'
-							}`}
-						>
-							{category.isPublished ? 'Published' : 'Not published'}
-						</span>
+						{category.displayName}
+						<span class={`inline-block h-1.5 w-1.5 rounded-full ${category.isPublished ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
 					</button>
 				{/each}
 
 				{#if categories.length === 0 && !onAddCategory}
-					<p class="text-xs text-ash">Create a category to start tagging projects.</p>
+					<p class="text-sm text-slate-400">Create a category to start tagging projects.</p>
 				{/if}
 			{/if}
 		</div>
 	</div>
+
+	<!-- Attributes -->
 	<div>
-		<p class="text-sm text-ash mb-2">Attributes</p>
+		<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Attributes</p>
 		<div class="flex flex-wrap gap-2">
-			<!-- Add attribute button pill -->
 			<button
 				type="button"
 				onclick={openNewAttributeModal}
-				class="inline-flex items-center rounded-full border-2 border-dashed border-walnut/30 bg-cream/60 hover:border-copper hover:bg-copper/10 transition-colors"
+				class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-150"
 			>
-				<span class="px-3 py-1 text-xs text-copper font-medium">+ Add attribute</span>
+				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+				</svg>
+				Add attribute
 			</button>
 
-			<!-- Attribute pills -->
 			{#each editAttributes as attribute, index (attribute.id ?? index)}
 				<button
 					type="button"
 					ondblclick={() => openEditAttributeModal(index)}
-					class="inline-flex items-center gap-1.5 rounded-full border border-walnut/20 bg-white hover:border-copper transition-colors group"
+					class="inline-flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:shadow-sm transition-all duration-150 group"
 				>
-					<span class="px-3 py-1 text-xs font-medium text-walnut border-r border-walnut/20 group-hover:border-copper">
+					<span class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-50 border-r border-slate-200 group-hover:bg-slate-100 transition-colors duration-150">
 						{attribute.name}
 					</span>
-					<span class="pl-1 pr-2 py-1 text-xs text-ash">
+					<span class="px-3 py-1.5 text-xs text-slate-500">
 						{attribute.value}
 					</span>
-					{#if attribute.showInNav}
-						<span class="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-blue-500 text-white">
-							In nav
-						</span>
-					{/if}
-					<span
-						class={`mr-1 text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full ${
-							attribute.isPublished
-								? 'bg-emerald-500 text-white'
-								: 'bg-ash/20 text-ash'
-						}`}
-					>
-						{attribute.isPublished ? 'Published' : 'Not published'}
+					<span class="flex items-center gap-1.5 pr-2.5">
+						{#if attribute.showInNav}
+							<span class="h-1.5 w-1.5 rounded-full bg-blue-400" title="Shown in nav"></span>
+						{/if}
+						<span
+							class={`h-1.5 w-1.5 rounded-full ${attribute.isPublished ? 'bg-emerald-400' : 'bg-slate-300'}`}
+							title={attribute.isPublished ? 'Published' : 'Draft'}
+						></span>
 					</span>
 				</button>
 			{/each}
 		</div>
 	</div>
-	<label class="flex items-center gap-2 text-sm text-ash">
-		<input
-			type="checkbox"
-			bind:checked={editIsPublished}
-			class="accent-copper"
-			onchange={(e) => {
-				console.log('Checkbox changed!', 'new value:', (e.target as HTMLInputElement).checked, 'editIsPublished:', editIsPublished);
+
+	<!-- Published toggle -->
+	<div class="flex items-center gap-3">
+		<button
+			type="button"
+			role="switch"
+			aria-checked={editIsPublished}
+			aria-label="Toggle published"
+			onclick={() => {
+				editIsPublished = !editIsPublished;
+				console.log('Toggle changed!', 'new value:', editIsPublished);
 			}}
-		/>
-		Published
-	</label>
+			class={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 ${editIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+		>
+			<span
+				class={`pointer-events-none inline-block h-5 w-5 translate-y-[1px] transform rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-in-out ${editIsPublished ? 'translate-x-[22px]' : 'translate-x-[2px]'}`}
+			></span>
+		</button>
+		<span class="text-sm font-medium text-slate-600">{editIsPublished ? 'Published' : 'Draft'}</span>
+	</div>
 </div>
 
+<!-- Attribute Modal -->
 {#if showAttributeModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center px-4">
 		<button
 			type="button"
-			class="absolute inset-0 bg-black/40"
+			class="absolute inset-0 bg-black/40 backdrop-blur-sm"
 			onclick={closeAttributeModal}
 			aria-label="Close attribute modal"
 		></button>
-		<div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-			<div class="flex items-start justify-between gap-4 mb-4">
-				<div>
-					<p class="text-xs uppercase tracking-[0.25em] text-ash">
-						{editingAttributeIndex !== null ? 'Edit' : 'New'} Attribute
-					</p>
-					<h3 class="font-display text-2xl text-walnut mt-1">
-						{editingAttributeIndex !== null ? 'Update details' : 'Add details'}
-					</h3>
-				</div>
+		<div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+			<!-- Header -->
+			<div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
+				<h3 class="text-base font-semibold text-slate-900">
+					{editingAttributeIndex !== null ? 'Edit Attribute' : 'New Attribute'}
+				</h3>
 				<button
 					type="button"
-					class="text-xs uppercase tracking-wide text-ash hover:text-copper"
+					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
 					onclick={closeAttributeModal}
 				>
-					Close
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+					</svg>
 				</button>
 			</div>
 
-			<div class="grid gap-4">
-				<label class="text-sm">
-					<span class="text-ash">Name</span>
+			<!-- Body -->
+			<div class="px-6 py-5 grid gap-4">
+				<label class="grid gap-1.5">
+					<span class="text-xs font-medium text-slate-600">Name</span>
 					<input
 						type="text"
 						bind:value={modalAttributeName}
-						class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
+						class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
 						placeholder="e.g., Material, Size, Time"
 					/>
 				</label>
-				<label class="text-sm">
-					<span class="text-ash">Value</span>
+				<label class="grid gap-1.5">
+					<span class="text-xs font-medium text-slate-600">Value</span>
 					<input
 						type="text"
 						bind:value={modalAttributeValue}
-						class="mt-1 w-full rounded-md border border-walnut/20 px-3 py-2 bg-white"
-						placeholder="e.g., Black Walnut, 8' × 42&quot;, 2 hours"
+						class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
+						placeholder="e.g., Black Walnut, 8' &times; 42&quot;, 2 hours"
 					/>
 				</label>
-				<label class="flex items-center gap-2 text-sm text-ash">
-					<input type="checkbox" bind:checked={modalAttributeShowInNav} class="accent-copper" />
-					Show in navigation
-				</label>
-				<label class="flex items-center gap-2 text-sm text-ash">
-					<input type="checkbox" bind:checked={modalAttributeIsPublished} class="accent-copper" />
-					Published
-				</label>
 
-				<div class="flex flex-wrap gap-3 pt-2">
-					<button
-						type="button"
-						onclick={saveAttributeModal}
-						class="px-4 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
-					>
-						{editingAttributeIndex !== null ? 'Save changes' : 'Add attribute'}
-					</button>
-					{#if editingAttributeIndex !== null}
+				<div class="flex flex-col gap-3 pt-1">
+					<div class="flex items-center gap-3">
 						<button
 							type="button"
-							onclick={() => {
-								if (editingAttributeIndex !== null) {
-									editAttributes = removeAttributeRow(editAttributes, editingAttributeIndex);
-								}
-								closeAttributeModal();
-							}}
-							class="px-4 py-2 rounded-full border border-red-200 text-sm text-red-600 hover:bg-red-50"
+							role="switch"
+							aria-checked={modalAttributeShowInNav}
+							aria-label="Toggle show in navigation"
+							onclick={() => { modalAttributeShowInNav = !modalAttributeShowInNav; }}
+							class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${modalAttributeShowInNav ? 'bg-blue-500' : 'bg-slate-200'}`}
 						>
-							Delete
+							<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${modalAttributeShowInNav ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
 						</button>
-					{/if}
+						<span class="text-sm text-slate-600">Show in navigation</span>
+					</div>
+					<div class="flex items-center gap-3">
+						<button
+							type="button"
+							role="switch"
+							aria-checked={modalAttributeIsPublished}
+							aria-label="Toggle published"
+							onclick={() => { modalAttributeIsPublished = !modalAttributeIsPublished; }}
+							class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${modalAttributeIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+						>
+							<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${modalAttributeIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+						</button>
+						<span class="text-sm text-slate-600">Published</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Footer -->
+			<div class="flex items-center gap-2.5 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
+				<button
+					type="button"
+					onclick={saveAttributeModal}
+					class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150"
+				>
+					{editingAttributeIndex !== null ? 'Save changes' : 'Add attribute'}
+				</button>
+				{#if editingAttributeIndex !== null}
 					<button
 						type="button"
-						class="px-4 py-2 rounded-full border border-walnut/20 text-sm text-ash hover:text-walnut"
-						onclick={closeAttributeModal}
+						onclick={() => {
+							if (editingAttributeIndex !== null) {
+								editAttributes = removeAttributeRow(editAttributes, editingAttributeIndex);
+							}
+							closeAttributeModal();
+						}}
+						class="px-4 py-2 rounded-xl border border-red-200 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-150"
 					>
-						Cancel
+						Delete
 					</button>
-				</div>
+				{/if}
+				<button
+					type="button"
+					class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					onclick={closeAttributeModal}
+				>
+					Cancel
+				</button>
 			</div>
 		</div>
 	</div>
 {/if}
 
+<!-- Link Category Modal -->
 {#if showLinkCategoryModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center px-4">
 		<button
 			type="button"
-			class="absolute inset-0 bg-black/40"
+			class="absolute inset-0 bg-black/40 backdrop-blur-sm"
 			onclick={closeLinkCategoryModal}
 			aria-label="Close link category modal"
 		></button>
-		<div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-			<div class="flex items-start justify-between gap-4 mb-4">
-				<div>
-					<p class="text-xs uppercase tracking-[0.25em] text-ash">Link Categories</p>
-					<h3 class="font-display text-2xl text-walnut mt-1">Select categories</h3>
-				</div>
+		<div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+			<!-- Header -->
+			<div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
+				<h3 class="text-base font-semibold text-slate-900">Link Categories</h3>
 				<button
 					type="button"
-					class="text-xs uppercase tracking-wide text-ash hover:text-copper"
+					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
 					onclick={closeLinkCategoryModal}
 				>
-					Close
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+					</svg>
 				</button>
 			</div>
 
-			<div class="grid gap-3 max-h-96 overflow-y-auto">
+			<!-- Body -->
+			<div class="px-6 py-4 grid gap-2 max-h-96 overflow-y-auto">
 				{#each categories as category (category.id)}
 					{@const isSelected = editCategoryIds.includes(category.id)}
 					{@const isFocused = focusedCategoryId === category.id}
 					<button
 						type="button"
 						onclick={() => (editCategoryIds = toggleCategory(editCategoryIds, category.id))}
-						class={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
+						class={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-all duration-150 ${
 							isFocused
-								? 'bg-walnut/10 border-walnut ring-2 ring-walnut/40'
+								? 'bg-slate-100 border-slate-900 ring-1 ring-slate-900'
 								: isSelected
-									? 'bg-copper/10 border-copper ring-2 ring-copper/40'
-									: 'border-walnut/20 hover:border-copper'
+									? 'bg-slate-50 border-slate-300'
+									: 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
 						}`}
 					>
 						<div class="flex-1">
-							<p class={`text-sm font-medium ${isFocused ? 'text-walnut' : isSelected ? 'text-copper' : 'text-walnut'}`}>
+							<p class={`text-sm font-medium ${isSelected ? 'text-slate-900' : 'text-slate-600'}`}>
 								{category.displayName}
 							</p>
-							<p class="text-xs text-ash">/{category.name}</p>
+							<p class="text-xs text-slate-400 font-mono">/{category.name}</p>
 						</div>
-						<div class="flex items-center gap-2">
-							<span
-								class={`text-[10px] uppercase tracking-wide px-2 py-1 rounded-full ${
-									category.isPublished
-										? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-										: 'bg-ash/10 text-ash border border-ash/20'
-								}`}
-							>
-								{category.isPublished ? 'Live' : 'Draft'}
-							</span>
+						<div class="flex items-center gap-2.5">
+							<span class={`inline-block h-2 w-2 rounded-full ${category.isPublished ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
 							{#if isSelected}
 								<svg
-									class="w-5 h-5 text-copper"
+									class="w-5 h-5 text-slate-900"
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
@@ -587,12 +590,13 @@
 				{/each}
 			</div>
 
-			<div class="flex flex-wrap gap-3 pt-4 mt-4 border-t border-walnut/10">
+			<!-- Footer -->
+			<div class="flex items-center gap-2.5 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
 				{#if focusedCategoryId !== null}
 					<button
 						type="button"
 						onclick={unlinkFocusedCategory}
-						class="px-4 py-2 rounded-full bg-red-600 text-white text-sm hover:bg-red-700 transition-colors"
+						class="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors duration-150"
 					>
 						Unlink category
 					</button>
@@ -600,7 +604,7 @@
 				<button
 					type="button"
 					onclick={closeLinkCategoryModal}
-					class="px-4 py-2 rounded-full bg-walnut text-cream text-sm hover:bg-copper transition-colors"
+					class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150"
 				>
 					Done
 				</button>

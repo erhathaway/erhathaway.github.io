@@ -32,13 +32,13 @@
 	}
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-walnut/10">
+<header class="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-slate-200">
 	<div>
-		<h1 class="font-display text-4xl text-walnut mb-2">Admin Panel</h1>
-		<p class="text-ash">Portfolio Management Dashboard</p>
+		<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Dashboard</p>
+		<h1 class="text-xl font-semibold text-slate-900 mt-1">Admin Panel</h1>
 	</div>
 	<UserButton />
-</div>
+</header>
 
 <SignedIn>
 	<CategoryManager
@@ -52,7 +52,10 @@
 </SignedIn>
 
 <SignedOut>
-	<div class="mt-8 p-4 bg-red-50 border border-red-200 rounded">
-		<p class="text-red-700">You need to be signed in to access this page.</p>
+	<div class="mt-8 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+		<svg class="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+		</svg>
+		<p class="text-sm text-red-700">You need to be signed in to access this page.</p>
 	</div>
 </SignedOut>

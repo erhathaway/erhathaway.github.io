@@ -312,24 +312,24 @@
 </script>
 
 <section class="mt-8 mb-8">
-	<div class="flex flex-wrap items-baseline justify-between gap-4 mb-6">
+	<div class="flex flex-wrap items-center justify-between gap-4 mb-5">
 		<div>
-			<h2 class="font-display text-xl text-walnut">Projects</h2>
-			<p class="text-ash text-xs mt-0.5">Manage portfolio projects</p>
+			<h2 class="text-lg font-semibold text-slate-900">Projects</h2>
+			<p class="text-sm text-slate-500 mt-0.5">Manage portfolio projects</p>
 		</div>
-		<div class="flex items-center gap-3">
+		<div class="flex items-center gap-2">
 			<button
 				type="button"
 				onclick={fetchProjects}
 				disabled={projectsLoading}
-				class="px-3 py-1.5 text-xs border border-walnut/20 rounded-full hover:bg-walnut/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+				class="px-3.5 py-1.5 text-xs font-medium border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
 			>
 				{projectsLoading ? 'Refreshing...' : 'Refresh'}
 			</button>
 			<select
 				bind:value={projectsFilter}
-				class="px-3 py-1.5 pr-8 text-xs border border-walnut/20 rounded-full bg-white appearance-none cursor-pointer hover:bg-walnut/5 focus:outline-none focus:border-walnut/40 relative"
-				style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23888%27%3e%3cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M19 9l-7 7-7-7%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 8px center; background-size: 16px;"
+				class="px-3 py-1.5 pr-8 text-xs font-medium border border-slate-200 rounded-xl bg-white text-slate-600 cursor-pointer hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150 appearance-none"
+				style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23999%27%3e%3cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M19 9l-7 7-7-7%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px;"
 			>
 				<option value="all">All</option>
 				<option value="published">Published</option>
@@ -338,25 +338,38 @@
 		</div>
 	</div>
 
-	<p class="text-xs text-ash mb-6 pb-6 border-b border-walnut/5">
+	<p class="text-xs text-slate-400 mb-5 pb-5 border-b border-slate-100">
 		Add projects from the left panel.
 	</p>
 
 	{#if projectsError}
-		<p class="text-xs text-red-600 mb-3">{projectsError}</p>
+		<div class="flex items-start gap-2 mb-3">
+			<svg class="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+			</svg>
+			<p class="text-xs text-red-600">{projectsError}</p>
+		</div>
 	{/if}
 	{#if projectsSuccess}
-		<p class="text-xs text-emerald-600 mb-3">{projectsSuccess}</p>
+		<div class="flex items-start gap-2 mb-3">
+			<svg class="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+			</svg>
+			<p class="text-xs text-emerald-600">{projectsSuccess}</p>
+		</div>
 	{/if}
 
 	{#if projectsLoading}
-		<p class="text-xs text-ash">Loading...</p>
+		<div class="flex items-center gap-2 py-4">
+			<div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500"></div>
+			<p class="text-xs text-slate-400">Loading...</p>
+		</div>
 	{:else if filteredProjects.length === 0}
-		<p class="text-xs text-ash">No projects yet</p>
+		<p class="text-xs text-slate-400 py-4">No projects yet</p>
 	{:else if editingProjectId !== null}
 		{#each filteredProjects as project (project.id)}
 			{#if editingProjectId === project.id}
-				<div class="flex flex-wrap items-center gap-3 p-4 bg-white/70 rounded-xl border border-walnut/15">
+				<div class="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
 					{#key project.id}
 						<ProjectEditor
 							project={project}
@@ -372,34 +385,28 @@
 			{/if}
 		{/each}
 	{:else}
-		<div class="space-y-3">
+		<div class="space-y-2">
 			{#each filteredProjects as project (project.id)}
-				<div class="group p-4 bg-[#E8E4DE] border border-walnut/15 rounded-xl hover:border-walnut/25 hover:bg-[#DDD9D3] transition-all">
+				<div class="group p-4 bg-white border border-slate-200 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all duration-150">
 					<div class="flex items-start justify-between gap-4">
 						<div class="flex-1 space-y-2">
-							<div class="flex items-center gap-2">
-								<span class="text-sm text-walnut font-medium">{project.displayName || project.name}</span>
-								<span class="text-xs text-ash">/{project.name}</span>
-								{#if project.isPublished}
-									<span class="w-1.5 h-1.5 bg-copper rounded-full flex-shrink-0"></span>
-								{:else}
-									<span class="text-xs text-ash/60">(draft)</span>
-								{/if}
+							<div class="flex items-center gap-2.5">
+								<span class="text-sm font-medium text-slate-800">{project.displayName || project.name}</span>
+								<span class="text-xs font-mono text-slate-400">/{project.name}</span>
+								<span class={`inline-block h-1.5 w-1.5 rounded-full ${project.isPublished ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
 							</div>
 
 							{#if project.description}
-								<p class="text-xs text-walnut/70">{project.description}</p>
+								<p class="text-xs text-slate-500">{project.description}</p>
 							{/if}
 
 							{#if (projectCategoryIds[project.id] ?? []).length > 0}
 								<div class="flex flex-wrap gap-1.5">
 									{#each projectCategoryIds[project.id] ?? [] as categoryId (categoryId)}
 										{#if getCategory(categoryId)}
-											<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/60 border border-walnut/10 text-[10px]">
-												<span class="text-walnut">{getCategory(categoryId)?.displayName}</span>
-												{#if getCategory(categoryId)?.isPublished}
-													<span class="w-1 h-1 bg-copper rounded-full"></span>
-												{/if}
+											<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-[10px] font-medium text-slate-600">
+												{getCategory(categoryId)?.displayName}
+												<span class={`inline-block h-1 w-1 rounded-full ${getCategory(categoryId)?.isPublished ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
 											</span>
 										{/if}
 									{/each}
@@ -409,10 +416,10 @@
 							{#if (projectAttributes[project.id] ?? []).length > 0}
 								<div class="flex flex-wrap gap-x-3 gap-y-1">
 									{#each projectAttributes[project.id] ?? [] as attribute (attribute.id)}
-										<span class="text-[10px] text-ash">
-											<span class="text-walnut/80">{attribute.name}:</span> {attribute.value}
+										<span class="text-[10px] text-slate-400">
+											<span class="text-slate-600 font-medium">{attribute.name}:</span> {attribute.value}
 											{#if attribute.showInNav}
-												<span class="text-copper">•</span>
+												<span class="inline-block h-1 w-1 rounded-full bg-blue-400 ml-0.5"></span>
 											{/if}
 										</span>
 									{/each}
@@ -420,26 +427,24 @@
 							{/if}
 						</div>
 
-						<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+						<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
 							<a
 								href={`/admin/projects/${project.id}`}
-								class="text-xs text-ash hover:text-walnut hover:bg-blue-100 rounded px-2 py-0.5 transition-colors"
+								class="text-xs font-medium text-slate-400 hover:text-slate-700 rounded-lg px-2 py-1 hover:bg-slate-100 transition-colors duration-150"
 							>
 								Edit
 							</a>
-							<span class="text-ash/20">|</span>
 							<button
 								type="button"
 								onclick={() => startProjectEdit(project)}
-								class="text-xs text-ash hover:text-walnut hover:bg-copper/10 rounded px-2 py-0.5 transition-colors"
+								class="text-xs font-medium text-slate-400 hover:text-slate-700 rounded-lg px-2 py-1 hover:bg-slate-100 transition-colors duration-150"
 							>
 								Quick Edit
 							</button>
-							<span class="text-ash/20">|</span>
 							<button
 								type="button"
 								onclick={() => deleteProject(project.id)}
-								class="text-xs text-red-600/70 hover:text-red-600 hover:bg-red-50 rounded px-2 py-0.5 transition-colors"
+								class="text-xs font-medium text-slate-400 hover:text-red-600 rounded-lg px-2 py-1 hover:bg-red-50 transition-colors duration-150"
 							>
 								Delete
 							</button>

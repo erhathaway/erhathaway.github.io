@@ -150,24 +150,24 @@
 </script>
 
 <section class="mb-8">
-	<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+	<div class="flex flex-wrap items-center justify-between gap-4 mb-5">
 		<div>
-			<h2 class="font-display text-xl text-walnut">Categories</h2>
-			<p class="text-ash text-xs mt-0.5">Manage portfolio categories</p>
+			<h2 class="text-lg font-semibold text-slate-900">Categories</h2>
+			<p class="text-sm text-slate-500 mt-0.5">Manage portfolio categories</p>
 		</div>
-		<div class="flex items-center gap-3">
+		<div class="flex items-center gap-2">
 			<button
 				type="button"
 				onclick={fetchCategories}
 				disabled={isLoading}
-				class="px-3 py-1.5 text-xs border border-walnut/20 rounded-full hover:bg-walnut/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+				class="px-3.5 py-1.5 text-xs font-medium border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
 			>
 				{isLoading ? 'Refreshing...' : 'Refresh'}
 			</button>
 			<select
 				bind:value={filter}
-				class="px-3 py-1.5 pr-8 text-xs border border-walnut/20 rounded-full bg-white appearance-none cursor-pointer hover:bg-walnut/5 focus:outline-none focus:border-walnut/40 relative"
-				style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23888%27%3e%3cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M19 9l-7 7-7-7%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 8px center; background-size: 16px;"
+				class="px-3 py-1.5 pr-8 text-xs font-medium border border-slate-200 rounded-xl bg-white text-slate-600 cursor-pointer hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150 appearance-none"
+				style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%23999%27%3e%3cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M19 9l-7 7-7-7%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px;"
 			>
 				<option value="all">All</option>
 				<option value="published">Published</option>
@@ -176,51 +176,73 @@
 		</div>
 	</div>
 
-	<p class="text-xs text-ash mb-6 pb-6 border-b border-walnut/5">
+	<p class="text-xs text-slate-400 mb-5 pb-5 border-b border-slate-100">
 		Add categories from the left panel.
 	</p>
 
 	{#if error}
-		<p class="text-xs text-red-600 mb-3">{error}</p>
+		<div class="flex items-start gap-2 mb-3">
+			<svg class="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+			</svg>
+			<p class="text-xs text-red-600">{error}</p>
+		</div>
 	{/if}
 	{#if success}
-		<p class="text-xs text-emerald-600 mb-3">{success}</p>
+		<div class="flex items-start gap-2 mb-3">
+			<svg class="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+			</svg>
+			<p class="text-xs text-emerald-600">{success}</p>
+		</div>
 	{/if}
 
 	{#if isLoading}
-		<p class="text-xs text-ash">Loading...</p>
+		<div class="flex items-center gap-2 py-4">
+			<div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500"></div>
+			<p class="text-xs text-slate-400">Loading...</p>
+		</div>
 	{:else if filteredCategories.length === 0}
-		<p class="text-xs text-ash">No categories yet</p>
+		<p class="text-xs text-slate-400 py-4">No categories yet</p>
 	{:else if editingId !== null}
 		{#each filteredCategories as category (category.id)}
 			{#if editingId === category.id}
-				<div class="flex flex-wrap items-center gap-3 p-4 bg-white/70 rounded-xl border border-walnut/15">
+				<div class="flex flex-wrap items-center gap-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
 					<input
 						bind:value={editName}
-						class="w-32 px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white focus:outline-none focus:border-walnut/30"
+						class="w-32 rounded-xl border border-slate-200 px-3 py-2 text-sm font-mono text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
 						placeholder="url-slug"
 					/>
 					<input
 						bind:value={editDisplayName}
-						class="w-40 px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white focus:outline-none focus:border-walnut/30"
+						class="w-40 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
 						placeholder="Display Name"
 					/>
-					<label class="flex items-center gap-2 text-xs text-ash cursor-pointer hover:text-walnut">
-						<input type="checkbox" bind:checked={editIsPublished} class="w-3.5 h-3.5 rounded border-walnut/30 text-copper focus:ring-0 focus:ring-offset-0" />
-						Publish
-					</label>
+					<div class="flex items-center gap-3">
+						<button
+							type="button"
+							role="switch"
+							aria-checked={editIsPublished}
+							aria-label="Toggle published"
+							onclick={() => { editIsPublished = !editIsPublished; }}
+							class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+						>
+							<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${editIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+						</button>
+						<span class="text-xs text-slate-500">Published</span>
+					</div>
 					<div class="flex items-center gap-2 ml-auto">
 						<button
 							type="button"
 							onclick={saveEdit}
-							class="px-4 py-1.5 text-xs bg-walnut text-cream rounded-full hover:bg-copper transition-colors"
+							class="px-4 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors duration-150"
 						>
 							Save
 						</button>
 						<button
 							type="button"
 							onclick={cancelEdit}
-							class="px-3 py-1.5 text-xs text-walnut border border-walnut/20 rounded-full hover:bg-walnut/5 transition-colors"
+							class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors duration-150"
 						>
 							Cancel
 						</button>
@@ -231,28 +253,24 @@
 	{:else}
 		<div class="flex flex-wrap gap-2">
 			{#each filteredCategories as category (category.id)}
-				<div class="group inline-flex items-center gap-2 px-4 py-2 bg-[#E8E4DE] border border-walnut/15 rounded-full hover:border-walnut/25 hover:bg-[#DDD9D3] hover:pr-3 transition-all">
-					<span class="text-sm text-walnut font-medium">{category.displayName || category.name}</span>
-					<span class="text-xs text-ash">/{category.name}</span>
-					{#if category.isPublished}
-						<span class="w-1.5 h-1.5 bg-copper rounded-full flex-shrink-0"></span>
-					{:else}
-						<span class="text-xs text-ash/60">(draft)</span>
-					{/if}
+				<div class="group inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl hover:border-slate-300 hover:shadow-sm transition-all duration-150">
+					<span class="text-sm font-medium text-slate-700">{category.displayName || category.name}</span>
+					<span class="text-xs font-mono text-slate-400">/{category.name}</span>
+					<span class={`inline-block h-1.5 w-1.5 rounded-full ${category.isPublished ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
 
-					<div class="flex items-center gap-0.5 overflow-hidden max-w-0 group-hover:max-w-[150px] transition-all duration-300">
-						<span class="text-ash/20 mx-1">|</span>
+					<div class="flex items-center gap-1 overflow-hidden max-w-0 group-hover:max-w-[120px] transition-all duration-300">
+						<span class="text-slate-200 mx-0.5">|</span>
 						<button
 							type="button"
 							onclick={() => startEdit(category)}
-							class="text-xs text-ash hover:text-walnut hover:bg-blue-100 rounded px-2 py-0.5 transition-colors whitespace-nowrap"
+							class="text-xs font-medium text-slate-400 hover:text-slate-700 rounded-lg px-1.5 py-0.5 hover:bg-slate-100 transition-colors duration-150 whitespace-nowrap"
 						>
 							Edit
 						</button>
 						<button
 							type="button"
 							onclick={() => deleteCategory(category.id)}
-							class="text-xs text-red-600/70 hover:text-red-600 hover:bg-red-50 rounded px-2 py-0.5 transition-colors whitespace-nowrap"
+							class="text-xs font-medium text-slate-400 hover:text-red-600 rounded-lg px-1.5 py-0.5 hover:bg-red-50 transition-colors duration-150 whitespace-nowrap"
 						>
 							Delete
 						</button>

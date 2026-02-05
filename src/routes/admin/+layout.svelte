@@ -269,77 +269,89 @@
 	});
 </script>
 
-<div class="bg-cream text-walnut h-screen overflow-hidden">
+<div class="bg-[#fafafa] text-slate-900 h-screen overflow-hidden">
 	<div class="h-full flex">
-		<aside class="w-72 shrink-0 border-r border-walnut/10 bg-[#F2EDE6] px-6 py-6 flex flex-col gap-6 overflow-y-auto">
-			<div>
-				<p class="text-[11px] uppercase tracking-[0.35em] text-ash">Admin</p>
-				<a href="/admin" class="mt-3 inline-flex text-lg font-display text-walnut hover:text-copper">
-					Dashboard
+		<aside class="w-72 shrink-0 border-r border-slate-200 bg-white px-5 py-5 flex flex-col gap-5 overflow-y-auto">
+			<!-- Brand -->
+			<div class="pb-4 border-b border-slate-100">
+				<a href="/admin" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-slate-600 transition-colors duration-150">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+					</svg>
+					Admin
 				</a>
 			</div>
 
+			<!-- Actions -->
 			<div class="flex flex-col gap-2">
 				<button
 					type="button"
 					onclick={() => (showCategoryModal = true)}
-					class="w-full rounded-full border border-walnut/20 px-3 py-2 text-xs uppercase tracking-[0.22em] text-walnut hover:bg-walnut/5"
+					class="w-full flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs font-medium text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-150"
 				>
+					<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+					</svg>
 					New Category
 				</button>
 				<button
 					type="button"
 					onclick={() => (showProjectModal = true)}
-					class="w-full rounded-full border border-walnut/20 px-3 py-2 text-xs uppercase tracking-[0.22em] text-walnut hover:bg-walnut/5"
+					class="w-full flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs font-medium text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-150"
 				>
+					<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+					</svg>
 					New Project
 				</button>
 			</div>
 
-			<div class="flex-1 min-h-0 overflow-y-auto space-y-6 pr-1">
+			<!-- Nav Lists -->
+			<div class="flex-1 min-h-0 overflow-y-auto space-y-5 pr-1">
+				<!-- Categories -->
 				<div>
-					<div class="flex items-center justify-between">
-						<p class="text-[11px] uppercase tracking-[0.3em] text-ash">Categories</p>
-					</div>
+					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Categories</p>
 					{#if adminStore.categoriesLoaded}
 						{#if adminStore.categories.length === 0}
-							<p class="mt-3 text-xs text-ash">No categories yet.</p>
+							<p class="text-xs text-slate-400">No categories yet.</p>
 						{:else}
-							<ul class="mt-3 space-y-1">
+							<ul class="space-y-0.5">
 								{#each adminStore.categories as category (category.id)}
-									<li class="flex items-center justify-between text-xs text-walnut">
-										<span>{category.displayName || category.name}</span>
-										<span class="text-[10px] text-ash">/{category.name}</span>
+									<li class="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors duration-150">
+										<span class="font-medium">{category.displayName || category.name}</span>
+										<div class="flex items-center gap-2">
+											<span class="text-[10px] font-mono text-slate-400">/{category.name}</span>
+											<span class={`inline-block h-1.5 w-1.5 rounded-full ${category.isPublished ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
+										</div>
 									</li>
 								{/each}
 							</ul>
 						{/if}
 					{:else}
-						<p class="mt-3 text-xs text-ash">Loading categories...</p>
+						<p class="text-xs text-slate-400">Loading...</p>
 					{/if}
 				</div>
 
+				<!-- Projects -->
 				<div>
-					<div class="flex items-center justify-between">
-						<p class="text-[11px] uppercase tracking-[0.3em] text-ash">Projects</p>
-					</div>
+					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Projects</p>
 					{#if adminStore.projectsLoaded}
 						{#if adminStore.projects.length === 0}
-							<p class="mt-3 text-xs text-ash">No projects yet.</p>
+							<p class="text-xs text-slate-400">No projects yet.</p>
 						{:else}
-							<ul class="mt-3 space-y-1">
+							<ul class="space-y-0.5">
 								{#each adminStore.projects as project (project.id)}
 									<li>
 										<a
 											href={`/admin/projects/${project.id}`}
-											class={`flex items-center justify-between rounded-md px-2 py-1 text-xs transition-colors ${
+											class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
 												activeProjectId === project.id
-													? 'bg-walnut text-cream'
-													: 'text-walnut hover:bg-walnut/10'
+													? 'bg-slate-900 text-white'
+													: 'text-slate-600 hover:bg-slate-50'
 											}`}
 										>
-											<span>{project.displayName || project.name}</span>
-											<span class={`text-[10px] ${activeProjectId === project.id ? 'text-cream/70' : 'text-ash'}`}>
+											<span class="font-medium">{project.displayName || project.name}</span>
+											<span class={`text-[10px] font-mono ${activeProjectId === project.id ? 'text-white/50' : 'text-slate-400'}`}>
 												/{project.name}
 											</span>
 										</a>
@@ -348,19 +360,22 @@
 							</ul>
 						{/if}
 					{:else}
-						<p class="mt-3 text-xs text-ash">Loading projects...</p>
+						<p class="text-xs text-slate-400">Loading...</p>
 					{/if}
 				</div>
 			</div>
 
-			<div class="text-xs text-ash">
-				{#if navError}
-					<p class="text-red-600">{navError}</p>
-				{/if}
-				{#if navSuccess}
-					<p class="text-emerald-700">{navSuccess}</p>
-				{/if}
-			</div>
+			<!-- Status -->
+			{#if navError || navSuccess}
+				<div class="text-xs pt-3 border-t border-slate-100">
+					{#if navError}
+						<p class="text-red-600">{navError}</p>
+					{/if}
+					{#if navSuccess}
+						<p class="text-emerald-600">{navSuccess}</p>
+					{/if}
+				</div>
+			{/if}
 		</aside>
 
 		<main class="flex-1 min-w-0 overflow-y-auto">
@@ -371,170 +386,215 @@
 	</div>
 </div>
 
+<!-- New Category Modal -->
 {#if showCategoryModal}
-	<div class="fixed inset-0 z-50">
+	<div class="fixed inset-0 z-50 flex items-center justify-center px-4">
 		<button
 			type="button"
-			class="absolute inset-0 bg-black/40"
+			class="absolute inset-0 bg-black/40 backdrop-blur-sm"
 			aria-label="Close modal"
 			onclick={() => (showCategoryModal = false)}
 		></button>
-		<div class="absolute inset-0 flex items-center justify-center px-4 pointer-events-none">
-			<div class="pointer-events-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-walnut/20">
-				<div class="flex items-center justify-between mb-4">
-					<h3 class="font-display text-xl text-walnut">New Category</h3>
-					<button type="button" class="text-ash hover:text-walnut" onclick={() => (showCategoryModal = false)}>
-						Close
-					</button>
-				</div>
-				<form class="space-y-4" onsubmit={handleCreateCategory}>
+		<div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+			<!-- Header -->
+			<div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
+				<h3 class="text-base font-semibold text-slate-900">New Category</h3>
+				<button
+					type="button"
+					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					onclick={() => (showCategoryModal = false)}
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+
+			<!-- Body -->
+			<form class="px-6 py-5 grid gap-4" onsubmit={handleCreateCategory}>
+				<label class="grid gap-1.5">
+					<span class="text-xs font-medium text-slate-600">URL slug</span>
 					<input
 						bind:value={newCategoryName}
 						required
-						class="w-full px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/80 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
+						class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 font-mono placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
 						placeholder="url-slug"
 					/>
+				</label>
+				<label class="grid gap-1.5">
+					<span class="text-xs font-medium text-slate-600">Display Name</span>
 					<input
 						bind:value={newCategoryDisplayName}
-						class="w-full px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/80 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
+						class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
 						placeholder="Display Name"
 					/>
-					<label class="flex items-center gap-2 text-xs text-ash cursor-pointer hover:text-walnut">
-						<input type="checkbox" bind:checked={newCategoryIsPublished} class="w-3.5 h-3.5 rounded border-walnut/30 text-copper focus:ring-0 focus:ring-offset-0" />
-						Publish
-					</label>
-					<div class="flex items-center justify-end gap-2">
-						<button
-							type="button"
-							onclick={() => (showCategoryModal = false)}
-							class="px-4 py-2 text-xs border border-walnut/20 rounded-full text-ash hover:text-walnut"
-						>
-							Cancel
-						</button>
-						<button
-							type="submit"
-							class="px-4 py-2 text-xs bg-walnut text-cream rounded-full hover:bg-copper transition-colors"
-						>
-							Create
-						</button>
-					</div>
-				</form>
-			</div>
+				</label>
+				<div class="flex items-center gap-3">
+					<button
+						type="button"
+						role="switch"
+						aria-checked={newCategoryIsPublished}
+						aria-label="Toggle published"
+						onclick={() => { newCategoryIsPublished = !newCategoryIsPublished; }}
+						class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${newCategoryIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+					>
+						<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${newCategoryIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+					</button>
+					<span class="text-sm text-slate-600">Published</span>
+				</div>
+
+				<!-- Footer -->
+				<div class="flex items-center gap-2.5 pt-3 border-t border-slate-100 mt-1">
+					<button
+						type="submit"
+						class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150"
+					>
+						Create
+					</button>
+					<button
+						type="button"
+						onclick={() => (showCategoryModal = false)}
+						class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					>
+						Cancel
+					</button>
+				</div>
+			</form>
 		</div>
 	</div>
 {/if}
 
+<!-- New Project Modal -->
 {#if showProjectModal}
-	<div class="fixed inset-0 z-50">
+	<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
 		<button
 			type="button"
-			class="absolute inset-0 bg-black/40"
+			class="absolute inset-0 bg-black/40 backdrop-blur-sm"
 			aria-label="Close modal"
 			onclick={() => (showProjectModal = false)}
 		></button>
-		<div class="absolute inset-0 flex items-center justify-center px-4 pointer-events-none">
-			<div class="pointer-events-auto w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl border border-walnut/20">
-				<div class="flex items-center justify-between mb-4">
-					<h3 class="font-display text-xl text-walnut">New Project</h3>
-					<button type="button" class="text-ash hover:text-walnut" onclick={() => (showProjectModal = false)}>
-						Close
-					</button>
-				</div>
-				<form class="space-y-4" onsubmit={handleCreateProject}>
-					<div class="grid gap-3 sm:grid-cols-2">
+		<div class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+			<!-- Header -->
+			<div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100 sticky top-0 bg-white z-10">
+				<h3 class="text-base font-semibold text-slate-900">New Project</h3>
+				<button
+					type="button"
+					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					onclick={() => (showProjectModal = false)}
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+
+			<!-- Body -->
+			<form class="px-6 py-5 grid gap-5" onsubmit={handleCreateProject}>
+				<div class="grid gap-4 sm:grid-cols-2">
+					<label class="grid gap-1.5">
+						<span class="text-xs font-medium text-slate-600">URL slug</span>
 						<input
 							bind:value={newProjectName}
 							required
-							class="w-full px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/80 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
+							class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 font-mono placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
 							placeholder="url-slug"
 						/>
+					</label>
+					<label class="grid gap-1.5">
+						<span class="text-xs font-medium text-slate-600">Display Name</span>
 						<input
 							bind:value={newProjectDisplayName}
-							class="w-full px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/80 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
+							class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
 							placeholder="Display Name"
 						/>
-					</div>
+					</label>
+				</div>
+				<label class="grid gap-1.5">
+					<span class="text-xs font-medium text-slate-600">Description</span>
 					<textarea
 						bind:value={newProjectDescription}
 						rows="2"
-						class="w-full px-3 py-2 text-sm rounded-lg border border-walnut/15 bg-white/80 placeholder-ash/50 focus:outline-none focus:border-walnut/30"
+						class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
 						placeholder="Brief description..."
 					></textarea>
-					<div>
-						<p class="text-xs text-ash mb-2">Categories</p>
-						{#if adminStore.categoriesLoaded}
-							{#if adminStore.categories.length === 0}
-								<p class="text-xs text-ash">Create a category first.</p>
-							{:else}
-								<div class="flex flex-wrap gap-2">
-									{#each adminStore.categories as category (category.id)}
-										{@const isSelected = newProjectCategoryIds.includes(category.id)}
-										<button
-											type="button"
-											onclick={() =>
-												(newProjectCategoryIds = toggleCategory(newProjectCategoryIds, category.id))}
-											class={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
-												isSelected
-													? 'bg-copper/90 text-cream border-copper ring-2 ring-copper/40'
-													: 'border-walnut/20 text-walnut hover:border-copper hover:text-copper'
-											}`}
-										>
-											<span class={isSelected ? 'font-semibold' : ''}>{category.displayName || category.name}</span>
-											<span
-												class={`text-[10px] uppercase tracking-wide ${
-													isSelected
-														? 'text-cream/80'
-														: category.isPublished
-															? 'text-emerald-200'
-															: 'text-ash'
-												}`}
-											>
-												{isSelected ? 'Selected' : category.isPublished ? 'Live' : 'Draft'}
-											</span>
-										</button>
-									{/each}
-								</div>
-							{/if}
+				</label>
+
+				<!-- Categories -->
+				<div>
+					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2.5">Categories</p>
+					{#if adminStore.categoriesLoaded}
+						{#if adminStore.categories.length === 0}
+							<p class="text-xs text-slate-400">Create a category first.</p>
 						{:else}
-							<p class="text-xs text-ash">Loading categories...</p>
+							<div class="flex flex-wrap gap-2">
+								{#each adminStore.categories as category (category.id)}
+									{@const isSelected = newProjectCategoryIds.includes(category.id)}
+									<button
+										type="button"
+										onclick={() =>
+											(newProjectCategoryIds = toggleCategory(newProjectCategoryIds, category.id))}
+										class={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
+											isSelected
+												? 'bg-slate-900 text-white border-slate-900'
+												: 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+										}`}
+									>
+										{category.displayName || category.name}
+										<span class={`inline-block h-1.5 w-1.5 rounded-full ${
+											isSelected
+												? (category.isPublished ? 'bg-emerald-400' : 'bg-slate-500')
+												: (category.isPublished ? 'bg-emerald-400' : 'bg-slate-300')
+										}`}></span>
+									</button>
+								{/each}
+							</div>
 						{/if}
+					{:else}
+						<p class="text-xs text-slate-400">Loading categories...</p>
+					{/if}
+				</div>
+
+				<!-- Attributes -->
+				<div>
+					<div class="flex items-center justify-between mb-2.5">
+						<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Attributes</p>
+						<button
+							type="button"
+							onclick={() => (newProjectAttributes = addAttributeRow(newProjectAttributes))}
+							class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors duration-150"
+						>
+							<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+							</svg>
+							Add
+						</button>
 					</div>
-					<div>
-						<div class="flex items-center justify-between mb-2">
-							<p class="text-xs text-ash">Attributes</p>
-							<button
-								type="button"
-								onclick={() => (newProjectAttributes = addAttributeRow(newProjectAttributes))}
-								class="text-xs text-copper hover:text-walnut"
-							>
-								Add attribute
-							</button>
-						</div>
-						{#if newProjectAttributes.length === 0}
-							<p class="text-xs text-ash">No attributes yet.</p>
-						{:else}
-							<div class="grid gap-2">
-								{#each newProjectAttributes as attribute, index (index)}
-									<div class="flex flex-wrap items-center gap-2 rounded-lg border border-walnut/10 bg-cream/60 p-2">
-										<input
-											class="flex-1 min-w-[160px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
-											placeholder="Name"
-											value={attribute.name}
-											oninput={(event) =>
-												(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
-													name: (event.target as HTMLInputElement).value
-												}))}
-										/>
-										<input
-											class="flex-1 min-w-[200px] rounded-md border border-walnut/20 px-3 py-2 text-xs"
-											placeholder="Value"
-											value={attribute.value}
-											oninput={(event) =>
-												(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
-													value: (event.target as HTMLInputElement).value
-												}))}
-										/>
-										<label class="flex items-center gap-1 text-[11px] text-ash">
+					{#if newProjectAttributes.length === 0}
+						<p class="text-xs text-slate-400">No attributes yet.</p>
+					{:else}
+						<div class="grid gap-2">
+							{#each newProjectAttributes as attribute, index (index)}
+								<div class="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+									<input
+										class="flex-1 min-w-[140px] rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
+										placeholder="Name"
+										value={attribute.name}
+										oninput={(event) =>
+											(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
+												name: (event.target as HTMLInputElement).value
+											}))}
+									/>
+									<input
+										class="flex-1 min-w-[180px] rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150"
+										placeholder="Value"
+										value={attribute.value}
+										oninput={(event) =>
+											(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
+												value: (event.target as HTMLInputElement).value
+											}))}
+									/>
+									<div class="flex items-center gap-3">
+										<label class="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-pointer">
 											<input
 												type="checkbox"
 												checked={attribute.showInNav}
@@ -542,11 +602,11 @@
 													(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
 														showInNav: (event.target as HTMLInputElement).checked
 													}))}
-												class="accent-copper"
+												class="accent-blue-500 w-3 h-3"
 											/>
-											Show in nav
+											Nav
 										</label>
-										<label class="flex items-center gap-1 text-[11px] text-ash">
+										<label class="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-pointer">
 											<input
 												type="checkbox"
 												checked={attribute.isPublished}
@@ -554,44 +614,57 @@
 													(newProjectAttributes = updateAttributeRow(newProjectAttributes, index, {
 														isPublished: (event.target as HTMLInputElement).checked
 													}))}
-												class="accent-copper"
+												class="accent-emerald-500 w-3 h-3"
 											/>
-											Published
+											Pub
 										</label>
-										<button
-											type="button"
-											onclick={() =>
-												(newProjectAttributes = removeAttributeRow(newProjectAttributes, index))}
-											class="text-xs text-red-600 hover:text-red-700"
-										>
-											Remove
-										</button>
 									</div>
-								{/each}
-							</div>
-						{/if}
-					</div>
-					<label class="flex items-center gap-2 text-xs text-ash cursor-pointer hover:text-walnut">
-						<input type="checkbox" bind:checked={newProjectIsPublished} class="w-3.5 h-3.5 rounded border-walnut/30 text-copper focus:ring-0 focus:ring-offset-0" />
-						Publish
-					</label>
-					<div class="flex items-center justify-end gap-2">
-						<button
-							type="button"
-							onclick={() => (showProjectModal = false)}
-							class="px-4 py-2 text-xs border border-walnut/20 rounded-full text-ash hover:text-walnut"
-						>
-							Cancel
-						</button>
-						<button
-							type="submit"
-							class="px-4 py-2 text-xs bg-walnut text-cream rounded-full hover:bg-copper transition-colors"
-						>
-							Create
-						</button>
-					</div>
-				</form>
-			</div>
+									<button
+										type="button"
+										onclick={() =>
+											(newProjectAttributes = removeAttributeRow(newProjectAttributes, index))}
+										class="text-xs font-medium text-slate-400 hover:text-red-600 transition-colors duration-150"
+									>
+										Remove
+									</button>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+
+				<!-- Published toggle -->
+				<div class="flex items-center gap-3">
+					<button
+						type="button"
+						role="switch"
+						aria-checked={newProjectIsPublished}
+						aria-label="Toggle published"
+						onclick={() => { newProjectIsPublished = !newProjectIsPublished; }}
+						class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${newProjectIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
+					>
+						<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${newProjectIsPublished ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+					</button>
+					<span class="text-sm text-slate-600">Published</span>
+				</div>
+
+				<!-- Footer -->
+				<div class="flex items-center gap-2.5 pt-3 border-t border-slate-100 mt-1">
+					<button
+						type="submit"
+						class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150"
+					>
+						Create
+					</button>
+					<button
+						type="button"
+						onclick={() => (showProjectModal = false)}
+						class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					>
+						Cancel
+					</button>
+				</div>
+			</form>
 		</div>
 	</div>
 {/if}
