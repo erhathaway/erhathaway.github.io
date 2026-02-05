@@ -8,7 +8,12 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		adapter: adapter()
+		adapter: adapter({
+			platformProxy: {
+				configPath: './wrangler.toml',
+				persist: { path: '.wrangler/state/v3' }
+			}
+		})
 	}
 };
 
