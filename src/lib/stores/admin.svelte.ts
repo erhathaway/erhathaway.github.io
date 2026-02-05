@@ -12,6 +12,8 @@ export type AdminProject = {
 	description: string | null;
 	isPublished: boolean;
 	coverImageUrl: string | null;
+	categories: string[];
+	navAttributes: Array<{ name: string; value: string }>;
 };
 
 class AdminStore {

@@ -53,37 +53,6 @@
 		}
 	}
 
-	async function deleteProject(event: MouseEvent, projectId: number) {
-		event.preventDefault();
-		event.stopPropagation();
-
-		if (!confirm('Delete this project?')) return;
-
-		projectsError = '';
-		projectsSuccess = '';
-
-		const token = await getToken();
-		if (!token) {
-			projectsError = 'Sign in to delete projects.';
-			return;
-		}
-
-		const response = await fetch(`/api/projects/${projectId}`, {
-			method: 'DELETE',
-			headers: {
-				Authorization: `Bearer ${token}`
-			}
-		});
-
-		if (!response.ok) {
-			projectsError = 'Unable to delete project.';
-			return;
-		}
-
-		adminStore.projects = adminStore.projects.filter((project) => project.id !== projectId);
-		projectsSuccess = 'Project deleted.';
-	}
-
 	onMount(fetchProjects);
 </script>
 
@@ -168,30 +137,32 @@
 						{/if}
 					</div>
 
-					<!-- Bottom Overlay -->
-					<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-3 pt-10">
+					<!-- Top Overlay: Title + Categories -->
+					<div class="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/40 to-transparent p-3 pb-10">
 						<div class="flex items-center gap-1.5">
 							<span class={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${project.isPublished ? 'bg-emerald-400' : 'bg-slate-400'}`}></span>
-							<h3 class="text-sm font-medium text-white truncate">{project.displayName || project.name}</h3>
+							<h3 class="text-base font-semibold text-white truncate">{project.displayName || project.name}</h3>
 						</div>
-						{#if project.description}
-							<p class="text-[11px] text-white/70 mt-0.5 line-clamp-2">{project.description}</p>
+						{#if project.categories.length > 0}
+							<div class="flex flex-wrap gap-1 mt-1.5">
+								{#each project.categories as cat}
+									<span class="inline-block rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-medium text-white/90 backdrop-blur-sm">{cat}</span>
+								{/each}
+							</div>
 						{/if}
 					</div>
 
-					<!-- Hover Actions -->
-					<div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-						<button
-							type="button"
-							onclick={(e) => deleteProject(e, project.id)}
-							class="rounded-lg p-1.5 bg-black/50 text-white/80 hover:bg-red-600 hover:text-white backdrop-blur-sm transition-colors duration-150"
-							aria-label="Delete project"
-						>
-							<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-							</svg>
-						</button>
-					</div>
+					<!-- Bottom Overlay: Attributes -->
+					{#if project.navAttributes.length > 0}
+						<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-3 pt-10">
+							<div class="flex flex-wrap gap-1">
+								{#each project.navAttributes as attr}
+									<span class="inline-block rounded-full bg-amber-400/25 px-2 py-0.5 text-[11px] font-medium text-amber-200 backdrop-blur-sm">{attr.name}: {attr.value}</span>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
 				</a>
 			{/each}
 		</div>

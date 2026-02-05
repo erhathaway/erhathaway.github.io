@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
+	import { adminStore } from '$lib/stores/admin.svelte';
 	import { SignedIn, SignedOut, useClerkContext } from 'svelte-clerk';
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
 	import ImageArtifactEditor from '$lib/schemas/artifacts/image-v1/Editor.svelte';
@@ -113,6 +115,8 @@
 	let descriptionInput: HTMLTextAreaElement | undefined = $state();
 
 	let isSavingBasicInfo = $state(false);
+	let showDeleteProjectModal = $state(false);
+	let isDeletingProject = $state(false);
 
 	function handleSchemaChange(event: Event) {
 		const target = event.currentTarget as HTMLSelectElement | null;
@@ -698,6 +702,31 @@
 		}
 	}
 
+	async function deleteProject() {
+		isDeletingProject = true;
+		pageError = '';
+		try {
+			const token = await getToken();
+			if (!token) {
+				pageError = 'Sign in to delete projects.';
+				return;
+			}
+			const response = await fetch(`/api/projects/${projectId}`, {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` }
+			});
+			if (!response.ok) {
+				pageError = 'Unable to delete project.';
+				return;
+			}
+			adminStore.projects = adminStore.projects.filter((p) => p.id !== projectId);
+			await goto('/admin');
+		} finally {
+			isDeletingProject = false;
+			showDeleteProjectModal = false;
+		}
+	}
+
 	onMount(() => {
 		let currentId = Number.isNaN(projectId) ? null : projectId;
 		if (currentId !== null) {
@@ -1020,6 +1049,23 @@
 				{/each}
 			</div>
 		</section>
+		<!-- Danger Zone -->
+		<section class="mt-6 rounded-2xl border border-red-200 bg-red-50/50 p-6">
+			<div class="flex items-center justify-between gap-4">
+				<div>
+					<h2 class="text-sm font-semibold text-red-900">Danger zone</h2>
+					<p class="text-xs text-red-700/70 mt-0.5">Permanently delete this project and all its data.</p>
+				</div>
+				<button
+					type="button"
+					class="px-4 py-1.5 rounded-lg border border-red-300 bg-white text-xs font-medium text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors duration-150"
+					onclick={() => (showDeleteProjectModal = true)}
+				>
+					Delete project
+				</button>
+			</div>
+		</section>
+
 	{:else}
 		<div class="flex items-center justify-center py-16">
 			<p class="text-sm text-slate-400">Project not found.</p>
@@ -1251,6 +1297,48 @@
 							</button>
 						</div>
 					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Delete Project Modal -->
+	{#if showDeleteProjectModal}
+		<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
+			<button
+				type="button"
+				class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+				onclick={() => (showDeleteProjectModal = false)}
+				aria-label="Close delete confirmation"
+			></button>
+			<div class="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden">
+				<div class="px-5 pt-5 pb-4">
+					<div class="flex items-center gap-3 mb-3">
+						<div class="flex items-center justify-center w-10 h-10 rounded-full bg-red-100">
+							<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+							</svg>
+						</div>
+						<h3 class="text-sm font-semibold text-slate-900">Delete project</h3>
+					</div>
+					<p class="text-sm text-slate-500">Are you sure you want to delete <strong class="text-slate-700">{project?.displayName}</strong>? This will permanently remove the project and all its artifacts. This action cannot be undone.</p>
+				</div>
+				<div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-100 bg-slate-50/50">
+					<button
+						type="button"
+						class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors duration-150"
+						onclick={() => (showDeleteProjectModal = false)}
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						disabled={isDeletingProject}
+						class="px-4 py-1.5 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+						onclick={() => void deleteProject()}
+					>
+						{isDeletingProject ? 'Deleting...' : 'Delete project'}
+					</button>
 				</div>
 			</div>
 		</div>
