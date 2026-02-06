@@ -128,9 +128,9 @@
 		<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none" style="view-transition-name: social-links">
 			<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
 				<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
-					<a href="https://github.com" class="hover:text-copper transition-colors">GitHub</a>
-					<a href="https://instagram.com" class="hover:text-copper transition-colors">Instagram</a>
-					<a href="mailto:contact@example.com" class="hover:text-copper transition-colors">Contact</a>
+					<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors">GitHub</a>
+					<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors">Instagram</a>
+					<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors">Contact</a>
 				</div>
 			</div>
 		</div>
