@@ -8,17 +8,11 @@
   let {
     item,
     index = 0,
-    hoverInfoInWall = false,
-    hoverInfoItem = null,
-    hoverInfoOverlayTargetId = null,
-    hoverInfoOverlayAlign = 'left'
+    hoverInfoInWall = false
   }: {
     item: PortfolioItem;
     index?: number;
     hoverInfoInWall?: boolean;
-    hoverInfoItem?: PortfolioItem | null;
-    hoverInfoOverlayTargetId?: number | null;
-    hoverInfoOverlayAlign?: 'left' | 'right';
   } = $props();
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animation after its first run.
@@ -66,12 +60,6 @@
   }
 
   const isHovered = $derived.by(() => portfolio.hoveredItemId === item.id);
-  const showHoverInfoOverlay = $derived.by(() => {
-    if (!hoverInfoInWall) return false;
-    if (!hoverInfoItem) return false;
-    if (!hoverInfoOverlayTargetId) return false;
-    return item.id === hoverInfoOverlayTargetId;
-  });
 
 </script>
 
@@ -100,9 +88,9 @@
     {item.id.toString().padStart(2, '0')}
   </span>
 
-  {#if showHoverInfoOverlay}
+  {#if hoverInfoInWall && isHovered}
     <div class="absolute inset-0 z-20 pointer-events-none">
-      <HoverInfo item={hoverInfoItem} variant="tile" tileAlign={hoverInfoOverlayAlign} />
+      <HoverInfo item={item} variant="tile" />
     </div>
   {/if}
 

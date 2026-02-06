@@ -25,103 +25,6 @@
     portfolio.setHoveredItem(null);
   }
 
-  const hoveredItem = $derived(portfolio.hoveredItem);
-
-  function findNearestOverlayTargetIndex(params: {
-    hoveredIndex: number;
-    totalTiles: number;
-    nameCardIndex: number | null;
-  }): number | null {
-    const { hoveredIndex, totalTiles, nameCardIndex } = params;
-
-    // Assumes a 3-column grid and mostly regular tiles (current site behavior).
-    const cols = 3;
-    const row = Math.floor(hoveredIndex / cols);
-    const col = hoveredIndex % cols;
-
-    const candidates: Array<[number, number]> = [
-      [0, 1], // right
-      [0, -1], // left
-      [1, 0], // down
-      [-1, 0], // up
-      [1, 1], // down-right
-      [1, -1], // down-left
-      [-1, 1], // up-right
-      [-1, -1] // up-left
-    ];
-
-    for (const [dr, dc] of candidates) {
-      const r = row + dr;
-      const c = col + dc;
-      if (r < 0 || c < 0 || c >= cols) continue;
-      const idx = r * cols + c;
-      if (idx < 0 || idx >= totalTiles) continue;
-      if (idx === hoveredIndex) continue;
-      if (nameCardIndex !== null && idx === nameCardIndex) continue;
-      return idx;
-    }
-
-    // Fallback: scan outward by index distance if adjacency doesn't exist (edges/short rows).
-    for (let delta = 1; delta <= 9; delta += 1) {
-      const opts = [hoveredIndex + delta, hoveredIndex - delta];
-      for (const idx of opts) {
-        if (idx < 0 || idx >= totalTiles) continue;
-        if (nameCardIndex !== null && idx === nameCardIndex) continue;
-        return idx;
-      }
-    }
-
-    return null;
-  }
-
-  const hoverInfoOverlayTargetId = $derived.by(() => {
-    if (!homeNamecardInGallery) return null;
-    if (!hoveredItem) return null;
-
-    const tiles: Array<number | null> = [
-      null, // name card tile
-      ...portfolio.filteredItems.map((i) => i.id)
-    ];
-
-    const hoveredIndex = tiles.indexOf(hoveredItem.id);
-    if (hoveredIndex < 0) return null;
-
-    const targetIndex = findNearestOverlayTargetIndex({
-      hoveredIndex,
-      totalTiles: tiles.length,
-      nameCardIndex: 0
-    });
-
-    if (targetIndex === null) return null;
-    const targetId = tiles[targetIndex];
-    if (targetId === null) return null;
-    if (targetId === hoveredItem.id) return null;
-    return targetId;
-  });
-
-  const hoverInfoOverlayAlign = $derived.by(() => {
-    if (!homeNamecardInGallery) return 'left' as const;
-    if (!hoveredItem) return 'left' as const;
-
-    const tiles: Array<number | null> = [
-      null, // name card tile
-      ...portfolio.filteredItems.map((i) => i.id)
-    ];
-    const hoveredIndex = tiles.indexOf(hoveredItem.id);
-    if (hoveredIndex < 0) return 'left' as const;
-
-    const targetId = hoverInfoOverlayTargetId;
-    if (!targetId) return 'left' as const;
-    const targetIndex = tiles.indexOf(targetId);
-    if (targetIndex < 0) return 'left' as const;
-
-    const cols = 3;
-    const hoveredCol = hoveredIndex % cols;
-    const targetCol = targetIndex % cols;
-    // Align text toward the hovered tile: if the overlay tile is left of hovered, right-align.
-    return targetCol < hoveredCol ? ('right' as const) : ('left' as const);
-  });
-
   const hiddenCount = $derived.by(() => {
     return portfolio.allItems.length - portfolio.filteredItems.length;
   });
@@ -162,9 +65,6 @@
         {item}
         index={homeNamecardInGallery ? index + 1 : index}
         hoverInfoInWall={homeNamecardInGallery}
-        hoverInfoItem={hoveredItem}
-        hoverInfoOverlayTargetId={hoverInfoOverlayTargetId}
-        hoverInfoOverlayAlign={hoverInfoOverlayAlign}
       />
     {/each}
   </div>
