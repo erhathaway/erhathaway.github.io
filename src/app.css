@@ -173,6 +173,19 @@
     opacity: 0;
   }
 
+  /* Social links — keep positioned but don't animate */
+  ::view-transition-group(social-links) {
+    animation-duration: 0s !important;
+  }
+  ::view-transition-old(social-links) {
+    animation: none !important;
+    opacity: 0;
+  }
+  ::view-transition-new(social-links) {
+    animation: none !important;
+    opacity: 1;
+  }
+
   /* Project image morphing - the star of the show */
   ::view-transition-old(project-image),
   ::view-transition-new(project-image) {
