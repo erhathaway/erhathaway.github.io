@@ -5,7 +5,21 @@
   import { onMount } from 'svelte';
   import HoverInfo from './HoverInfo.svelte';
 
-  let { item, index = 0, hoverInfoInWall = false }: { item: PortfolioItem; index?: number; hoverInfoInWall?: boolean } = $props();
+  let {
+    item,
+    index = 0,
+    hoverInfoInWall = false,
+    hoverInfoItem = null,
+    hoverInfoOverlayTargetId = null,
+    hoverInfoOverlayAlign = 'left'
+  }: {
+    item: PortfolioItem;
+    index?: number;
+    hoverInfoInWall?: boolean;
+    hoverInfoItem?: PortfolioItem | null;
+    hoverInfoOverlayTargetId?: number | null;
+    hoverInfoOverlayAlign?: 'left' | 'right';
+  } = $props();
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animation after its first run.
   let fadeInActive = $state(true);
@@ -52,6 +66,12 @@
   }
 
   const isHovered = $derived.by(() => portfolio.hoveredItemId === item.id);
+  const showHoverInfoOverlay = $derived.by(() => {
+    if (!hoverInfoInWall) return false;
+    if (!hoverInfoItem) return false;
+    if (!hoverInfoOverlayTargetId) return false;
+    return item.id === hoverInfoOverlayTargetId;
+  });
 
 </script>
 
@@ -80,9 +100,9 @@
     {item.id.toString().padStart(2, '0')}
   </span>
 
-  {#if hoverInfoInWall && isHovered}
+  {#if showHoverInfoOverlay}
     <div class="absolute inset-0 z-20 pointer-events-none">
-      <HoverInfo item={item} variant="tile" />
+      <HoverInfo item={hoverInfoItem} variant="tile" tileAlign={hoverInfoOverlayAlign} />
     </div>
   {/if}
 
