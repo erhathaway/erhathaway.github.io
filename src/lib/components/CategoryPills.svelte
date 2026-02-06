@@ -14,7 +14,7 @@
   {#each categories as category, i (category.value)}
     {@const isActive = portfolio.selectedCategory === category.value}
     <button
-      class="pill px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream {isActive ? 'transition-[background-color,color] duration-300' : 'transition-all duration-300 animate-slide-up'}"
+      class="pill px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream {isActive ? '' : 'transition-all duration-300 animate-slide-up'}"
       style="background: radial-gradient(circle at bottom right, rgba(253, 218, 130, 0.3), rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.1)); border: 1px solid rgba(160, 190, 210, 0.2);{isActive ? ' view-transition-name: category-back;' : ''} animation-delay: {0.3 + i * 0.05}s;"
       class:active={isActive}
       onclick={() => portfolio.setCategory(category.value)}

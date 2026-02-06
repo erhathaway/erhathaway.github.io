@@ -52,6 +52,9 @@
   .pill.active {
     background-color: #2C2218 !important;
     color: #F5F1EB !important;
+    opacity: 1 !important;
+    animation: none !important;
+    transition: none !important;
   }
 
 
