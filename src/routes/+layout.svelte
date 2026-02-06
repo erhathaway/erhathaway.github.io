@@ -10,6 +10,7 @@
 	import { page } from '$app/stores';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { onMount, tick } from 'svelte';
+	import { env } from '$env/dynamic/public';
 
 	let { children } = $props();
 	const isProjectPage = $derived($page.route.id?.includes('/project/'));
@@ -25,6 +26,20 @@
 	// During collapse we must destroy the modal FIRST (removing its names) before
 	// LeftPanel re-adds the same names — otherwise duplicate names cause InvalidStateError.
 	let panelTransitionNames = $state(true);
+
+	const homeNamecardInGallery = (() => {
+		const raw = env.PUBLIC_HOME_NAMECARD_IN_GALLERY;
+		const value = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+		return value === '1' || value === 'true' || value === 'yes' || value === 'on';
+	})();
+	const showLeftPanelNameCard = $derived(isProjectPage || !homeNamecardInGallery);
+	const NAME_CARD_TRIGGER_NAMES_OFF_CLASS = 'namecard-trigger-names-off';
+
+	function setPanelTransitionNames(active: boolean) {
+		panelTransitionNames = active;
+		if (typeof document === 'undefined') return;
+		document.documentElement.classList.toggle(NAME_CARD_TRIGGER_NAMES_OFF_CLASS, !active);
+	}
 
 	type NameCardCloseMaskPhase = 'hidden' | 'visible' | 'fading';
 	let nameCardCloseMaskPhase = $state<NameCardCloseMaskPhase>('hidden');
@@ -111,7 +126,7 @@
 	function expandNameCard() {
 		if (!document.startViewTransition) {
 			nameCardExpanded = true;
-			panelTransitionNames = false;
+			setPanelTransitionNames(false);
 			return;
 		}
 
@@ -120,13 +135,13 @@
 		try {
 			const t = document.startViewTransition(async () => {
 				try {
-					panelTransitionNames = false; // remove names from LeftPanel first
+					setPanelTransitionNames(false); // remove names from LeftPanel first
 					await tick();
 					nameCardExpanded = true; // create modal with those names
 					await tick();
 				} catch {
 					// If anything goes wrong mid-update, land in the intended end state.
-					panelTransitionNames = false;
+					setPanelTransitionNames(false);
 					nameCardExpanded = true;
 				}
 			});
@@ -143,7 +158,7 @@
 			// If a transition is already running (InvalidStateError), fall back to an instant state update.
 			window.clearTimeout(scopeTimeout);
 			releaseNameCardScope();
-			panelTransitionNames = false;
+			setPanelTransitionNames(false);
 			nameCardExpanded = true;
 		}
 	}
@@ -160,7 +175,7 @@
 
 		if (!document.startViewTransition) {
 			nameCardExpanded = false;
-			panelTransitionNames = true;
+			setPanelTransitionNames(true);
 			armHoverSuppressionRelease(releaseHoverSuppression);
 			requestAnimationFrame(fadeOutNameCardCloseMask);
 			return;
@@ -173,12 +188,12 @@
 				try {
 					nameCardExpanded = false; // destroy modal first (removes names)
 					await tick();
-					panelTransitionNames = true; // add names back to LeftPanel
+					setPanelTransitionNames(true); // add names back to LeftPanel
 					await tick();
 				} catch {
 					// If anything goes wrong mid-update, land in the intended end state.
 					nameCardExpanded = false;
-					panelTransitionNames = true;
+					setPanelTransitionNames(true);
 				}
 			});
 			// Prevent ViewTransition promise rejections from triggering SvelteKit error recovery
@@ -217,13 +232,16 @@
 			window.clearTimeout(scopeTimeout);
 			releaseNameCardScope();
 			nameCardExpanded = false;
-			panelTransitionNames = true;
+			setPanelTransitionNames(true);
 			armHoverSuppressionRelease(releaseHoverSuppression);
 			requestAnimationFrame(fadeOutNameCardCloseMask);
 		}
 	}
 
 	onMount(() => {
+		// Ensure the trigger-name suppression class matches initial state on first paint/hydration.
+		setPanelTransitionNames(panelTransitionNames);
+
 		const handleResize = () => {
 			const width = window.innerWidth;
 			isMobileScreen = width < 768;
@@ -236,6 +254,11 @@
 		window.addEventListener('resize', handleResize);
 		handleResize(); // Initial check
 
+		const handleNameCardOpen = () => {
+			expandNameCard();
+		};
+		window.addEventListener('namecard:open', handleNameCardOpen);
+
 		const unsubscribe = page.subscribe(($page) => {
 			const hoverId = $page.state?.hoverId as number | undefined;
 			if (hoverId && hoverId !== appliedHoverId) {
@@ -246,6 +269,7 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			window.removeEventListener('namecard:open', handleNameCardOpen);
 			unsubscribe();
 		};
 	});
@@ -322,6 +346,9 @@
 
 		if (!document.startViewTransition) return;
 
+		const HOME_PROJECT_NAV_CLASS = 'vt-home-project-nav';
+		document.documentElement.classList.add(HOME_PROJECT_NAV_CLASS);
+
 		if (isHomeToProject) {
 			document.documentElement.classList.add('vt-home-to-project');
 		}
@@ -366,7 +393,19 @@
 
 				// Prevent ViewTransition promise rejections from triggering SvelteKit error recovery
 				swallowViewTransitionErrors(t);
+				const finished = (t as any).finished;
+				if (finished && typeof finished.then === 'function') {
+					finished.then(
+						() => document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS),
+						() => document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS)
+					);
+				} else {
+					window.setTimeout(() => {
+						document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS);
+					}, 1200);
+				}
 			} catch {
+				document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS);
 				if (isHomeToProject) {
 					document.documentElement.classList.remove('vt-home-to-project');
 				}
@@ -405,7 +444,7 @@
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
 		<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 vt-exclude-namecard" style="view-transition-name: left-panel">
-			<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} hasTransitionNames={panelTransitionNames} onItemClick={() => {
+			<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} hasTransitionNames={panelTransitionNames} showNameCard={showLeftPanelNameCard} onItemClick={() => {
 				// Only close menu on mobile when clicking an item
 				if (isMobileScreen) {
 					mobileMenuOpen = false;
@@ -441,8 +480,8 @@
 					Back
 				</a>
 			{:else}
-				<div class="pointer-events-auto">
-					<CategoryPills />
+				<div class="pointer-events-auto {homeNamecardInGallery ? 'px-4 py-3 bg-cream/80 backdrop-blur-md border border-walnut/10 shadow-sm' : ''}">
+					<CategoryPills cardMode={homeNamecardInGallery} />
 				</div>
 			{/if}
 		</div>

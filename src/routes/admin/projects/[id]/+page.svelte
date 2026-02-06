@@ -90,6 +90,8 @@
 	let addArtifactStep = $state<'idle' | 'pick-source'>('idle');
 	let googlePhotosConnected = $state(false);
 	let showGooglePhotosPickerModal = $state(false);
+	let dropUploading = $state(false);
+	let dropProgress = $state({ done: 0, total: 0 });
 
 	let editingArtifactIndex = $derived(
 		editingArtifactId !== null ? artifacts.findIndex((a) => a.id === editingArtifactId) : -1
@@ -489,6 +491,61 @@
 		return payload.url;
 	}
 
+	async function handleFileDrop(event: DragEvent) {
+		event.preventDefault();
+
+		const files = Array.from(event.dataTransfer?.files ?? []).filter((f) =>
+			f.type.startsWith('image/')
+		);
+		if (files.length === 0) return;
+
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to upload images.';
+			return;
+		}
+
+		dropUploading = true;
+		dropProgress = { done: 0, total: files.length };
+		addArtifactStep = 'idle';
+		pageError = '';
+
+		const created: typeof artifacts = [];
+
+		for (const file of files) {
+			try {
+				const url = await handleArtifactUpload(file);
+				const response = await fetch(`/api/projects/${projectId}/artifacts`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${token}`
+					},
+					body: JSON.stringify({
+						schema: 'image-v1',
+						dataBlob: { imageUrl: url, description: file.name },
+						isPublished: false
+					})
+				});
+
+				if (response.ok) {
+					const artifact = await response.json();
+					created.push({ ...artifact, projectId, isCover: false });
+				}
+			} catch {
+				// continue with remaining files
+			}
+			dropProgress = { done: dropProgress.done + 1, total: files.length };
+		}
+
+		dropUploading = false;
+
+		if (created.length > 0) {
+			artifacts = [...created, ...artifacts];
+			pageSuccess = `Uploaded ${created.length} image${created.length !== 1 ? 's' : ''}.`;
+		}
+	}
+
 	function startArtifactEdit(artifact: ProjectArtifact) {
 		if (!getArtifactComponent(artifact.schema, 'adminEditor')) {
 			pageError = 'Unsupported schema for editing.';
@@ -831,6 +888,47 @@
 		window.addEventListener('keydown', handleKeydown);
 		return () => window.removeEventListener('keydown', handleKeydown);
 	});
+
+	let showDropOverlay = $state(false);
+	let dragCounterRaw = 0;
+
+	function onWindowDragOver(e: DragEvent) {
+		if (addArtifactStep === 'pick-source') e.preventDefault();
+	}
+	function onWindowDragEnter(e: DragEvent) {
+		if (addArtifactStep !== 'pick-source') return;
+		e.preventDefault();
+		dragCounterRaw++;
+		showDropOverlay = true;
+	}
+	function onWindowDragLeave() {
+		if (addArtifactStep !== 'pick-source') return;
+		dragCounterRaw--;
+		if (dragCounterRaw <= 0) {
+			dragCounterRaw = 0;
+			showDropOverlay = false;
+		}
+	}
+	function onWindowDrop(e: DragEvent) {
+		if (addArtifactStep !== 'pick-source') return;
+		e.preventDefault();
+		dragCounterRaw = 0;
+		showDropOverlay = false;
+		handleFileDrop(e);
+	}
+
+	onMount(() => {
+		window.addEventListener('dragover', onWindowDragOver);
+		window.addEventListener('dragenter', onWindowDragEnter);
+		window.addEventListener('dragleave', onWindowDragLeave);
+		window.addEventListener('drop', onWindowDrop);
+		return () => {
+			window.removeEventListener('dragover', onWindowDragOver);
+			window.removeEventListener('dragenter', onWindowDragEnter);
+			window.removeEventListener('dragleave', onWindowDragLeave);
+			window.removeEventListener('drop', onWindowDrop);
+		};
+	});
 </script>
 
 <SignedIn>
@@ -979,7 +1077,12 @@
 
 			<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 				<!-- New Artifact Card -->
-				{#if addArtifactStep === 'idle'}
+				{#if dropUploading}
+					<div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-3 min-h-[160px] transition-all duration-150">
+						<div class="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-600"></div>
+						<span class="text-xs font-medium text-slate-500">{dropProgress.done} of {dropProgress.total} uploaded</span>
+					</div>
+				{:else if addArtifactStep === 'idle'}
 					<div
 						class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-3 min-h-[160px] hover:border-slate-400 hover:bg-slate-50 transition-all duration-150 cursor-pointer"
 						onclick={() => (addArtifactStep = 'pick-source')}
@@ -1463,6 +1566,18 @@
 			}}
 			onClose={() => (showGooglePhotosPickerModal = false)}
 		/>
+	{/if}
+
+	<!-- Full-page drop overlay -->
+	{#if showDropOverlay}
+		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm pointer-events-none">
+			<div class="flex flex-col items-center gap-3 rounded-2xl bg-white px-10 py-8 shadow-2xl">
+				<svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+				</svg>
+				<span class="text-sm font-medium text-slate-600">Drop images to upload</span>
+			</div>
+		</div>
 	{/if}
 </SignedIn>
 

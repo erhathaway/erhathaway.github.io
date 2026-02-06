@@ -180,6 +180,17 @@
     view-transition-name: none !important;
   }
 
+  /* When the modal owns the namecard view-transition-names, disable them on triggers
+     (left-panel header and/or home wall tile) to prevent duplicate-name errors. */
+  html.namecard-trigger-names-off .namecard-vt {
+    view-transition-name: none !important;
+  }
+
+  /* During home↔project view transitions, keep the namecard trigger out of the nav animation. */
+  html.vt-home-project-nav .namecard-vt {
+    view-transition-name: none !important;
+  }
+
   /* Root snapshot: keep UA positioning transform; disable crossfade */
   ::view-transition-group(root) {
     animation-duration: 0s !important;
