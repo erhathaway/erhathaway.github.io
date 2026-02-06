@@ -161,11 +161,16 @@
 @supports (view-transition-name: none) {
   /* Completely disable root transitions to prevent browser defaults */
   ::view-transition-group(root),
-  ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none !important;
     transform: none;
     opacity: 1;
+  }
+  /* Hide old root snapshot instantly so persistent elements don't flash */
+  ::view-transition-old(root) {
+    animation: none !important;
+    transform: none;
+    opacity: 0;
   }
 
   /* Project image morphing - the star of the show */

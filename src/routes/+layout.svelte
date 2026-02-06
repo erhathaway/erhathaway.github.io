@@ -48,36 +48,31 @@
 		};
 	});
 
-	// Enable View Transitions API
+	// Enable View Transitions API — only for home→project (image morphing)
 	onNavigate((navigation) => {
-		if (!document.startViewTransition) return;
 		const fromPath = navigation.from?.url?.pathname;
 		const toPath = navigation.to?.url?.pathname;
+
+		// Handle hover lock on project→home (no view transition needed)
+		if (fromPath?.startsWith('/project') && toPath === '/' && portfolio.hoverLockId !== null) {
+			const lockId = portfolio.hoverLockId;
+			setTimeout(() => {
+				if (portfolio.hoverLockId === lockId && portfolio.hoveredItemId === lockId) {
+					portfolio.hoveredItemId = null;
+					portfolio.hoverLockId = null;
+				}
+			}, 650);
+		}
+
+		// Only use view transitions for home→project (image morph effect)
 		const isHomeToProject = fromPath === '/' && toPath?.startsWith('/project');
-		const isProjectToProject = fromPath?.startsWith('/project') && toPath?.startsWith('/project');
+		if (!isHomeToProject || !document.startViewTransition) return;
 
-		if (isProjectToProject) {
-			return;
-		}
-
-		if (isHomeToProject) {
-			document.documentElement.classList.add('vt-home-to-project');
-		}
+		document.documentElement.classList.add('vt-home-to-project');
 
 		return new Promise((resolve) => {
 			document.startViewTransition(async () => {
-				if (isHomeToProject) {
-					document.documentElement.classList.remove('vt-home-to-project');
-				}
-				if (fromPath?.startsWith('/project') && toPath === '/' && portfolio.hoverLockId !== null) {
-					const lockId = portfolio.hoverLockId;
-					setTimeout(() => {
-						if (portfolio.hoverLockId === lockId && portfolio.hoveredItemId === lockId) {
-							portfolio.hoveredItemId = null;
-							portfolio.hoverLockId = null;
-						}
-					}, 650);
-				}
+				document.documentElement.classList.remove('vt-home-to-project');
 				resolve();
 				await navigation.complete;
 			});
@@ -123,7 +118,7 @@
 		{#if !isProjectPage}
 			<AuthButton onOpenModal={() => showLoginModal = true} />
 		{/if}
-		<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none">
+		<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-[999] xl:bottom-4 max-xl:top-4 pointer-events-none">
 			<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
 				<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
 					<a href="https://github.com" class="hover:text-copper transition-colors">GitHub</a>
