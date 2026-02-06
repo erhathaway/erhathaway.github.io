@@ -32,12 +32,14 @@
 			panelTransitionNames = false;
 			return;
 		}
-		document.startViewTransition(async () => {
+		const t = document.startViewTransition(async () => {
 			panelTransitionNames = false; // remove names from LeftPanel first
 			await tick();
 			nameCardExpanded = true;      // create modal with those names
 			await tick();
 		});
+		// Prevent unhandled ViewTransition rejections from triggering SvelteKit error recovery
+		t.finished.catch(() => {});
 	}
 
 	function collapseNameCard() {
@@ -46,12 +48,14 @@
 			panelTransitionNames = true;
 			return;
 		}
-		document.startViewTransition(async () => {
+		const t = document.startViewTransition(async () => {
 			nameCardExpanded = false;     // destroy modal first (removes names)
 			await tick();
 			panelTransitionNames = true;  // add names back to LeftPanel
 			await tick();
 		});
+		// Prevent unhandled ViewTransition rejections from triggering SvelteKit error recovery
+		t.finished.catch(() => {});
 	}
 
 	onMount(() => {

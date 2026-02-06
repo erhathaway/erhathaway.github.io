@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { projects, projectArtifacts, projectCoverArtifact, categories, projectCategories, projectAttributes } from '$lib/server/db/schema';
 import { verifyClerkAuth } from '$lib/server/auth';
 
@@ -60,6 +60,7 @@ export const GET: RequestHandler = async ({ request, locals, platform }) => {
 				})
 				.from(projectCategories)
 				.innerJoin(categories, eq(projectCategories.categoryId, categories.id))
+				.where(isAuthed ? undefined : eq(categories.isPublished, true))
 			: Promise.resolve([]),
 		projectIds.length > 0
 			? db
@@ -69,7 +70,10 @@ export const GET: RequestHandler = async ({ request, locals, platform }) => {
 					value: projectAttributes.value
 				})
 				.from(projectAttributes)
-				.where(eq(projectAttributes.showInNav, true))
+				.where(isAuthed
+					? eq(projectAttributes.showInNav, true)
+					: and(eq(projectAttributes.showInNav, true), eq(projectAttributes.isPublished, true))
+				)
 			: Promise.resolve([])
 	]);
 

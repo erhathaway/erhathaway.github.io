@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { and, eq } from 'drizzle-orm';
 import { error, json } from '@sveltejs/kit';
-import { projects } from '$lib/server/db/schema';
+import { projects, projectArtifacts, projectCoverArtifact, categories, projectCategories, projectAttributes } from '$lib/server/db/schema';
 import { verifyClerkAuth } from '$lib/server/auth';
 
 const corsHeaders = {
@@ -40,18 +40,72 @@ export const GET: RequestHandler = async ({ params, request, locals, platform })
 	const db = getDbOrThrow(locals.db);
 	const userId = await verifyClerkAuth(request, platform?.env);
 	const authUserId = locals.auth?.()?.userId ?? null;
+	const isAuthed = !!(userId || authUserId);
 	const id = parseId(params.id);
 
-	const where = userId || authUserId
+	const where = isAuthed
 		? eq(projects.id, id)
 		: and(eq(projects.id, id), eq(projects.isPublished, true));
 
-	const [row] = await db.select().from(projects).where(where);
+	const [row] = await db
+		.select({
+			id: projects.id,
+			name: projects.name,
+			displayName: projects.displayName,
+			description: projects.description,
+			isPublished: projects.isPublished,
+			coverArtifactDataBlob: projectArtifacts.dataBlob
+		})
+		.from(projects)
+		.leftJoin(projectCoverArtifact, eq(projects.id, projectCoverArtifact.projectId))
+		.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id))
+		.where(where);
+
 	if (!row) {
 		throw error(404, 'Project not found');
 	}
 
-	return json(row, { headers: corsHeaders });
+	const [catRows, attrRows] = await Promise.all([
+		db
+			.select({
+				categoryName: categories.displayName
+			})
+			.from(projectCategories)
+			.innerJoin(categories, eq(projectCategories.categoryId, categories.id))
+			.where(isAuthed
+				? eq(projectCategories.projectId, id)
+				: and(eq(projectCategories.projectId, id), eq(categories.isPublished, true))
+			),
+		db
+			.select({
+				name: projectAttributes.name,
+				value: projectAttributes.value
+			})
+			.from(projectAttributes)
+			.where(isAuthed
+				? and(eq(projectAttributes.projectId, id), eq(projectAttributes.showInNav, true))
+				: and(eq(projectAttributes.projectId, id), eq(projectAttributes.showInNav, true), eq(projectAttributes.isPublished, true))
+			)
+	]);
+
+	let coverImageUrl: string | null = null;
+	if (row.coverArtifactDataBlob) {
+		const blob = typeof row.coverArtifactDataBlob === 'string'
+			? JSON.parse(row.coverArtifactDataBlob)
+			: row.coverArtifactDataBlob;
+		coverImageUrl = blob?.imageUrl ?? null;
+	}
+
+	return json({
+		id: row.id,
+		name: row.name,
+		displayName: row.displayName,
+		description: row.description,
+		isPublished: row.isPublished,
+		coverImageUrl,
+		categories: catRows.map((r) => r.categoryName),
+		navAttributes: attrRows.map((r) => ({ name: r.name, value: r.value }))
+	}, { headers: corsHeaders });
 };
 
 export const PUT: RequestHandler = async ({ params, request, locals, platform }) => {
