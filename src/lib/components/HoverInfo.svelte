@@ -37,64 +37,53 @@
       : 'text-base text-ash leading-relaxed mb-6 vt-exclude-namecard'
   );
   const metaKeyClass = $derived.by(() =>
-    isTile ? 'text-[10px] tracking-wider uppercase' : 'text-[10px] tracking-wider uppercase text-ash'
+    isTile ? 'text-[10px] tracking-wider uppercase text-walnut' : 'text-[10px] tracking-wider uppercase text-ash'
   );
-  const metaValueClass = $derived.by(() => (isTile ? 'font-display text-base' : 'font-display text-base text-walnut'));
+  const metaValueClass = $derived.by(() => (isTile ? 'font-display text-base text-walnut' : 'font-display text-base text-walnut'));
 
-  const tileLineStyle = '-webkit-box-decoration-break: clone; box-decoration-break: clone;';
+  const tileCategoryClass = $derived.by(() =>
+    isTile
+      ? 'text-[10px] font-medium tracking-widest uppercase text-walnut mb-3 vt-exclude-namecard'
+      : 'text-[10px] font-medium tracking-widest uppercase text-copper mb-3 vt-exclude-namecard'
+  );
 </script>
 
 {#if item}
   <div class={wrapperClass}>
+    {#if isTile}
+      <div
+        class="absolute inset-0 bg-white/95"
+        style="clip-path: polygon(0% 0%, 68% 0%, 48% 100%, 0% 100%);"
+      ></div>
+    {/if}
     <div class={innerClass}>
       <div class="project-header-block text-left">
-      <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3 vt-exclude-namecard" style="view-transition-name: hover-info-category;">
-        {#if isTile}
-          <span class="inline bg-white/95 text-copper px-2 py-1" style={tileLineStyle}>
-            {item.categories.join(' · ') || 'Uncategorized'}
-          </span>
-        {:else}
+      <div class={isTile ? 'relative z-10 max-w-[72%]' : ''}>
+        <p class={tileCategoryClass} style="view-transition-name: hover-info-category;">
           {item.categories.join(' · ') || 'Uncategorized'}
-        {/if}
-      </p>
-      <h3 class={titleClass} style="view-transition-name: hover-info-title;">
-        {#if isTile}
-          <span
-            class="inline-block px-2 py-1"
-            style="{tileLineStyle} background: #1A1714; color: #F5F1EB;"
-          >
-            {item.name}
-          </span>
-        {:else}
-          {item.name}
-        {/if}
-      </h3>
-      {#if item.description?.trim()}
-        <p class={descriptionClass} style="view-transition-name: hover-info-description;">
-          {#if isTile}
-            <span class="inline bg-white/95 text-ash px-2 py-1" style={tileLineStyle}>
-              {item.description}
-            </span>
-          {:else}
-            {item.description}
-          {/if}
         </p>
-      {/if}
-      {#if item.metadata}
-        <div class="flex gap-8 vt-exclude-namecard justify-start text-left" style="view-transition-name: hover-info-meta;">
-          {#each Object.entries(item.metadata) as [key, value] (key)}
-            <div class="flex flex-col gap-1 items-start">
-              {#if isTile}
-                <span class="{metaKeyClass} inline bg-white/95 text-ash px-2 py-1" style={tileLineStyle}>{key}</span>
-                <span class="{metaValueClass} inline bg-white/95 text-walnut px-2 py-1" style={tileLineStyle}>{formatMetadata(key, value)}</span>
-              {:else}
+
+        <h3 class={titleClass} style="view-transition-name: hover-info-title;">
+          {item.name}
+        </h3>
+
+        {#if item.description?.trim()}
+          <p class={descriptionClass} style="view-transition-name: hover-info-description;">
+            {item.description}
+          </p>
+        {/if}
+
+        {#if item.metadata}
+          <div class="flex gap-8 vt-exclude-namecard justify-start text-left" style="view-transition-name: hover-info-meta;">
+            {#each Object.entries(item.metadata) as [key, value] (key)}
+              <div class="flex flex-col gap-1 items-start">
                 <span class={metaKeyClass}>{key}</span>
                 <span class={metaValueClass}>{formatMetadata(key, value)}</span>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      {/if}
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
       </div>
     </div>
   </div>
