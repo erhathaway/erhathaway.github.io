@@ -9,7 +9,7 @@
 	import { onNavigate, goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { ClerkProvider } from 'svelte-clerk';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	let { children } = $props();
 	const isProjectPage = $derived($page.route.id?.includes('/project/'));
@@ -20,6 +20,29 @@
 	// Start with menu open on screens 768px and up, closed below
 	let mobileMenuOpen = $state(true);
 	let isMobileScreen = $state(false);
+	let nameCardExpanded = $state(false);
+
+	function expandNameCard() {
+		if (!document.startViewTransition) {
+			nameCardExpanded = true;
+			return;
+		}
+		document.startViewTransition(async () => {
+			nameCardExpanded = true;
+			await tick();
+		});
+	}
+
+	function collapseNameCard() {
+		if (!document.startViewTransition) {
+			nameCardExpanded = false;
+			return;
+		}
+		document.startViewTransition(async () => {
+			nameCardExpanded = false;
+			await tick();
+		});
+	}
 
 	onMount(() => {
 		const handleResize = () => {
@@ -85,6 +108,7 @@
 	});
 </script>
 
+<svelte:window onkeydown={(e: KeyboardEvent) => { if (e.key === 'Escape' && nameCardExpanded) collapseNameCard(); }} />
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <ClerkProvider>
@@ -113,7 +137,7 @@
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
 		<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0" style="view-transition-name: left-panel">
-			<LeftPanel isMobile={isMobileScreen} onItemClick={() => {
+			<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} {nameCardExpanded} onItemClick={() => {
 				// Only close menu on mobile when clicking an item
 				if (isMobileScreen) {
 					mobileMenuOpen = false;
@@ -125,15 +149,17 @@
 				<AuthButton onOpenModal={() => showLoginModal = true} />
 			{/if}
 		</div>
-		<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none" style="view-transition-name: social-links">
-			<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
-				<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
-					<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors">GitHub</a>
-					<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors">Instagram</a>
-					<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors">Contact</a>
+		{#if !nameCardExpanded}
+			<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none" style="view-transition-name: social-links">
+				<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
+					<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
+						<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
+						<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-instagram">Instagram</a>
+						<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors" style="view-transition-name: social-link-contact">Contact</a>
+					</div>
 				</div>
 			</div>
-		</div>
+		{/if}
 		<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0" style="view-transition-name: bottom-bar">
 			{#if isProjectPage}
 				<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
@@ -152,6 +178,33 @@
 				</div>
 			{/if}
 		</div>
+		<!-- Expanded name card modal -->
+		{#if nameCardExpanded}
+			<div class="fixed inset-0 z-[300]" role="dialog" aria-modal="true">
+				<!-- Backdrop -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<div class="absolute inset-0 bg-white/85 backdrop-blur-sm" style="view-transition-name: name-card-backdrop" onclick={collapseNameCard}></div>
+				<!-- Card background that morphs from the left panel card -->
+				<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+					<div class="w-[min(500px,90vw)] pointer-events-auto rounded-sm" style="view-transition-name: name-card-bg; background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); border: 1px solid rgba(138,128,120,0.15); backdrop-filter: blur(12px);">
+						<div class="p-10 pt-12 pb-8 flex flex-col items-center text-center">
+							<span class="text-[48px] font-normal text-walnut leading-[1.2] mb-4 block" style="font-family: 'Playfair Display', Georgia, serif; view-transition-name: name-text">
+								Ethan<br>Hathaway
+							</span>
+							<p class="text-[11px] tracking-[0.32em] uppercase text-ash/80 mb-10" style="view-transition-name: subtitle-text">
+								Things I Make
+							</p>
+							<div class="flex flex-col gap-4 text-sm tracking-[0.18em] uppercase text-walnut/60">
+								<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
+								<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-instagram">Instagram</a>
+								<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors" style="view-transition-name: social-link-contact">Contact</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 		<!-- Hamburger menu button - show below md (768px) - placed last to ensure it's on top -->
 		{#if isMobileScreen}

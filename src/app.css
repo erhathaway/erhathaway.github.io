@@ -261,6 +261,85 @@
     opacity: 1;
   }
 
+  /* Name card expansion — backdrop: instant on open, fade out on close */
+  ::view-transition-group(name-card-backdrop) {
+    animation-duration: 0.5s;
+    z-index: 298;
+  }
+  ::view-transition-old(name-card-backdrop) {
+    animation: fade-out 0.5s ease-out;
+  }
+  ::view-transition-new(name-card-backdrop) {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  /* Name card expansion — name text morphs position/size */
+  ::view-transition-group(name-text) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 300;
+  }
+  ::view-transition-old(name-text) {
+    animation: none !important;
+    opacity: 0;
+  }
+  ::view-transition-new(name-text) {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  /* Name card expansion — subtitle morphs */
+  ::view-transition-group(subtitle-text) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 300;
+  }
+  ::view-transition-old(subtitle-text) {
+    animation: none !important;
+    opacity: 0;
+  }
+  ::view-transition-new(subtitle-text) {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  /* Name card expansion — background card morphs */
+  ::view-transition-group(name-card-bg) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 299;
+  }
+  ::view-transition-old(name-card-bg) {
+    animation: none !important;
+    opacity: 0;
+  }
+  ::view-transition-new(name-card-bg) {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  /* Name card expansion — individual social links morph */
+  ::view-transition-group(social-link-github),
+  ::view-transition-group(social-link-instagram),
+  ::view-transition-group(social-link-contact) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 300;
+  }
+  ::view-transition-old(social-link-github),
+  ::view-transition-old(social-link-instagram),
+  ::view-transition-old(social-link-contact) {
+    animation: none !important;
+    opacity: 0;
+  }
+  ::view-transition-new(social-link-github),
+  ::view-transition-new(social-link-instagram),
+  ::view-transition-new(social-link-contact) {
+    animation: none !important;
+    opacity: 1;
+  }
+
   /* Project image morphing - the star of the show */
   ::view-transition-old(project-image),
   ::view-transition-new(project-image) {
