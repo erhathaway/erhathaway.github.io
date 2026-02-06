@@ -204,6 +204,20 @@
     opacity: 1;
   }
 
+  /* Auth button — keep positioned but don't animate */
+  ::view-transition-group(auth-button) {
+    animation-duration: 0s !important;
+    z-index: 99;
+  }
+  ::view-transition-old(auth-button) {
+    animation: none !important;
+    opacity: 0;
+  }
+  ::view-transition-new(auth-button) {
+    animation: none !important;
+    opacity: 1;
+  }
+
   /* Social links — keep positioned but don't animate */
   ::view-transition-group(social-links) {
     animation-duration: 0s !important;
