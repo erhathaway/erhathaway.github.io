@@ -3,6 +3,8 @@ import { and, eq } from 'drizzle-orm';
 import { error, json } from '@sveltejs/kit';
 import { projects, projectArtifacts, projectCoverArtifact, categories, projectCategories, projectAttributes } from '$lib/server/db/schema';
 import { verifyClerkAuth } from '$lib/server/auth';
+import { extractR2Keys, deleteR2Objects } from '$lib/server/r2';
+import type { R2Bucket } from '@cloudflare/workers-types';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
@@ -154,10 +156,24 @@ export const DELETE: RequestHandler = async ({ params, request, locals, platform
 	}
 
 	const id = parseId(params.id);
+
+	// Collect R2 keys from all artifacts before cascade delete
+	const artifactRows = await db
+		.select({ dataBlob: projectArtifacts.dataBlob })
+		.from(projectArtifacts)
+		.where(eq(projectArtifacts.projectId, id));
+
 	const [deleted] = await db.delete(projects).where(eq(projects.id, id)).returning();
 
 	if (!deleted) {
 		throw error(404, 'Project not found');
+	}
+
+	// Clean up R2 objects after DB delete
+	const bucket = platform?.env?.ARTIFACTS as R2Bucket | undefined;
+	if (bucket && artifactRows.length > 0) {
+		const keys = artifactRows.flatMap((row) => extractR2Keys(row.dataBlob));
+		await deleteR2Objects(bucket, keys);
 	}
 
 	return json({ success: true }, { headers: corsHeaders });

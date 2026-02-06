@@ -4,6 +4,8 @@ import { error, json } from '@sveltejs/kit';
 import { projectArtifacts, projects, projectCoverArtifact } from '$lib/server/db/schema';
 import { verifyClerkAuth } from '$lib/server/auth';
 import { validateArtifactData } from '$lib/schemas/artifacts';
+import { extractR2Keys, deleteR2Objects } from '$lib/server/r2';
+import type { R2Bucket } from '@cloudflare/workers-types';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
@@ -100,6 +102,12 @@ export const PUT: RequestHandler = async ({ params, request, locals, platform })
 	await fetchProjectOrThrow(db, projectId);
 	const artifact = parseArtifact(await request.json());
 
+	// Fetch old dataBlob before update so we can clean up replaced R2 objects
+	const [oldArtifact] = await db
+		.select({ dataBlob: projectArtifacts.dataBlob })
+		.from(projectArtifacts)
+		.where(and(eq(projectArtifacts.id, artifactId), eq(projectArtifacts.projectId, projectId)));
+
 	const [updated] = await db
 		.update(projectArtifacts)
 		.set({
@@ -112,6 +120,15 @@ export const PUT: RequestHandler = async ({ params, request, locals, platform })
 
 	if (!updated) {
 		throw error(404, 'Artifact not found');
+	}
+
+	// Clean up R2 objects that are no longer referenced
+	const bucket = platform?.env?.ARTIFACTS as R2Bucket | undefined;
+	if (bucket && oldArtifact) {
+		const oldKeys = new Set(extractR2Keys(oldArtifact.dataBlob));
+		const newKeys = new Set(extractR2Keys(artifact.dataBlob));
+		const removedKeys = [...oldKeys].filter((k) => !newKeys.has(k));
+		await deleteR2Objects(bucket, removedKeys);
 	}
 
 	const [coverRow] = await db
@@ -135,7 +152,7 @@ export const DELETE: RequestHandler = async ({ params, request, locals, platform
 	await fetchProjectOrThrow(db, projectId);
 
 	const [existing] = await db
-		.select({ id: projectArtifacts.id })
+		.select({ id: projectArtifacts.id, dataBlob: projectArtifacts.dataBlob })
 		.from(projectArtifacts)
 		.where(and(eq(projectArtifacts.id, artifactId), eq(projectArtifacts.projectId, projectId)));
 
@@ -146,6 +163,13 @@ export const DELETE: RequestHandler = async ({ params, request, locals, platform
 	await db
 		.delete(projectArtifacts)
 		.where(and(eq(projectArtifacts.id, artifactId), eq(projectArtifacts.projectId, projectId)));
+
+	// Clean up R2 objects after DB delete
+	const bucket = platform?.env?.ARTIFACTS as R2Bucket | undefined;
+	if (bucket) {
+		const keys = extractR2Keys(existing.dataBlob);
+		await deleteR2Objects(bucket, keys);
+	}
 
 	return json({ success: true }, { headers: corsHeaders });
 };
