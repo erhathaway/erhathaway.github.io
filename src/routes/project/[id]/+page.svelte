@@ -42,17 +42,17 @@
         </a>
 
         <div class="project-header-block">
-          <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3" style="view-transition-name: hover-info-category;">
+          <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3 vt-exclude-namecard" style="view-transition-name: hover-info-category;">
             {item.categories.join(' · ') || 'Uncategorized'}
           </p>
-          <h1 class="font-display text-3xl font-semibold text-walnut leading-tight mb-4" style="view-transition-name: hover-info-title;">
+          <h1 class="font-display text-3xl font-semibold text-walnut leading-tight mb-4 vt-exclude-namecard" style="view-transition-name: hover-info-title;">
             {item.name}
           </h1>
-          <p class="text-base text-ash leading-relaxed mb-6" style="view-transition-name: hover-info-description;">
+          <p class="text-base text-ash leading-relaxed mb-6 vt-exclude-namecard" style="view-transition-name: hover-info-description;">
             {item.description}
           </p>
           {#if Object.keys(item.metadata).length > 0}
-            <div class="flex gap-8" style="view-transition-name: hover-info-meta;">
+            <div class="flex gap-8 vt-exclude-namecard" style="view-transition-name: hover-info-meta;">
               {#each Object.entries(item.metadata) as [key, value] (key)}
                 <div class="flex flex-col gap-1">
                   <span class="text-[10px] tracking-wider uppercase text-ash">{key}</span>
@@ -69,7 +69,7 @@
 
       <!-- Large image -->
       <div
-        class="relative aspect-[16/9] overflow-hidden rounded-lg mb-12"
+        class="relative aspect-[16/9] overflow-hidden rounded-lg mb-12 vt-exclude-namecard"
         style="view-transition-name: project-image-{item.id}"
       >
         {#if item.image}
