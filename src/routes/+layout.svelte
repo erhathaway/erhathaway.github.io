@@ -6,7 +6,7 @@
 	import LoginModal from '$lib/components/LoginModal.svelte';
 	import AuthButton from '$lib/components/AuthButton.svelte';
 	import { portfolio } from '$lib/stores/portfolio.svelte';
-	import { onNavigate } from '$app/navigation';
+	import { onNavigate, goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { onMount } from 'svelte';
@@ -48,31 +48,36 @@
 		};
 	});
 
-	// Enable View Transitions API — only for home→project (image morphing)
+	// Enable View Transitions API for home↔project navigation
 	onNavigate((navigation) => {
 		const fromPath = navigation.from?.url?.pathname;
 		const toPath = navigation.to?.url?.pathname;
-
-		// Handle hover lock on project→home (no view transition needed)
-		if (fromPath?.startsWith('/project') && toPath === '/' && portfolio.hoverLockId !== null) {
-			const lockId = portfolio.hoverLockId;
-			setTimeout(() => {
-				if (portfolio.hoverLockId === lockId && portfolio.hoveredItemId === lockId) {
-					portfolio.hoveredItemId = null;
-					portfolio.hoverLockId = null;
-				}
-			}, 650);
-		}
-
-		// Only use view transitions for home→project (image morph effect)
 		const isHomeToProject = fromPath === '/' && toPath?.startsWith('/project');
-		if (!isHomeToProject || !document.startViewTransition) return;
+		const isProjectToHome = fromPath?.startsWith('/project') && toPath === '/';
+		const isProjectToProject = fromPath?.startsWith('/project') && toPath?.startsWith('/project');
 
-		document.documentElement.classList.add('vt-home-to-project');
+		if (isProjectToProject) return;
+		if (!isHomeToProject && !isProjectToHome) return;
+		if (!document.startViewTransition) return;
+
+		if (isHomeToProject) {
+			document.documentElement.classList.add('vt-home-to-project');
+		}
 
 		return new Promise((resolve) => {
 			document.startViewTransition(async () => {
-				document.documentElement.classList.remove('vt-home-to-project');
+				if (isHomeToProject) {
+					document.documentElement.classList.remove('vt-home-to-project');
+				}
+				if (isProjectToHome && portfolio.hoverLockId !== null) {
+					const lockId = portfolio.hoverLockId;
+					setTimeout(() => {
+						if (portfolio.hoverLockId === lockId && portfolio.hoveredItemId === lockId) {
+							portfolio.hoveredItemId = null;
+							portfolio.hoverLockId = null;
+						}
+					}, 650);
+				}
 				resolve();
 				await navigation.complete;
 			});
@@ -127,13 +132,24 @@
 				</div>
 			</div>
 		</div>
-		{#if !isProjectPage}
-			<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0">
+		<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0">
+			{#if isProjectPage}
+				<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
+					event.preventDefault();
+					const projectId = $page.params?.id ? parseInt($page.params.id) : null;
+					goto('/', projectId ? { state: { hoverId: projectId } } : undefined);
+				}}>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+					</svg>
+					Back
+				</a>
+			{:else}
 				<div class="pointer-events-auto animate-slide-up" style="animation-delay: 0.3s">
 					<CategoryPills />
 				</div>
-			</div>
-		{/if}
+			{/if}
+		</div>
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 		<!-- Hamburger menu button - show below md (768px) - placed last to ensure it's on top -->
 		{#if isMobileScreen}

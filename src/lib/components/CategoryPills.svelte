@@ -14,7 +14,7 @@
   {#each categories as category (category.value)}
     <button
       class="pill px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] transition-all duration-300 text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream"
-      style="background: radial-gradient(circle at bottom right, rgba(253, 218, 130, 0.3), rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.1)); border: 1px solid rgba(160, 190, 210, 0.2);"
+      style="background: radial-gradient(circle at bottom right, rgba(253, 218, 130, 0.3), rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.1)); border: 1px solid rgba(160, 190, 210, 0.2);{portfolio.selectedCategory === category.value ? ' view-transition-name: category-back;' : ''}"
       class:active={portfolio.selectedCategory === category.value}
       onclick={() => portfolio.setCategory(category.value)}
     >
