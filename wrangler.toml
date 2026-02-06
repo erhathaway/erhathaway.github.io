@@ -5,8 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 # Enable workers.dev subdomain
 workers_dev = true
-
-# Custom domain route lives under the production env to avoid dev redirects
+route = "erhathaway.com/*"
 
 [vars]
 ENVIRONMENT = "production"
@@ -35,5 +34,3 @@ binding = "ASSETS"
 [build]
 command = "bun run build"
 
-[env.production]
-route = "erhathaway.com/*"
