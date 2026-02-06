@@ -174,19 +174,101 @@ interface PortfolioItem {
 - Client API calls should use same-origin `/api` endpoints.
 - `/api/projects` endpoints are available for CRUD; reads are public for published items.
 
-## Known Issues
+## View Transitions API
 
-### View Transitions API - Slide Effect
-When navigating from gallery to project pages, there is a persistent "slide to right" effect that occurs despite various attempts to override it with custom CSS animations. This appears to be caused by browser default view transition behavior that cannot be fully overridden.
+View transitions are enabled for home↔project navigation in `src/routes/+layout.svelte` via the `onNavigate` hook and `document.startViewTransition()`. CSS rules live in the `@supports (view-transition-name: none)` block in `src/app.css`.
 
-**Attempted Solutions:**
-- Replaced slide animations with fade-only transitions
-- Disabled root transitions entirely with `animation: none !important`
-- Set instant opacity changes instead of fade animations
-- Simplified view transition configuration to minimal setup
+### How it works
 
-**Current Status:**
-The slide effect persists even with all custom transitions disabled. The View Transitions API is enabled for the project image morphing effect, but the unwanted slide animation remains as a browser default behavior.
+`startViewTransition()` captures the **entire document** as screenshots, hides the real DOM, updates it, then swaps back. Elements with a `view-transition-name` are extracted into their own transition group and animated independently. Everything else falls into the `root` group.
 
-**Workaround:**
-To completely eliminate the slide effect, disable the View Transitions API in `src/routes/+layout.svelte` by commenting out the `onNavigate` handler. This provides instant navigation without any transitions.
+### Key problems and solutions
+
+**1. Named groups render above root — fixed elements get covered**
+
+Named transition groups (like `project-image`) stack above the `root` group by default. This means fixed UI elements (social links, category pills) that are part of `root` get hidden behind the morphing image during the transition.
+
+**Fix:** Give persistent fixed elements their own `view-transition-name` and set `z-index: 99` on their `::view-transition-group` so they render above the morphing content.
+
+**2. `animation: none` on groups breaks positioning**
+
+Setting `animation: none !important` on a `::view-transition-group` removes the browser's positioning transform, sending the element to (0, 0) — the top-left corner.
+
+**Fix:** Use `animation-duration: 0s !important` instead. This lets the positioning transform resolve instantly without removing it.
+
+**3. Fixed elements lose `position: fixed` during transitions**
+
+When a `position: fixed` element gets a `view-transition-name`, the browser extracts it into an absolutely-positioned pseudo-element relative to the viewport container. The `fixed` behavior is lost.
+
+**Fix:** This isn't an issue as long as positioning resolves correctly (see point 2). The `::view-transition-group` is positioned within a viewport-covering container, so absolute positioning gives the same result as fixed.
+
+**4. Old root snapshot causes flash on persistent elements**
+
+Both old and new root screenshots at `opacity: 1` causes a visible swap frame on elements that shouldn't change.
+
+**Fix:** Set `::view-transition-old(root)` to `opacity: 0` so only the new state renders. Persistent elements appear instantly in their new (identical) state.
+
+### Pattern for persistent fixed UI elements
+
+To keep a fixed element stable during transitions:
+
+```svelte
+<!-- In the template -->
+<div class="fixed ..." style="view-transition-name: my-element">
+```
+
+```css
+/* In app.css inside @supports (view-transition-name: none) */
+::view-transition-group(my-element) {
+  animation-duration: 0s !important;
+  z-index: 99;
+}
+::view-transition-old(my-element) {
+  animation: none !important;
+  opacity: 0;
+}
+::view-transition-new(my-element) {
+  animation: none !important;
+  opacity: 1;
+}
+```
+
+### Pattern for morphing elements (e.g., category pill → back button)
+
+To morph one element into another across pages:
+
+1. Give both elements the same `view-transition-name`
+2. Let the group animate position/size (don't set `animation-duration: 0s`)
+3. Set `z-index: 99` on the group if it needs to stay above the morphing image
+4. Hide old content instantly, show new content instantly (avoids crossfade flicker)
+
+```css
+::view-transition-group(category-back) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 99;
+}
+::view-transition-old(category-back) {
+  animation: none !important;
+  opacity: 0;
+}
+::view-transition-new(category-back) {
+  animation: none !important;
+  opacity: 1;
+}
+```
+
+### Current named transition groups
+
+| Name | Element | Behavior |
+|------|---------|----------|
+| `social-links` | Social links footer | Static, z-index 99 |
+| `bottom-bar` | Category pills / back button container | Static, z-index 99 |
+| `category-back` | Active category pill ↔ back button | Morphs over 0.4s, z-index 99 |
+| `main-content` | Main scrollable content area | Old hidden instantly, new shown instantly |
+| `project-image-{id}` | Gallery item ↔ project hero image | Position/size morph over 0.6s |
+| `hover-info-*` | Hover info text blocks | Position morph over 0.6s |
+
+### Scope
+
+View transitions only run for home→project and project→home navigation. Project→project and all other routes use standard SvelteKit client-side navigation with no view transition.

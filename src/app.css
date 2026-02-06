@@ -190,6 +190,20 @@
     opacity: 1;
   }
 
+  /* Bottom bar container — keep above morphing image */
+  ::view-transition-group(bottom-bar) {
+    animation-duration: 0s !important;
+    z-index: 99;
+  }
+  ::view-transition-old(bottom-bar) {
+    animation: none !important;
+    opacity: 0;
+  }
+  ::view-transition-new(bottom-bar) {
+    animation: none !important;
+    opacity: 1;
+  }
+
   /* Category pill ↔ back button */
   ::view-transition-group(category-back) {
     animation-duration: 0.4s;

@@ -132,7 +132,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0">
+		<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0" style="view-transition-name: bottom-bar">
 			{#if isProjectPage}
 				<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
 					event.preventDefault();
