@@ -30,6 +30,7 @@
 	let nameCardCloseMaskPhase = $state<NameCardCloseMaskPhase>('hidden');
 	let nameCardCloseMaskTimer: ReturnType<typeof setTimeout> | null = null;
 	let nameCardViewTransitionScopes = 0;
+	const NAME_CARD_CLOSE_MASK_FADE_MS = 120;
 
 	function swallowViewTransitionErrors(t: ViewTransition) {
 		// Different engines/polyfills may omit some promises (notably `updateCallbackDone`).
@@ -79,7 +80,7 @@
 		nameCardCloseMaskTimer = window.setTimeout(() => {
 			nameCardCloseMaskPhase = 'hidden';
 			nameCardCloseMaskTimer = null;
-		}, 200);
+		}, NAME_CARD_CLOSE_MASK_FADE_MS);
 	}
 
 	function beginHoverSuppression() {
@@ -382,7 +383,7 @@
 		</div>
 		{#if nameCardCloseMaskPhase !== 'hidden'}
 			<div
-				class="fixed inset-0 z-[297] pointer-events-none bg-white/85 backdrop-blur-sm transition-opacity duration-200"
+				class="fixed inset-0 z-[297] pointer-events-none bg-white/85 backdrop-blur-sm transition-opacity duration-[120ms]"
 				class:opacity-0={nameCardCloseMaskPhase === 'fading'}
 				aria-hidden="true"
 			></div>
