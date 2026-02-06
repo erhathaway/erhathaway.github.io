@@ -2,8 +2,25 @@
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import type { PortfolioItem } from '$lib/data/items';
   import { page } from '$app/stores';
+  import { onMount } from 'svelte';
 
   let { item, index = 0 }: { item: PortfolioItem; index?: number } = $props();
+  // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
+  // when it is revealed again. Disable the "entrance" animation after its first run.
+  let fadeInActive = $state(true);
+
+  function handleFadeInDone(e: AnimationEvent) {
+    if (e.target !== e.currentTarget) return;
+    if (e.animationName !== 'fadeIn') return;
+    fadeInActive = false;
+  }
+
+  onMount(() => {
+    const timer = window.setTimeout(() => {
+      fadeInActive = false;
+    }, 1200 + index * 50);
+    return () => window.clearTimeout(timer);
+  });
 
   // Check if this item is the active project
   const isActive = $derived.by(() => {
@@ -32,11 +49,14 @@
 
 <a
   href="/project/{item.id}"
-  class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {gridSpan} block animate-fade-in {isActive ? 'ring-2 ring-copper' : ''}"
+  class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {gridSpan} block {fadeInActive ? 'animate-fade-in' : ''} {isActive ? 'ring-2 ring-copper' : ''}"
   onmouseenter={handleMouseEnter}
+  onanimationend={handleFadeInDone}
+  onanimationcancel={handleFadeInDone}
   aria-label="{item.name} - {item.categories.join(', ')}"
   aria-current={isActive ? 'page' : undefined}
-  style="view-transition-name: project-image-{item.id}; animation-delay: {index * 0.05}s"
+  style="view-transition-name: project-image-{item.id};"
+  style:animation-delay={fadeInActive ? `${index * 0.05}s` : undefined}
 >
   {#if item.image}
     <img

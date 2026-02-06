@@ -26,36 +26,200 @@
 	// LeftPanel re-adds the same names — otherwise duplicate names cause InvalidStateError.
 	let panelTransitionNames = $state(true);
 
+	type NameCardCloseMaskPhase = 'hidden' | 'visible' | 'fading';
+	let nameCardCloseMaskPhase = $state<NameCardCloseMaskPhase>('hidden');
+	let nameCardCloseMaskTimer: ReturnType<typeof setTimeout> | null = null;
+	let nameCardViewTransitionScopes = 0;
+
+	function swallowViewTransitionErrors(t: ViewTransition) {
+		// Different engines/polyfills may omit some promises (notably `updateCallbackDone`).
+		// Use optional chaining to avoid throwing while trying to swallow errors.
+		try {
+			(t as any).ready?.catch?.(() => {});
+			(t as any).updateCallbackDone?.catch?.(() => {});
+			(t as any).finished?.catch?.(() => {});
+		} catch {
+			// ignore
+		}
+	}
+
+	function acquireNameCardViewTransitionScope() {
+		nameCardViewTransitionScopes += 1;
+		if (nameCardViewTransitionScopes === 1) {
+			document.documentElement.classList.add('vt-namecard');
+		}
+
+		let released = false;
+		return () => {
+			if (released) return;
+			released = true;
+
+			nameCardViewTransitionScopes -= 1;
+			if (nameCardViewTransitionScopes <= 0) {
+				nameCardViewTransitionScopes = 0;
+				document.documentElement.classList.remove('vt-namecard');
+			}
+		};
+	}
+
+	function showNameCardCloseMask() {
+		if (nameCardCloseMaskTimer) {
+			window.clearTimeout(nameCardCloseMaskTimer);
+			nameCardCloseMaskTimer = null;
+		}
+		nameCardCloseMaskPhase = 'visible';
+	}
+
+	function fadeOutNameCardCloseMask() {
+		if (nameCardCloseMaskPhase === 'hidden') return;
+		nameCardCloseMaskPhase = 'fading';
+		if (nameCardCloseMaskTimer) {
+			window.clearTimeout(nameCardCloseMaskTimer);
+		}
+		nameCardCloseMaskTimer = window.setTimeout(() => {
+			nameCardCloseMaskPhase = 'hidden';
+			nameCardCloseMaskTimer = null;
+		}, 200);
+	}
+
+	function beginHoverSuppression() {
+		if (typeof window === 'undefined') return;
+		portfolio.setHoverUpdatesSuppressed(true);
+		document.documentElement.classList.add('vt-suppress-hover');
+
+		let released = false;
+		const release = () => {
+			if (released) return;
+			released = true;
+			portfolio.setHoverUpdatesSuppressed(false);
+			document.documentElement.classList.remove('vt-suppress-hover');
+		};
+
+		return release;
+	}
+
+	function armHoverSuppressionRelease(release: (() => void) | undefined) {
+		if (typeof window === 'undefined') return;
+		if (!release) return;
+		window.addEventListener('pointermove', release, { once: true });
+		window.addEventListener('pointerdown', release, { once: true });
+		window.addEventListener('keydown', release, { once: true });
+		window.setTimeout(release, 1200);
+	}
+
 	function expandNameCard() {
 		if (!document.startViewTransition) {
 			nameCardExpanded = true;
 			panelTransitionNames = false;
 			return;
 		}
-		const t = document.startViewTransition(async () => {
-			panelTransitionNames = false; // remove names from LeftPanel first
-			await tick();
-			nameCardExpanded = true;      // create modal with those names
-			await tick();
-		});
-		// Prevent unhandled ViewTransition rejections from triggering SvelteKit error recovery
-		t.finished.catch(() => {});
+
+		const releaseNameCardScope = acquireNameCardViewTransitionScope();
+		const scopeTimeout = window.setTimeout(releaseNameCardScope, 2000);
+		try {
+			const t = document.startViewTransition(async () => {
+				try {
+					panelTransitionNames = false; // remove names from LeftPanel first
+					await tick();
+					nameCardExpanded = true; // create modal with those names
+					await tick();
+				} catch {
+					// If anything goes wrong mid-update, land in the intended end state.
+					panelTransitionNames = false;
+					nameCardExpanded = true;
+				}
+			});
+			// Prevent ViewTransition promise rejections from triggering SvelteKit error recovery
+			swallowViewTransitionErrors(t);
+			const finished = (t as any).finished;
+			if (finished && typeof finished.then === 'function') {
+				finished.then(
+					() => { window.clearTimeout(scopeTimeout); releaseNameCardScope(); },
+					() => { window.clearTimeout(scopeTimeout); releaseNameCardScope(); }
+				);
+			}
+		} catch {
+			// If a transition is already running (InvalidStateError), fall back to an instant state update.
+			window.clearTimeout(scopeTimeout);
+			releaseNameCardScope();
+			panelTransitionNames = false;
+			nameCardExpanded = true;
+		}
 	}
 
 	function collapseNameCard() {
+		// When the ViewTransition finishes, the live DOM is revealed under the current pointer
+		// position. That can fire immediate `mouseenter` handlers (gallery hover) and cause the
+		// page to "jump" right as the transition ends.
+		//
+		// 1) Suppress hover state and CSS hover effects until the user shows intent again.
+		// 2) Keep a real DOM backdrop briefly after the VT ends to mask the snapshot→live swap.
+		const releaseHoverSuppression = beginHoverSuppression();
+		showNameCardCloseMask();
+
 		if (!document.startViewTransition) {
 			nameCardExpanded = false;
 			panelTransitionNames = true;
+			armHoverSuppressionRelease(releaseHoverSuppression);
+			requestAnimationFrame(fadeOutNameCardCloseMask);
 			return;
 		}
-		const t = document.startViewTransition(async () => {
-			nameCardExpanded = false;     // destroy modal first (removes names)
-			await tick();
-			panelTransitionNames = true;  // add names back to LeftPanel
-			await tick();
-		});
-		// Prevent unhandled ViewTransition rejections from triggering SvelteKit error recovery
-		t.finished.catch(() => {});
+
+		const releaseNameCardScope = acquireNameCardViewTransitionScope();
+		const scopeTimeout = window.setTimeout(releaseNameCardScope, 2000);
+		try {
+			const t = document.startViewTransition(async () => {
+				try {
+					nameCardExpanded = false; // destroy modal first (removes names)
+					await tick();
+					panelTransitionNames = true; // add names back to LeftPanel
+					await tick();
+				} catch {
+					// If anything goes wrong mid-update, land in the intended end state.
+					nameCardExpanded = false;
+					panelTransitionNames = true;
+				}
+			});
+			// Prevent ViewTransition promise rejections from triggering SvelteKit error recovery
+			swallowViewTransitionErrors(t);
+			const finished = (t as any).finished;
+			if (finished && typeof finished.then === 'function') {
+				finished.then(
+					() => {
+						window.clearTimeout(scopeTimeout);
+						releaseNameCardScope();
+						// Let the UA do the final swap before we fade the real DOM mask.
+						requestAnimationFrame(() => {
+							armHoverSuppressionRelease(releaseHoverSuppression);
+							fadeOutNameCardCloseMask();
+						});
+					},
+					() => {
+						window.clearTimeout(scopeTimeout);
+						releaseNameCardScope();
+						requestAnimationFrame(() => {
+							armHoverSuppressionRelease(releaseHoverSuppression);
+							fadeOutNameCardCloseMask();
+						});
+					}
+				);
+			} else {
+				window.clearTimeout(scopeTimeout);
+				releaseNameCardScope();
+				requestAnimationFrame(() => {
+					armHoverSuppressionRelease(releaseHoverSuppression);
+					fadeOutNameCardCloseMask();
+				});
+			}
+		} catch {
+			// If a transition is already running (InvalidStateError), fall back to an instant state update.
+			window.clearTimeout(scopeTimeout);
+			releaseNameCardScope();
+			nameCardExpanded = false;
+			panelTransitionNames = true;
+			armHoverSuppressionRelease(releaseHoverSuppression);
+			requestAnimationFrame(fadeOutNameCardCloseMask);
+		}
 	}
 
 	onMount(() => {
@@ -102,22 +266,46 @@
 		}
 
 		return new Promise((resolve) => {
-			document.startViewTransition(async () => {
+			let resolved = false;
+			const resolveOnce = () => {
+				if (resolved) return;
+				resolved = true;
+				resolve();
+			};
+
+			try {
+				const t = document.startViewTransition(async () => {
+					try {
+						if (isHomeToProject) {
+							document.documentElement.classList.remove('vt-home-to-project');
+						}
+						if (isProjectToHome && portfolio.hoverLockId !== null) {
+							const lockId = portfolio.hoverLockId;
+							setTimeout(() => {
+								if (portfolio.hoverLockId === lockId && portfolio.hoveredItemId === lockId) {
+									portfolio.hoveredItemId = null;
+									portfolio.hoverLockId = null;
+								}
+							}, 650);
+						}
+					} finally {
+						resolveOnce();
+					}
+					try {
+						await navigation.complete;
+					} catch {
+						// ignore aborted navigations; we already resolved the hook
+					}
+				});
+
+				// Prevent ViewTransition promise rejections from triggering SvelteKit error recovery
+				swallowViewTransitionErrors(t);
+			} catch {
 				if (isHomeToProject) {
 					document.documentElement.classList.remove('vt-home-to-project');
 				}
-				if (isProjectToHome && portfolio.hoverLockId !== null) {
-					const lockId = portfolio.hoverLockId;
-					setTimeout(() => {
-						if (portfolio.hoverLockId === lockId && portfolio.hoveredItemId === lockId) {
-							portfolio.hoveredItemId = null;
-							portfolio.hoverLockId = null;
-						}
-					}, 650);
-				}
-				resolve();
-				await navigation.complete;
-			});
+				resolveOnce();
+			}
 		});
 	});
 </script>
@@ -133,7 +321,7 @@
 		<AuthButton onOpenModal={() => showLoginModal = true} />
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 	{:else}
-		<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[200]" style="view-transition-name: left-bar"></div>
+		<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[200] vt-exclude-namecard" style="view-transition-name: left-bar"></div>
 
 		<div class="font-body bg-charcoal text-cream h-screen flex ml-[12px]">
 			<!-- Left spacer only on project pages on larger screens -->
@@ -141,7 +329,7 @@
 				<div class="hidden sm:block w-80 shrink-0"></div>
 			{/if}
 			<!-- Main Content - full width for home/gallery, adjusted for project pages -->
-			<div class="{isProjectPage ? 'flex-1' : 'w-full'} h-full overflow-auto" style="view-transition-name: main-content">
+			<div class="{isProjectPage ? 'flex-1' : 'w-full'} h-full overflow-auto vt-exclude-namecard" style="view-transition-name: main-content">
 				{@render children()}
 			</div>
 		</div>
@@ -150,7 +338,7 @@
 			<div class="fixed inset-0 z-[99] pointer-events-none bg-black/10"></div>
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
-		<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0" style="view-transition-name: left-panel">
+		<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 vt-exclude-namecard" style="view-transition-name: left-panel">
 			<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} hasTransitionNames={panelTransitionNames} onItemClick={() => {
 				// Only close menu on mobile when clicking an item
 				if (isMobileScreen) {
@@ -158,13 +346,13 @@
 				}
 			}} />
 		</div>
-		<div style="view-transition-name: auth-button">
+		<div class="vt-exclude-namecard" style="view-transition-name: auth-button">
 			{#if !isProjectPage}
 				<AuthButton onOpenModal={() => showLoginModal = true} />
 			{/if}
 		</div>
 		{#if panelTransitionNames}
-			<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none" style="view-transition-name: social-links">
+			<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none vt-exclude-namecard" style="view-transition-name: social-links">
 				<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
 					<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
 						<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
@@ -174,7 +362,7 @@
 				</div>
 			</div>
 		{/if}
-		<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0" style="view-transition-name: bottom-bar">
+		<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0 vt-exclude-namecard" style="view-transition-name: bottom-bar">
 			{#if isProjectPage}
 				<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
 					event.preventDefault();
@@ -192,6 +380,13 @@
 				</div>
 			{/if}
 		</div>
+		{#if nameCardCloseMaskPhase !== 'hidden'}
+			<div
+				class="fixed inset-0 z-[297] pointer-events-none bg-white/85 backdrop-blur-sm transition-opacity duration-200"
+				class:opacity-0={nameCardCloseMaskPhase === 'fading'}
+				aria-hidden="true"
+			></div>
+		{/if}
 		<!-- Expanded name card modal -->
 		{#if nameCardExpanded}
 			<div class="fixed inset-0 z-[300]" role="dialog" aria-modal="true">

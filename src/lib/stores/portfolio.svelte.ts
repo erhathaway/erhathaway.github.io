@@ -10,6 +10,7 @@ class PortfolioStore {
   selectedCategory = $state<string | 'all'>('all');
   hoveredItemId = $state<number | null>(null);
   hoverLockId = $state<number | null>(null);
+  hoverUpdatesSuppressed = $state(false);
   projects = $state<Project[]>([]);
   categories = $state<CategoryInfo[]>([]);
   loading = $state(false);
@@ -50,6 +51,9 @@ class PortfolioStore {
   }
 
   setHoveredItem(id: number | null) {
+    if (this.hoverUpdatesSuppressed) {
+      return;
+    }
     if (this.hoverLockId !== null) {
       this.hoverLockId = null;
     }
@@ -59,6 +63,10 @@ class PortfolioStore {
   lockHover(id: number) {
     this.hoverLockId = id;
     this.hoveredItemId = id;
+  }
+
+  setHoverUpdatesSuppressed(suppressed: boolean) {
+    this.hoverUpdatesSuppressed = suppressed;
   }
 
   async loadProjects() {
