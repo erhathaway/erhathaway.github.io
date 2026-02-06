@@ -189,6 +189,24 @@ PUBLIC_R2_BASE_URL=https://<account-id>.r2.cloudflarestorage.com/portfolio-artif
 - Use `bunx wrangler dev` for local dev with D1 (Vite dev does not provide `platform.env`)
 - Generate migrations with `bun run db:generate`, apply with `bunx wrangler d1 execute portfolio-db --file=./drizzle/<migration>.sql`
 
+## Admin Route Auth
+
+Every page route under `src/routes/admin/` must have a `+page.server.ts` with a Clerk auth guard that redirects unauthenticated users:
+
+```typescript
+import { redirect } from '@sveltejs/kit';
+
+export const load = async ({ locals }) => {
+	const { userId } = locals.auth();
+	if (!userId) {
+		throw redirect(307, '/admin/sign-in');
+	}
+	return {};
+};
+```
+
+When adding a new admin page route, always create this `+page.server.ts` alongside the `+page.svelte`.
+
 ## API Notes
 
 - Client API calls should use same-origin `/api` endpoints.
