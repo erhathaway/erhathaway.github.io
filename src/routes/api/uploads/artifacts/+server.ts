@@ -77,8 +77,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		}
 	});
 
-	const baseUrl = platform?.env?.PUBLIC_R2_BASE_URL?.replace(/\/$/, '');
-	const url = baseUrl ? `${baseUrl}/${key}` : `/api/uploads/artifacts?key=${encodeURIComponent(key)}`;
+	const url = `/${key}`;
 
 	return json(
 		{

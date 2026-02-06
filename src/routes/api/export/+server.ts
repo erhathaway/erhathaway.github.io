@@ -30,15 +30,15 @@ const getDbOrThrow = (db: App.Locals['db']) => {
 	return db;
 };
 
-function extractR2Key(url: string, publicBaseUrl?: string): string | null {
-	if (publicBaseUrl) {
-		const base = publicBaseUrl.replace(/\/$/, '');
-		if (url.startsWith(base)) {
-			return url.slice(base.length + 1);
-		}
+function extractR2Key(url: string): string | null {
+	if (url.startsWith('/artifacts/')) {
+		return url.slice(1);
 	}
 	try {
 		const parsed = new URL(url, 'http://localhost');
+		if (parsed.pathname.startsWith('/artifacts/')) {
+			return parsed.pathname.slice(1);
+		}
 		if (parsed.pathname === '/api/uploads/artifacts') {
 			return parsed.searchParams.get('key');
 		}
@@ -86,7 +86,6 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			: await db.select().from(projects);
 
 	const bucket = platform?.env?.ARTIFACTS;
-	const publicBaseUrl = platform?.env?.PUBLIC_R2_BASE_URL;
 	const zip = new JSZip();
 	const imageMap = new Map<string, ArrayBuffer>();
 	const imageHashMap = new Map<string, string>();
@@ -150,7 +149,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 			// Try to fetch and include the image
 			if (artifact.schema === 'image-v1' && dataBlob.imageUrl && bucket) {
-				const key = extractR2Key(String(dataBlob.imageUrl), publicBaseUrl);
+				const key = extractR2Key(String(dataBlob.imageUrl));
 				if (key && !imageMap.has(key)) {
 					try {
 						const obj = await bucket.get(key);

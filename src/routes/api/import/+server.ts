@@ -43,15 +43,16 @@ function mimeFromExtension(ext: string): string {
 	return map[ext.toLowerCase()] ?? 'application/octet-stream';
 }
 
-function extractR2Key(url: string, publicBaseUrl?: string): string | null {
-	if (publicBaseUrl) {
-		const base = publicBaseUrl.replace(/\/$/, '');
-		if (url.startsWith(base)) {
-			return url.slice(base.length + 1);
-		}
+function extractR2Key(url: string): string | null {
+	// /artifacts/uuid.ext -> artifacts/uuid.ext
+	if (url.startsWith('/artifacts/')) {
+		return url.slice(1);
 	}
 	try {
 		const parsed = new URL(url, 'http://localhost');
+		if (parsed.pathname.startsWith('/artifacts/')) {
+			return parsed.pathname.slice(1);
+		}
 		if (parsed.pathname === '/api/uploads/artifacts') {
 			return parsed.searchParams.get('key');
 		}
@@ -73,11 +74,10 @@ async function computeSha256Hex(buffer: ArrayBuffer): Promise<string> {
 
 async function computeR2ImageHash(
 	imageUrl: string,
-	bucket: import('@cloudflare/workers-types').R2Bucket | undefined,
-	publicBaseUrl: string | undefined
+	bucket: import('@cloudflare/workers-types').R2Bucket | undefined
 ): Promise<string | null> {
 	if (!bucket) return null;
-	const key = extractR2Key(imageUrl, publicBaseUrl);
+	const key = extractR2Key(imageUrl);
 	if (!key) return null;
 	try {
 		const obj = await bucket.get(key);
@@ -102,7 +102,6 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	const db = getDbOrThrow(locals.db);
 	const bucket = platform?.env?.ARTIFACTS;
-	const publicBaseUrl = platform?.env?.PUBLIC_R2_BASE_URL?.replace(/\/$/, '');
 
 	const formData = await request.formData();
 	const file = formData.get('file');
@@ -227,14 +226,14 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			conflicts.perProject[proj.name] ?? conflicts.defaultResolution;
 
 		if (!existing) {
-			await createProject(db, proj, categoryNameToIdMap, zip, bucket, publicBaseUrl, summary);
+			await createProject(db, proj, categoryNameToIdMap, zip, bucket, summary);
 			summary.projectsCreated++;
 		} else if (resolution === 'skip') {
 			summary.projectsSkipped++;
 		} else if (resolution === 'clobber') {
 			// Delete existing (cascade handles related rows)
 			await db.delete(projects).where(eq(projects.id, existing.id));
-			await createProject(db, proj, categoryNameToIdMap, zip, bucket, publicBaseUrl, summary);
+			await createProject(db, proj, categoryNameToIdMap, zip, bucket, summary);
 			summary.projectsClobbered++;
 		} else {
 			// merge
@@ -245,7 +244,6 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 				categoryNameToIdMap,
 				zip,
 				bucket,
-				publicBaseUrl,
 				summary
 			);
 			summary.projectsMerged++;
@@ -259,7 +257,6 @@ async function uploadImage(
 	zip: JSZip,
 	localPath: string,
 	bucket: import('@cloudflare/workers-types').R2Bucket | undefined,
-	publicBaseUrl: string | undefined,
 	summary: ImportSummary
 ): Promise<string | null> {
 	if (!bucket) {
@@ -283,9 +280,7 @@ async function uploadImage(
 
 	summary.imagesUploaded++;
 
-	return publicBaseUrl
-		? `${publicBaseUrl}/${key}`
-		: `/api/uploads/artifacts?key=${encodeURIComponent(key)}`;
+	return `/${key}`;
 }
 
 async function createProject(
@@ -294,7 +289,6 @@ async function createProject(
 	categoryNameToIdMap: Map<string, number>,
 	zip: JSZip,
 	bucket: import('@cloudflare/workers-types').R2Bucket | undefined,
-	publicBaseUrl: string | undefined,
 	summary: ImportSummary
 ) {
 	const [created] = await db
@@ -340,7 +334,7 @@ async function createProject(
 		const dataBlob = { ...artifact.dataBlob };
 
 		if (artifact._localImagePath && artifact.schema === 'image-v1') {
-			const newUrl = await uploadImage(zip, artifact._localImagePath, bucket, publicBaseUrl, summary);
+			const newUrl = await uploadImage(zip, artifact._localImagePath, bucket, summary);
 			if (newUrl) {
 				dataBlob.imageUrl = newUrl;
 			}
@@ -377,7 +371,6 @@ async function mergeProject(
 	categoryNameToIdMap: Map<string, number>,
 	zip: JSZip,
 	bucket: import('@cloudflare/workers-types').R2Bucket | undefined,
-	publicBaseUrl: string | undefined,
 	summary: ImportSummary
 ) {
 	// Update project metadata
@@ -502,8 +495,7 @@ async function mergeProject(
 
 				const existingHash = await computeR2ImageHash(
 					String(blob.imageUrl),
-					bucket,
-					publicBaseUrl
+					bucket
 				);
 				if (existingHash) {
 					// Backfill hash into existing artifact for future fast lookups
@@ -534,7 +526,6 @@ async function mergeProject(
 				zip,
 				artifact._localImagePath,
 				bucket,
-				publicBaseUrl,
 				summary
 			);
 			if (newUrl) {
