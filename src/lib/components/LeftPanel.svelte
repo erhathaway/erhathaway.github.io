@@ -3,7 +3,7 @@
   import ItemList from './ItemList.svelte';
   import { page } from '$app/stores';
 
-  let { isMobile = false, onItemClick, onNameClick, nameCardExpanded = false }: { isMobile?: boolean, onItemClick?: () => void, onNameClick?: () => void, nameCardExpanded?: boolean } = $props();
+  let { isMobile = false, onItemClick, onNameClick, hasTransitionNames = true }: { isMobile?: boolean, onItemClick?: () => void, onNameClick?: () => void, hasTransitionNames?: boolean } = $props();
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
   let navEl = $state<HTMLElement | null>(null);
@@ -23,7 +23,7 @@
   <!-- Background rectangle behind name and tagline -->
   <div
     class="absolute top-0 left-0 w-[280px] h-[220px] border backdrop-blur-md z-0 {onNameClick ? 'cursor-pointer' : ''}"
-    style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); {nameCardExpanded ? '' : 'view-transition-name: name-card-bg'}"
+    style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); {hasTransitionNames ? 'view-transition-name: name-card-bg' : ''}"
     onclick={() => onNameClick?.()}
     onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }}
     role="button"
@@ -33,14 +33,14 @@
 
   <!-- Fixed Header - Always on top -->
   <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent {onNameClick ? 'cursor-pointer' : ''}" onclick={() => onNameClick?.()} onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }} role="button" tabindex={onNameClick ? 0 : -1}>
-    <span class="text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block animate-slide-up" style="animation-delay: 0.1s; font-family: 'Playfair Display', Georgia, serif; {nameCardExpanded ? '' : 'view-transition-name: name-text'}">
+    <span class="text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block animate-slide-up" style="animation-delay: 0.1s; font-family: 'Playfair Display', Georgia, serif; {hasTransitionNames ? 'view-transition-name: name-text' : ''}">
       Ethan<br>Hathaway
     </span>
   </div>
 
   <!-- Main Content Area -->
   <div class="flex-1 flex flex-col p-8 pt-4 relative z-0 min-h-0">
-    <p class="text-[11px] tracking-[0.32em] uppercase text-ash/80 animate-slide-up" style="animation-delay: 0.2s; {nameCardExpanded ? '' : 'view-transition-name: subtitle-text'}">
+    <p class="text-[11px] tracking-[0.32em] uppercase text-ash/80 animate-slide-up" style="animation-delay: 0.2s; {hasTransitionNames ? 'view-transition-name: subtitle-text' : ''}">
       Things I Make
     </p>
 

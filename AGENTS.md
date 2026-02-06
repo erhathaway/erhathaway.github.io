@@ -292,3 +292,61 @@ To morph one element into another across pages:
 ### Scope
 
 View transitions only run for home→project and project→home navigation. Project→project and all other routes use standard SvelteKit client-side navigation with no view transition.
+
+## Artifact Schema System
+
+Projects contain **artifacts** — typed content blocks (images, videos, etc.) that are rendered differently depending on context. The system is built around a registry that maps schema names to Svelte components for each rendering context.
+
+### Core concepts
+
+- **Schema definition** (`ArtifactSchemaDefinition`): a name, label, description, validator, and draft factory. Defined in `src/lib/schemas/artifacts/index.ts`.
+- **Component map** (`ArtifactComponentMap`): maps each of the 5 rendering contexts to a Svelte component. Defined per-schema (e.g. `src/lib/schemas/artifacts/image-v1/components.ts`).
+- **Component registry** (`artifactComponentRegistry`): top-level record mapping schema names to their component maps. Lives in `src/lib/schemas/artifacts/index.ts`.
+
+### Rendering contexts
+
+Each schema provides a component for every context:
+
+| Context | Purpose | Typical props |
+|---------|---------|---------------|
+| `adminEditor` | Editable form for creating/updating an artifact | `value`, `onChange`, `onUpload`, `onUploadStateChange` |
+| `adminList` | Compact read-only card in admin project artifact list | `data` |
+| `adminProjectCover` | Cover image display in admin project view | `data`, `className` |
+| `publicViewLandingPage` | Gallery rendering on the public landing page | `data` |
+| `publicViewProjectPage` | Detail rendering on a public project page | `data` |
+
+### Key files
+
+```
+src/lib/schemas/artifacts/
+├── index.ts              # Registry, schema list, getArtifactSchema(), getArtifactComponent()
+├── types.ts              # ArtifactComponentContext, ArtifactComponentMap
+└── image-v1/
+    ├── validator.ts      # ImageV1Data type, validation, draft factory
+    ├── components.ts     # Maps contexts → Editor/Viewer/AdminList/Cover components
+    ├── Editor.svelte     # adminEditor component
+    ├── Viewer.svelte     # publicViewLandingPage & publicViewProjectPage component
+    ├── AdminList.svelte  # adminList component
+    └── Cover.svelte      # adminProjectCover component
+```
+
+### Adding a new schema
+
+1. Create a new directory under `src/lib/schemas/artifacts/` (e.g. `video-v1/`)
+2. Add a `validator.ts` with the data type, validation function, and draft factory
+3. Create Svelte components for each of the 5 contexts
+4. Add a `components.ts` that exports an `ArtifactComponentMap`
+5. In `src/lib/schemas/artifacts/index.ts`:
+   - Add the schema name to the `ArtifactSchemaName` union type
+   - Create and export the schema definition
+   - Add it to the `artifactSchemas` array
+   - Add its component map to `artifactComponentRegistry`
+
+### Schema preview page
+
+The admin has a preview page at `/admin/schemas/[name]` that renders all 5 contexts for a given schema side-by-side with sample placeholder data. This is useful for visually verifying how each component looks without needing real project data.
+
+- Route: `src/routes/admin/schemas/[name]/+page.svelte`
+- Auth-gated via `+page.server.ts` (redirects to sign-in)
+- Linked from the "Schemas" section in the admin left nav (`src/routes/admin/+layout.svelte`)
+- The nav section is auto-generated from the `artifactSchemas` array, so new schemas appear automatically

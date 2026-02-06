@@ -21,14 +21,21 @@
 	let mobileMenuOpen = $state(true);
 	let isMobileScreen = $state(false);
 	let nameCardExpanded = $state(false);
+	// Separate flag controls when LeftPanel/social-links get their view-transition-names.
+	// During collapse we must destroy the modal FIRST (removing its names) before
+	// LeftPanel re-adds the same names — otherwise duplicate names cause InvalidStateError.
+	let panelTransitionNames = $state(true);
 
 	function expandNameCard() {
 		if (!document.startViewTransition) {
 			nameCardExpanded = true;
+			panelTransitionNames = false;
 			return;
 		}
 		document.startViewTransition(async () => {
-			nameCardExpanded = true;
+			panelTransitionNames = false; // remove names from LeftPanel first
+			await tick();
+			nameCardExpanded = true;      // create modal with those names
 			await tick();
 		});
 	}
@@ -36,10 +43,13 @@
 	function collapseNameCard() {
 		if (!document.startViewTransition) {
 			nameCardExpanded = false;
+			panelTransitionNames = true;
 			return;
 		}
 		document.startViewTransition(async () => {
-			nameCardExpanded = false;
+			nameCardExpanded = false;     // destroy modal first (removes names)
+			await tick();
+			panelTransitionNames = true;  // add names back to LeftPanel
 			await tick();
 		});
 	}
@@ -137,7 +147,7 @@
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
 		<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0" style="view-transition-name: left-panel">
-			<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} {nameCardExpanded} onItemClick={() => {
+			<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} hasTransitionNames={panelTransitionNames} onItemClick={() => {
 				// Only close menu on mobile when clicking an item
 				if (isMobileScreen) {
 					mobileMenuOpen = false;
@@ -149,7 +159,7 @@
 				<AuthButton onOpenModal={() => showLoginModal = true} />
 			{/if}
 		</div>
-		{#if !nameCardExpanded}
+		{#if panelTransitionNames}
 			<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none" style="view-transition-name: social-links">
 				<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
 					<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
