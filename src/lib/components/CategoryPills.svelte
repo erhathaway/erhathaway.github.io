@@ -28,7 +28,7 @@
   {#each portfolio.categories as category (category.name)}
     {@const isActive = portfolio.selectedCategory === category.displayName}
     <button
-      class="pill px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream transition-all duration-300 {!mounted && !isActive ? 'animate-slide-up' : ''}"
+      class="pill px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream transition-all duration-300 {!mounted && !isActive ? 'animate-slide-up' : ''}"
       style="{pillStyle}{isActive ? ' view-transition-name: category-back;' : ''}"
       class:active={isActive}
       onclick={() => portfolio.setCategory(category.displayName)}

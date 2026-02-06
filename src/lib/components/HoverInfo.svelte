@@ -53,7 +53,7 @@
     {#if isTile}
       <div
         class="absolute inset-0 bg-white/95"
-        style="clip-path: polygon(0% 0%, 68% 0%, 48% 100%, 0% 100%);"
+        style="clip-path: polygon(0% 0%, 60% 0%, 44% 100%, 0% 100%);"
       ></div>
     {/if}
     <div class={innerClass}>
