@@ -491,61 +491,6 @@
 		return payload.url;
 	}
 
-	async function handleFileDrop(event: DragEvent) {
-		event.preventDefault();
-
-		const files = Array.from(event.dataTransfer?.files ?? []).filter((f) =>
-			f.type.startsWith('image/')
-		);
-		if (files.length === 0) return;
-
-		const token = await getToken();
-		if (!token) {
-			pageError = 'Sign in to upload images.';
-			return;
-		}
-
-		dropUploading = true;
-		dropProgress = { done: 0, total: files.length };
-		addArtifactStep = 'idle';
-		pageError = '';
-
-		const created: typeof artifacts = [];
-
-		for (const file of files) {
-			try {
-				const url = await handleArtifactUpload(file);
-				const response = await fetch(`/api/projects/${projectId}/artifacts`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: `Bearer ${token}`
-					},
-					body: JSON.stringify({
-						schema: 'image-v1',
-						dataBlob: { imageUrl: url, description: file.name },
-						isPublished: false
-					})
-				});
-
-				if (response.ok) {
-					const artifact = await response.json();
-					created.push({ ...artifact, projectId, isCover: false });
-				}
-			} catch {
-				// continue with remaining files
-			}
-			dropProgress = { done: dropProgress.done + 1, total: files.length };
-		}
-
-		dropUploading = false;
-
-		if (created.length > 0) {
-			artifacts = [...created, ...artifacts];
-			pageSuccess = `Uploaded ${created.length} image${created.length !== 1 ? 's' : ''}.`;
-		}
-	}
-
 	function startArtifactEdit(artifact: ProjectArtifact) {
 		if (!getArtifactComponent(artifact.schema, 'adminEditor')) {
 			pageError = 'Unsupported schema for editing.';
@@ -889,35 +834,139 @@
 		return () => window.removeEventListener('keydown', handleKeydown);
 	});
 
-	let showDropOverlay = $state(false);
-	let dragCounterRaw = 0;
-</script>
-
-<svelte:document
-	ondragover={(e) => {
-		if (e.dataTransfer?.types.includes('Files')) e.preventDefault();
-	}}
-	ondragenter={(e) => {
-		if (!e.dataTransfer?.types.includes('Files')) return;
-		e.preventDefault();
-		dragCounterRaw++;
-		showDropOverlay = true;
-	}}
-	ondragleave={() => {
-		dragCounterRaw--;
-		if (dragCounterRaw <= 0) {
-			dragCounterRaw = 0;
-			showDropOverlay = false;
+	onMount(() => {
+		function onFileDrop(e: Event) {
+			const files = (e as CustomEvent).detail?.files as FileList | undefined;
+			if (files && files.length > 0) {
+				const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
+				if (imageFiles.length === 0) return;
+				handleFileDropFromList(imageFiles);
+			}
 		}
-	}}
-	ondrop={(e) => {
-		if (!e.dataTransfer?.types.includes('Files')) return;
-		e.preventDefault();
-		dragCounterRaw = 0;
-		showDropOverlay = false;
-		handleFileDrop(e);
-	}}
-/>
+		function onImageUrlDrop(e: Event) {
+			const url = (e as CustomEvent).detail?.url as string | undefined;
+			if (url) handleImageUrlDrop(url);
+		}
+		function onDropError(e: Event) {
+			pageError = (e as CustomEvent).detail?.message ?? 'Drop failed.';
+		}
+		window.addEventListener('admin-file-drop', onFileDrop);
+		window.addEventListener('admin-image-url-drop', onImageUrlDrop);
+		window.addEventListener('admin-drop-error', onDropError);
+		return () => {
+			window.removeEventListener('admin-file-drop', onFileDrop);
+			window.removeEventListener('admin-image-url-drop', onImageUrlDrop);
+			window.removeEventListener('admin-drop-error', onDropError);
+		};
+	});
+
+	async function handleImageUrlDrop(imageUrl: string) {
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to upload images.';
+			return;
+		}
+
+		dropUploading = true;
+		dropProgress = { done: 0, total: 1 };
+		addArtifactStep = 'idle';
+		pageError = '';
+
+		try {
+			// Use server-side proxy to fetch the image (bypasses CORS)
+			const uploadResponse = await fetch('/api/uploads/artifacts/from-url', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({ url: imageUrl })
+			});
+
+			if (!uploadResponse.ok) {
+				const err = await uploadResponse.json().catch(() => null);
+				throw new Error(err?.message || `Upload failed (${uploadResponse.status})`);
+			}
+
+			const { url } = await uploadResponse.json();
+
+			const artifactResponse = await fetch(`/api/projects/${projectId}/artifacts`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					schema: 'image-v1',
+					dataBlob: { imageUrl: url, description: imageUrl.split('/').pop()?.split('?')[0] || 'image' },
+					isPublished: false
+				})
+			});
+
+			if (artifactResponse.ok) {
+				const artifact = await artifactResponse.json();
+				artifacts = [{ ...artifact, projectId, isCover: false }, ...artifacts];
+				pageSuccess = 'Uploaded 1 image.';
+			} else {
+				pageError = 'Failed to create artifact.';
+			}
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : '';
+			pageError = msg || 'Can\'t import from that URL. Drag from desktop, use the upload button, or copy the image and paste (Cmd+V).';
+		}
+
+		dropProgress = { done: 1, total: 1 };
+		dropUploading = false;
+	}
+
+	async function handleFileDropFromList(files: File[]) {
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to upload images.';
+			return;
+		}
+
+		dropUploading = true;
+		dropProgress = { done: 0, total: files.length };
+		addArtifactStep = 'idle';
+		pageError = '';
+
+		const created: typeof artifacts = [];
+
+		for (const file of files) {
+			try {
+				const url = await handleArtifactUpload(file);
+				const response = await fetch(`/api/projects/${projectId}/artifacts`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${token}`
+					},
+					body: JSON.stringify({
+						schema: 'image-v1',
+						dataBlob: { imageUrl: url, description: file.name },
+						isPublished: false
+					})
+				});
+
+				if (response.ok) {
+					const artifact = await response.json();
+					created.push({ ...artifact, projectId, isCover: false });
+				}
+			} catch {
+				// continue with remaining files
+			}
+			dropProgress = { done: dropProgress.done + 1, total: files.length };
+		}
+
+		dropUploading = false;
+
+		if (created.length > 0) {
+			artifacts = [...created, ...artifacts];
+			pageSuccess = `Uploaded ${created.length} image${created.length !== 1 ? 's' : ''}.`;
+		}
+	}
+</script>
 
 <SignedIn>
 	{#if pageLoading}
@@ -1260,6 +1309,11 @@
 							onChange={handleArtifactDraftChange}
 							onUpload={handleArtifactUpload}
 							onUploadStateChange={handleArtifactUploadStateChange}
+							{googlePhotosConnected}
+							onGooglePhotosPick={() => {
+								showCreateArtifactModal = false;
+								showGooglePhotosPickerModal = true;
+							}}
 						/>
 					{/if}
 					{#if artifactDraftErrors.length > 0 || artifactUploadState.error}
@@ -1423,6 +1477,11 @@
 							onChange={handleEditArtifactDraftChange}
 							onUpload={handleArtifactUpload}
 							onUploadStateChange={handleEditArtifactUploadStateChange}
+							{googlePhotosConnected}
+							onGooglePhotosPick={() => {
+								cancelArtifactEdit();
+								showGooglePhotosPickerModal = true;
+							}}
 						/>
 					{/if}
 					{#if editArtifactErrors.length > 0 || editArtifactUploadState.error}
@@ -1556,17 +1615,6 @@
 		/>
 	{/if}
 
-	<!-- Full-page drop overlay -->
-	{#if showDropOverlay}
-		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm pointer-events-none">
-			<div class="flex flex-col items-center gap-3 rounded-2xl bg-white px-10 py-8 shadow-2xl">
-				<svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-				</svg>
-				<span class="text-sm font-medium text-slate-600">Drop images to upload</span>
-			</div>
-		</div>
-	{/if}
 </SignedIn>
 
 <SignedOut>

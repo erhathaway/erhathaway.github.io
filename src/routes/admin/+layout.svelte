@@ -19,6 +19,7 @@
 	let navError = $state('');
 	let navSuccess = $state('');
 	let googlePhotosConnected = $state(false);
+	let mainDragOver = $state(false);
 
 	let newCategoryName = $state('');
 	let newCategoryDisplayName = $state('');
@@ -372,6 +373,17 @@
 		if (isSignedIn) {
 			void loadNavData();
 		}
+
+		function onDragActive() {
+			mainDragOver = true;
+		}
+		function onDragInactive() { mainDragOver = false; }
+		window.addEventListener('admin-drag-active', onDragActive);
+		window.addEventListener('admin-drag-inactive', onDragInactive);
+		return () => {
+			window.removeEventListener('admin-drag-active', onDragActive);
+			window.removeEventListener('admin-drag-inactive', onDragInactive);
+		};
 	});
 </script>
 
@@ -555,10 +567,20 @@
 			{/if}
 		</aside>
 
-		<main class="flex-1 min-w-0 overflow-y-auto">
+		<main class="flex-1 min-w-0 overflow-y-auto relative">
 			<div class="px-6 sm:px-10 py-8 min-h-full">
 				{@render children()}
 			</div>
+			{#if mainDragOver}
+				<div class="absolute inset-0 z-[999] flex items-center justify-center bg-black/20 backdrop-blur-sm pointer-events-none">
+					<div class="flex flex-col items-center gap-3 rounded-2xl bg-white px-10 py-8 shadow-2xl">
+						<svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+						</svg>
+						<span class="text-sm font-medium text-slate-600">Drop to upload</span>
+					</div>
+				</div>
+			{/if}
 		</main>
 	</div>
 </div>

@@ -2,6 +2,8 @@
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import GalleryItem from './GalleryItem.svelte';
   import { env } from '$env/dynamic/public';
+  import { browser } from '$app/environment';
+  import { page } from '$app/stores';
 
   function handleGalleryLeave() {
     portfolio.setHoveredItem(null);
@@ -67,6 +69,22 @@
         hoverInfoInWall={homeNamecardInGallery}
       />
     {/each}
+    {#if browser && $page.url.pathname === '/'}
+      <div class="col-span-3">
+        <div
+          class="relative overflow-hidden border backdrop-blur-md"
+          style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08));"
+        >
+          <div class="px-8 py-6 flex items-center justify-center">
+            <div class="flex gap-10 text-sm tracking-[0.18em] uppercase text-walnut/70">
+              <a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors">GitHub</a>
+              <a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors">Instagram</a>
+              <a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors">Contact</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {/if}
   </div>
   <div class="h-[50vh] flex items-start justify-center px-8">
     {#if portfolio.selectedCategory !== 'all' && hiddenCount > 0}
