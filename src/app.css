@@ -176,6 +176,34 @@
     opacity: 0;
   }
 
+  /* Left bar — keep positioned but don't animate */
+  ::view-transition-group(left-bar) {
+    animation-duration: 0s !important;
+    z-index: 99;
+  }
+  ::view-transition-old(left-bar) {
+    animation: none !important;
+    opacity: 0;
+  }
+  ::view-transition-new(left-bar) {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  /* Left panel — keep positioned but don't animate */
+  ::view-transition-group(left-panel) {
+    animation-duration: 0s !important;
+    z-index: 99;
+  }
+  ::view-transition-old(left-panel) {
+    animation: none !important;
+    opacity: 0;
+  }
+  ::view-transition-new(left-panel) {
+    animation: none !important;
+    opacity: 1;
+  }
+
   /* Social links — keep positioned but don't animate */
   ::view-transition-group(social-links) {
     animation-duration: 0s !important;

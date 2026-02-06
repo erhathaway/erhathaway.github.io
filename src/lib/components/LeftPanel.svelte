@@ -25,8 +25,8 @@
 
 
   <!-- Fixed Header - Always on top -->
-  <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent" style="view-transition-name: header-name">
-    <a href="/" class="text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block animate-slide-up" style="animation-delay: 0.1s; view-transition-name: site-name; font-family: 'Times New Roman', Times, serif;">
+  <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent">
+    <a href="/" class="text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block animate-slide-up" style="animation-delay: 0.1s; font-family: 'Times New Roman', Times, serif;">
       Ethan<br>Hathaway
     </a>
   </div>
