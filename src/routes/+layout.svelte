@@ -445,14 +445,16 @@
 			<div class="fixed inset-0 z-[99] pointer-events-none bg-black/10"></div>
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
-		<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 vt-exclude-namecard" style="view-transition-name: left-panel">
-			<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} hasTransitionNames={panelTransitionNames} showNameCard={showLeftPanelNameCard} onItemClick={() => {
-				// Only close menu on mobile when clicking an item
-				if (isMobileScreen) {
-					mobileMenuOpen = false;
-				}
-			}} hoverInfoInWall={homeCardMode} bottomAlignNav={homeCardMode} />
-		</div>
+		{#if !isHomePage}
+			<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 vt-exclude-namecard" style="view-transition-name: left-panel">
+				<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} hasTransitionNames={panelTransitionNames} showNameCard={showLeftPanelNameCard} onItemClick={() => {
+					// Only close menu on mobile when clicking an item
+					if (isMobileScreen) {
+						mobileMenuOpen = false;
+					}
+				}} hoverInfoInWall={homeCardMode} bottomAlignNav={homeCardMode} />
+			</div>
+		{/if}
 		<div class="vt-exclude-namecard" style="view-transition-name: auth-button">
 			{#if !isProjectPage}
 				<AuthButton onOpenModal={() => showLoginModal = true} />
@@ -471,7 +473,7 @@
 		{/if}
 		<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0 vt-exclude-namecard" style="view-transition-name: bottom-bar">
 			{#if isProjectPage}
-				<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[3px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
+				<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
 					event.preventDefault();
 					const projectId = $page.params?.id ? parseInt($page.params.id) : null;
 					goto('/', projectId ? { state: { hoverId: projectId } } : undefined);
@@ -482,7 +484,7 @@
 					Back
 				</a>
 			{:else}
-				<div class="pointer-events-auto {homeCardMode ? 'px-0 py-0 bg-cream/85 backdrop-blur-md' : ''}">
+				<div class="pointer-events-auto rounded-[1px] {homeCardMode ? 'px-0 py-0 bg-cream/85 backdrop-blur-md' : ''}">
 					<CategoryPills cardMode={homeCardMode} />
 				</div>
 			{/if}
