@@ -61,7 +61,7 @@
       </button>
     {/if}
     {#each portfolio.filteredItems as item, index (item.id)}
-      <GalleryItem {item} index={homeNamecardInGallery ? index + 1 : index} />
+      <GalleryItem {item} index={homeNamecardInGallery ? index + 1 : index} hoverInfoInWall={homeNamecardInGallery} />
     {/each}
   </div>
   <div class="h-[50vh] flex items-start justify-center px-8">

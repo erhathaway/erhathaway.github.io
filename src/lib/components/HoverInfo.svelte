@@ -1,16 +1,30 @@
 <script lang="ts">
   import type { PortfolioItem } from '$lib/data/items';
 
-  let { item }: { item: PortfolioItem } = $props();
+  let { item, variant = 'inline' }: { item: PortfolioItem; variant?: 'inline' | 'tile' } = $props();
 
   function formatMetadata(key: string, value: string): string {
     return value;
   }
+
+  const wrapperClass = $derived.by(() => {
+    if (variant === 'tile') {
+      return 'w-full h-full bg-cream text-walnut flex items-center';
+    }
+    return 'hover-inline-card text-walnut py-12 flex items-center';
+  });
+
+  const innerClass = $derived.by(() => {
+    if (variant === 'tile') {
+      return 'w-full px-7 py-8';
+    }
+    return 'hover-inline-inner w-full';
+  });
 </script>
 
 {#if item}
-  <div class="hover-inline-card text-walnut py-12 flex items-center">
-    <div class="hover-inline-inner w-full">
+  <div class={wrapperClass}>
+    <div class={innerClass}>
       <div class="project-header-block">
       <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3 vt-exclude-namecard" style="view-transition-name: hover-info-category;">
         {item.categories.join(' · ') || 'Uncategorized'}

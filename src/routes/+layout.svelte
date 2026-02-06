@@ -15,6 +15,7 @@
 	let { children } = $props();
 	const isProjectPage = $derived($page.route.id?.includes('/project/'));
 	const isAdminPage = $derived($page.route.id?.includes('/admin'));
+	const isHomePage = $derived($page.url.pathname === '/');
 
 	let appliedHoverId: number | null = null;
 	let showLoginModal = $state(false);
@@ -32,6 +33,7 @@
 		const value = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
 		return value === '1' || value === 'true' || value === 'yes' || value === 'on';
 	})();
+	const homeCardMode = $derived(isHomePage && homeNamecardInGallery);
 	const showLeftPanelNameCard = $derived(isProjectPage || !homeNamecardInGallery);
 	const NAME_CARD_TRIGGER_NAMES_OFF_CLASS = 'namecard-trigger-names-off';
 
@@ -449,7 +451,7 @@
 				if (isMobileScreen) {
 					mobileMenuOpen = false;
 				}
-			}} />
+			}} hoverInfoInWall={homeCardMode} />
 		</div>
 		<div class="vt-exclude-namecard" style="view-transition-name: auth-button">
 			{#if !isProjectPage}
@@ -480,8 +482,8 @@
 					Back
 				</a>
 			{:else}
-				<div class="pointer-events-auto {homeNamecardInGallery ? 'px-0 py-0 bg-cream/85 backdrop-blur-md' : ''}">
-					<CategoryPills cardMode={homeNamecardInGallery} />
+				<div class="pointer-events-auto {homeCardMode ? 'px-0 py-0 bg-cream/85 backdrop-blur-md' : ''}">
+					<CategoryPills cardMode={homeCardMode} />
 				</div>
 			{/if}
 		</div>

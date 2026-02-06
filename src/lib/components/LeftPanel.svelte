@@ -4,7 +4,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
 
-  let { isMobile = false, onItemClick, onNameClick, hasTransitionNames = true, showNameCard = true }: { isMobile?: boolean, onItemClick?: () => void, onNameClick?: () => void, hasTransitionNames?: boolean, showNameCard?: boolean } = $props();
+  let { isMobile = false, onItemClick, onNameClick, hasTransitionNames = true, showNameCard = true, hoverInfoInWall = false }: { isMobile?: boolean, onItemClick?: () => void, onNameClick?: () => void, hasTransitionNames?: boolean, showNameCard?: boolean, hoverInfoInWall?: boolean } = $props();
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
   let navEl = $state<HTMLElement | null>(null);
@@ -93,7 +93,7 @@
       onanimationcancel={handleSlideUpDone}
       {@attach storeNav}
     >
-      <ItemList scrollContainer={navEl} onItemClick={onItemClick} />
+      <ItemList scrollContainer={navEl} onItemClick={onItemClick} hoverInfoInWall={hoverInfoInWall} />
 
       <!-- Admin Link (scrolls with content) -->
     </nav>

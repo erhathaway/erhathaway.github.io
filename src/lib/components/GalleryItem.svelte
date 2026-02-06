@@ -3,8 +3,9 @@
   import type { PortfolioItem } from '$lib/data/items';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+  import HoverInfo from './HoverInfo.svelte';
 
-  let { item, index = 0 }: { item: PortfolioItem; index?: number } = $props();
+  let { item, index = 0, hoverInfoInWall = false }: { item: PortfolioItem; index?: number; hoverInfoInWall?: boolean } = $props();
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animation after its first run.
   let fadeInActive = $state(true);
@@ -43,7 +44,14 @@
 
   function handleMouseEnter() {
     portfolio.setHoveredItem(item.id);
+    try {
+      window.dispatchEvent(new CustomEvent('portfolio:hover', { detail: { id: item.id } }));
+    } catch {
+      // ignore
+    }
   }
+
+  const isHovered = $derived.by(() => portfolio.hoveredItemId === item.id);
 
 </script>
 
@@ -71,5 +79,11 @@
   <span class="item-number absolute bottom-4 left-4 font-display text-sm {isActive ? 'text-copper' : 'text-white/60'} z-10">
     {item.id.toString().padStart(2, '0')}
   </span>
+
+  {#if hoverInfoInWall && isHovered}
+    <div class="absolute inset-0 z-20 pointer-events-none">
+      <HoverInfo item={item} variant="tile" />
+    </div>
+  {/if}
 
 </a>

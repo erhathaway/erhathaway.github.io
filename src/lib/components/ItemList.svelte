@@ -2,17 +2,13 @@
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { page } from '$app/stores';
   import HoverInfo from './HoverInfo.svelte';
+  import { onMount } from 'svelte';
 
-  let { scrollContainer, onItemClick }: { scrollContainer: HTMLElement | null, onItemClick?: () => void } = $props();
+  let { scrollContainer, onItemClick, hoverInfoInWall = false }: { scrollContainer: HTMLElement | null, onItemClick?: () => void, hoverInfoInWall?: boolean } = $props();
 
   const hoveredItem = $derived(portfolio.hoveredItem);
   let itemEls = $state<Record<number, HTMLElement | null>>({});
   let itemScales = $state<Record<number, number>>({});
-  let hasOverflowTop = $state(false);
-  let hasOverflowBottom = $state(false);
-  let isInitialized = $state(false);
-  let isMouseNear = $state(false);
-  let backgroundRecalcInterval: number | null = null;
 
   // Get the active project ID from the URL
   const activeProjectId = $derived.by(() => {
@@ -42,8 +38,8 @@
     const containerHeight = containerRect.height;
 
     // Check for overflow
-    hasOverflowTop = scrollContainer.scrollTop > 0;
-    hasOverflowBottom = scrollContainer.scrollHeight > scrollContainer.clientHeight + scrollContainer.scrollTop;
+    const hasOverflowTop = scrollContainer.scrollTop > 0;
+    const hasOverflowBottom = scrollContainer.scrollHeight > scrollContainer.clientHeight + scrollContainer.scrollTop;
 
     // Only apply scaling if there's overflow
     if (!hasOverflowTop && !hasOverflowBottom) {
@@ -90,136 +86,67 @@
     });
   }
 
-  // Setup scroll and event listeners
-  $effect(() => {
+  function scrollToItem(id: number) {
     if (!scrollContainer) return;
-
-    const handleScroll = () => {
-      requestAnimationFrame(() => {
-        updateItemScales();
-      });
-    };
-
-    scrollContainer.addEventListener('scroll', handleScroll);
-
-    // Also update on window resize
-    const handleResize = () => requestAnimationFrame(updateItemScales);
-    window.addEventListener('resize', handleResize);
-
-    // Update scales when mouse enters the container
-    const handleMouseEnter = () => {
-      isMouseNear = true;
-      requestAnimationFrame(updateItemScales);
-    };
-    scrollContainer.addEventListener('mouseenter', handleMouseEnter);
-
-    // Track when mouse leaves the container
-    const handleMouseLeave = () => {
-      isMouseNear = false;
-    };
-    scrollContainer.addEventListener('mouseleave', handleMouseLeave);
-
-    // Track mouse proximity to the container (within 100px)
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = scrollContainer.getBoundingClientRect();
-      const buffer = 100; // pixels
-
-      const nearContainer =
-        e.clientX >= rect.left - buffer &&
-        e.clientX <= rect.right + buffer &&
-        e.clientY >= rect.top - buffer &&
-        e.clientY <= rect.bottom + buffer;
-
-      isMouseNear = nearContainer;
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      scrollContainer.removeEventListener('scroll', handleScroll);
-      scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
-      scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('resize', handleResize);
-    };
-  });
-
-  // Initial calculation - run once when container is ready
-  $effect(() => {
-    if (!scrollContainer || isInitialized) return;
-
-    // Mark as initialized to prevent re-runs
-    isInitialized = true;
-
-    // Initial calculations with delays to ensure DOM is ready
-    updateItemScales();
-    setTimeout(updateItemScales, 10);
-    setTimeout(updateItemScales, 50);
-    setTimeout(updateItemScales, 150);
-    setTimeout(updateItemScales, 300);
-    setTimeout(updateItemScales, 600);
-    setTimeout(updateItemScales, 1000);
-  });
-
-  // Background recalculation when mouse is not near
-  $effect(() => {
-    if (!scrollContainer) return;
-
-    // Start or stop background recalculation based on mouse proximity
-    if (!isMouseNear && !backgroundRecalcInterval) {
-      // Immediate recalculation when starting background mode
-      requestAnimationFrame(updateItemScales);
-
-      // Start periodic recalculation every 500ms when mouse is away
-      backgroundRecalcInterval = window.setInterval(() => {
-        // Only recalculate if mouse is still away
-        if (!isMouseNear) {
-          requestAnimationFrame(updateItemScales);
-        }
-      }, 500);
-    } else if (isMouseNear && backgroundRecalcInterval) {
-      // Stop background recalculation when mouse is near
-      window.clearInterval(backgroundRecalcInterval);
-      backgroundRecalcInterval = null;
-    }
-
-    return () => {
-      if (backgroundRecalcInterval) {
-        window.clearInterval(backgroundRecalcInterval);
-        backgroundRecalcInterval = null;
-      }
-    };
-  });
-
-  // Recalculate when filtered items change
-  $effect(() => {
-    // Trigger on filteredItems change
-    const itemCount = portfolio.filteredItems.length;
-    if (scrollContainer && itemCount > 0) {
-      // Delay to allow DOM updates
-      setTimeout(() => {
-        requestAnimationFrame(updateItemScales);
-      }, 100);
-    }
-  });
-
-  // Scroll to center the hovered item in the visible portion
-  $effect(() => {
-    const id = hoveredItem?.id;
-    if (!id || !scrollContainer) return;
     const node = itemEls[id];
     if (!node) return;
 
-    // Calculate the center position
     const containerHeight = scrollContainer.clientHeight;
     const itemTop = node.offsetTop;
     const itemHeight = node.offsetHeight;
-    const scrollTarget = itemTop - (containerHeight / 2) + (itemHeight / 2);
+    const scrollTarget = itemTop - containerHeight / 2 + itemHeight / 2;
 
-    // Smooth scroll to center
     scrollContainer.scrollTo({
       top: Math.max(0, scrollTarget),
       behavior: 'smooth'
     });
+  }
+
+  onMount(() => {
+    let attachedTo: HTMLElement | null = null;
+    let rafId: number | null = null;
+
+    const handleScroll = () => requestAnimationFrame(updateItemScales);
+    const handleResize = () => requestAnimationFrame(updateItemScales);
+
+    const handlePortfolioHover = (event: Event) => {
+      const id = (event as CustomEvent<{ id?: number }>).detail?.id;
+      if (!id) return;
+      scrollToItem(id);
+    };
+
+    window.addEventListener('portfolio:hover', handlePortfolioHover as EventListener);
+
+    const attach = (el: HTMLElement) => {
+      attachedTo = el;
+      el.addEventListener('scroll', handleScroll);
+      window.addEventListener('resize', handleResize);
+
+      updateItemScales();
+      setTimeout(updateItemScales, 50);
+      setTimeout(updateItemScales, 250);
+    };
+
+    const detach = (el: HTMLElement) => {
+      el.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+
+    const tickAttach = () => {
+      if (scrollContainer && scrollContainer !== attachedTo) {
+        if (attachedTo) detach(attachedTo);
+        attach(scrollContainer);
+      }
+      rafId = requestAnimationFrame(tickAttach);
+    };
+
+    tickAttach();
+
+    return () => {
+      window.removeEventListener('portfolio:hover', handlePortfolioHover as EventListener);
+      if (rafId) cancelAnimationFrame(rafId);
+      if (attachedTo) detach(attachedTo);
+    };
   });
 </script>
 
@@ -238,8 +165,8 @@
         onclick={() => onItemClick?.()}
       >
         <div class="item-content-wrapper">
-          {#if isHovered}
-            <HoverInfo item={item} />
+          {#if isHovered && !hoverInfoInWall}
+            <HoverInfo item={item} variant="inline" />
           {:else}
             <span
               class="item-label block px-8"
