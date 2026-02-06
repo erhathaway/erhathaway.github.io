@@ -191,11 +191,13 @@
     animation-duration: 0.4s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
-  ::view-transition-old(category-back),
+  ::view-transition-old(category-back) {
+    animation: none !important;
+    opacity: 0;
+  }
   ::view-transition-new(category-back) {
-    mix-blend-mode: normal;
-    height: 100%;
-    overflow: clip;
+    animation: none !important;
+    opacity: 1;
   }
 
   /* Project image morphing - the star of the show */

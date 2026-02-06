@@ -145,7 +145,7 @@
 					Back
 				</a>
 			{:else}
-				<div class="pointer-events-auto animate-slide-up" style="animation-delay: 0.3s">
+				<div class="pointer-events-auto">
 					<CategoryPills />
 				</div>
 			{/if}
