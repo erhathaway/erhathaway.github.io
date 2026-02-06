@@ -891,45 +891,33 @@
 
 	let showDropOverlay = $state(false);
 	let dragCounterRaw = 0;
+</script>
 
-	function onWindowDragOver(e: DragEvent) {
-		if (addArtifactStep === 'pick-source') e.preventDefault();
-	}
-	function onWindowDragEnter(e: DragEvent) {
-		if (addArtifactStep !== 'pick-source') return;
+<svelte:document
+	ondragover={(e) => {
+		if (e.dataTransfer?.types.includes('Files')) e.preventDefault();
+	}}
+	ondragenter={(e) => {
+		if (!e.dataTransfer?.types.includes('Files')) return;
 		e.preventDefault();
 		dragCounterRaw++;
 		showDropOverlay = true;
-	}
-	function onWindowDragLeave() {
-		if (addArtifactStep !== 'pick-source') return;
+	}}
+	ondragleave={() => {
 		dragCounterRaw--;
 		if (dragCounterRaw <= 0) {
 			dragCounterRaw = 0;
 			showDropOverlay = false;
 		}
-	}
-	function onWindowDrop(e: DragEvent) {
-		if (addArtifactStep !== 'pick-source') return;
+	}}
+	ondrop={(e) => {
+		if (!e.dataTransfer?.types.includes('Files')) return;
 		e.preventDefault();
 		dragCounterRaw = 0;
 		showDropOverlay = false;
 		handleFileDrop(e);
-	}
-
-	onMount(() => {
-		window.addEventListener('dragover', onWindowDragOver);
-		window.addEventListener('dragenter', onWindowDragEnter);
-		window.addEventListener('dragleave', onWindowDragLeave);
-		window.addEventListener('drop', onWindowDrop);
-		return () => {
-			window.removeEventListener('dragover', onWindowDragOver);
-			window.removeEventListener('dragenter', onWindowDragEnter);
-			window.removeEventListener('dragleave', onWindowDragLeave);
-			window.removeEventListener('drop', onWindowDrop);
-		};
-	});
-</script>
+	}}
+/>
 
 <SignedIn>
 	{#if pageLoading}

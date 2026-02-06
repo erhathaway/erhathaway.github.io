@@ -480,7 +480,7 @@
 					Back
 				</a>
 			{:else}
-				<div class="pointer-events-auto {homeNamecardInGallery ? 'px-4 py-3 bg-cream/80 backdrop-blur-md border border-walnut/10 shadow-sm' : ''}">
+				<div class="pointer-events-auto {homeNamecardInGallery ? 'px-0 py-0 bg-cream/85 backdrop-blur-md' : ''}">
 					<CategoryPills cardMode={homeNamecardInGallery} />
 				</div>
 			{/if}
