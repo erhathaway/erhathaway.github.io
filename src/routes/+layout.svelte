@@ -257,9 +257,69 @@
 		const isHomeToProject = fromPath === '/' && toPath?.startsWith('/project');
 		const isProjectToHome = fromPath?.startsWith('/project') && toPath === '/';
 		const isProjectToProject = fromPath?.startsWith('/project') && toPath?.startsWith('/project');
+		const HOME_RIGHT_PANEL_SCROLL_TOP_KEY = 'portfolio:homeRightPanelScrollTop';
+
+		const getHomeRightPanel = (): HTMLElement | null => {
+			try {
+				return document.querySelector<HTMLElement>('.right-panel');
+			} catch {
+				return null;
+			}
+		};
+
+		const saveHomeRightPanelScrollTop = () => {
+			const el = getHomeRightPanel();
+			if (!el) return;
+			try {
+				sessionStorage.setItem(HOME_RIGHT_PANEL_SCROLL_TOP_KEY, String(el.scrollTop));
+			} catch {
+				// ignore
+			}
+		};
+
+		const readHomeRightPanelScrollTop = (): number | null => {
+			try {
+				const raw = sessionStorage.getItem(HOME_RIGHT_PANEL_SCROLL_TOP_KEY);
+				if (!raw) return null;
+				const value = Number.parseFloat(raw);
+				if (!Number.isFinite(value)) return null;
+				return value;
+			} catch {
+				return null;
+			}
+		};
+
+		const restoreHomeRightPanelScrollTop = async () => {
+			const target = readHomeRightPanelScrollTop();
+			if (target === null) return;
+
+			for (let i = 0; i < 10; i += 1) {
+				const el = getHomeRightPanel();
+				if (el) {
+					el.scrollTop = target;
+					return;
+				}
+				await new Promise<void>((r) => requestAnimationFrame(() => r()));
+			}
+		};
 
 		if (isProjectToProject) return;
 		if (!isHomeToProject && !isProjectToHome) return;
+
+		if (isHomeToProject) {
+			// Remember gallery scroll so project→home can restore it.
+			saveHomeRightPanelScrollTop();
+		}
+
+		if (isProjectToHome && !document.startViewTransition) {
+			// No View Transitions API: restore after navigation completes.
+			navigation.complete
+				.then(async () => {
+					await restoreHomeRightPanelScrollTop();
+				})
+				.catch(() => {});
+		}
+
 		if (!document.startViewTransition) return;
 
 		if (isHomeToProject) {
@@ -296,6 +356,11 @@
 						await navigation.complete;
 					} catch {
 						// ignore aborted navigations; we already resolved the hook
+					}
+
+					if (isProjectToHome) {
+						// Ensure the ViewTransition captures the restored scroll position.
+						await restoreHomeRightPanelScrollTop();
 					}
 				});
 
