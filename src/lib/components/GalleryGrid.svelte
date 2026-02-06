@@ -86,11 +86,11 @@
       </div>
     {/if}
   </div>
-  <div class="h-[50vh] flex items-start justify-center px-8">
-    {#if portfolio.selectedCategory !== 'all' && hiddenCount > 0}
+  {#if portfolio.selectedCategory !== 'all' && hiddenCount > 0}
+    <div class="py-10 flex items-start justify-center px-8">
       <p class="text-sm text-cream/70 tracking-wide">
         {hiddenCount} more items to see. remove {portfolio.selectedCategory} filter
       </p>
-    {/if}
-  </div>
+    </div>
+  {/if}
 </main>
