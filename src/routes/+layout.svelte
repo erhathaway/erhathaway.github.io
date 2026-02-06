@@ -451,7 +451,7 @@
 				if (isMobileScreen) {
 					mobileMenuOpen = false;
 				}
-			}} hoverInfoInWall={homeCardMode} />
+			}} hoverInfoInWall={homeCardMode} bottomAlignNav={homeCardMode} />
 		</div>
 		<div class="vt-exclude-namecard" style="view-transition-name: auth-button">
 			{#if !isProjectPage}
