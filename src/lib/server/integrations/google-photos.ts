@@ -386,11 +386,19 @@ export async function listAllPickedMediaItems(
 export async function downloadMedia(
 	accessToken: string,
 	baseUrl: string,
-	type: 'PHOTO' | 'VIDEO'
+	type: 'PHOTO' | 'VIDEO',
+	maxDimension?: number
 ): Promise<Response> {
-	// Photos: =d downloads original with EXIF (we strip it later)
-	// Videos: =dv downloads high-quality transcode
-	const downloadUrl = type === 'VIDEO' ? `${baseUrl}=dv` : `${baseUrl}=d`;
+	let downloadUrl: string;
+	if (type === 'VIDEO') {
+		downloadUrl = `${baseUrl}=dv`;
+	} else if (maxDimension) {
+		// Sized download: Google strips EXIF server-side, caps at maxDimension px
+		downloadUrl = `${baseUrl}=w${maxDimension}-h${maxDimension}`;
+	} else {
+		// Original download with EXIF (caller must strip)
+		downloadUrl = `${baseUrl}=d`;
+	}
 
 	const response = await fetch(downloadUrl, {
 		headers: { Authorization: `Bearer ${accessToken}` }

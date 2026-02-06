@@ -43,6 +43,8 @@
 	let importedCount = $state(0);
 	let totalCount = $state(0);
 	let importResults = $state<{ created: ImportedArtifact[]; errors: Array<{ filename: string; error: string }> }>({ created: [], errors: [] });
+	let currentFilename = $state('');
+	let cancelled = $state(false);
 
 	let popup: Window | null = null;
 	let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -202,42 +204,75 @@
 		}
 	}
 
-	// Step 6: Import
+	// Step 6: Import — one item per request for memory/CPU isolation
 	async function handleImport() {
 		step = 'importing';
 		totalCount = pickedItems.length;
 		importedCount = 0;
+		cancelled = false;
+		currentFilename = '';
+		importResults = { created: [], errors: [] };
 
-		try {
-			const headers = await authHeaders();
-			const response = await fetch('/api/integrations/google-photos/import', {
-				method: 'POST',
-				headers: { ...headers, 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					projectId,
-					sessionId
-				})
-			});
+		const headers = await authHeaders();
 
-			if (!response.ok) {
-				const text = await response.text();
-				throw new Error(text || 'Import failed');
+		for (const item of pickedItems) {
+			if (cancelled) break;
+
+			currentFilename = item.mediaFile.filename;
+
+			try {
+				const response = await fetch('/api/integrations/google-photos/import-item', {
+					method: 'POST',
+					headers: { ...headers, 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						projectId,
+						item,
+						isPublished: false
+					})
+				});
+
+				if (!response.ok) {
+					const text = await response.text();
+					throw new Error(text || 'Import failed');
+				}
+
+				const data = await response.json();
+				importResults.created = [...importResults.created, data.artifact];
+			} catch (err) {
+				importResults.errors = [
+					...importResults.errors,
+					{
+						filename: item.mediaFile.filename,
+						error: err instanceof Error ? err.message : 'Import failed'
+					}
+				];
 			}
 
-			const data = await response.json();
-			importResults = data;
-			importedCount = data.created.length;
-
-			step = 'done';
-
-			// Notify parent
-			if (data.created.length > 0) {
-				onImported(data.created);
-			}
-		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Import failed';
-			step = 'error';
+			importedCount++;
 		}
+
+		currentFilename = '';
+
+		// Clean up the picker session
+		try {
+			await fetch(`/api/integrations/google-photos/sessions/${sessionId}`, {
+				method: 'DELETE',
+				headers
+			});
+		} catch {
+			// Non-critical cleanup failure
+		}
+
+		step = 'done';
+
+		// Notify parent
+		if (importResults.created.length > 0) {
+			onImported(importResults.created);
+		}
+	}
+
+	function handleCancelImport() {
+		cancelled = true;
 	}
 
 	function handleCancel() {
@@ -370,9 +405,11 @@
 						></div>
 					</div>
 					<p class="text-sm text-slate-500">
-						Importing {totalCount} item{totalCount !== 1 ? 's' : ''}...
+						{importedCount} of {totalCount} imported
 					</p>
-					<p class="text-xs text-slate-400">This may take a moment for large selections.</p>
+					{#if currentFilename}
+						<p class="text-xs text-slate-400 truncate max-w-full">{currentFilename}</p>
+					{/if}
 				</div>
 
 			{:else if step === 'done'}
@@ -421,6 +458,14 @@
 					onclick={handleImport}
 				>
 					Import {pickedItems.length} item{pickedItems.length !== 1 ? 's' : ''}
+				</button>
+			{:else if step === 'importing'}
+				<button
+					type="button"
+					class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors duration-150"
+					onclick={handleCancelImport}
+				>
+					Cancel
 				</button>
 			{:else if step === 'done' || step === 'error'}
 				<button
