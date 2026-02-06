@@ -8,7 +8,6 @@ import {
 	getValidAccessToken,
 	listAllPickedMediaItems,
 	downloadMedia,
-	downloadThumbnail,
 	deletePickerSession,
 	extractMetadata,
 	mimeToExtension,
@@ -80,6 +79,15 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const errors: Array<{ filename: string; error: string }> = [];
 
 	for (const item of items) {
+		// Skip video items — only image-v1 schema is supported
+		if (item.type === 'VIDEO') {
+			errors.push({
+				filename: item.mediaFile.filename,
+				error: 'Video items are not supported'
+			});
+			continue;
+		}
+
 		try {
 			const result = await importSingleItem(
 				item,
@@ -119,26 +127,17 @@ async function importSingleItem(
 	db: ReturnType<typeof getDb>,
 	r2BaseUrl: string | undefined
 ): Promise<ImportResult> {
-	const isVideo = item.type === 'VIDEO';
-
-	// Skip videos that aren't ready
-	if (isVideo && item.mediaFile.mediaFileMetadata.videoMetadata?.processingStatus !== 'READY') {
-		throw new Error('Video is still processing');
-	}
-
 	// Download the media
 	const mediaResponse = await downloadMedia(
 		accessToken,
 		item.mediaFile.baseUrl,
-		isVideo ? 'VIDEO' : 'PHOTO'
+		'PHOTO'
 	);
 	let mediaBytes = await mediaResponse.arrayBuffer();
 
 	// Strip EXIF from images
 	const contentType = item.mediaFile.mimeType || mediaResponse.headers.get('Content-Type') || 'application/octet-stream';
-	if (!isVideo) {
-		mediaBytes = stripExif(mediaBytes, contentType);
-	}
+	mediaBytes = stripExif(mediaBytes, contentType);
 
 	// Upload to R2
 	const ext = mimeToExtension(contentType);
@@ -148,34 +147,12 @@ async function importSingleItem(
 	});
 	const mediaUrl = r2BaseUrl ? `${r2BaseUrl}/${key}` : `/api/uploads/artifacts?key=${encodeURIComponent(key)}`;
 
-	// For videos, also download and upload a thumbnail
-	let thumbnailUrl: string | undefined;
-	if (isVideo) {
-		try {
-			const thumbResponse = await downloadThumbnail(accessToken, item.mediaFile.baseUrl);
-			const thumbBytes = await thumbResponse.arrayBuffer();
-			const thumbKey = `artifacts/${crypto.randomUUID()}.jpg`;
-			await bucket.put(thumbKey, thumbBytes, {
-				httpMetadata: { contentType: 'image/jpeg' }
-			});
-			thumbnailUrl = r2BaseUrl ? `${r2BaseUrl}/${thumbKey}` : `/api/uploads/artifacts?key=${encodeURIComponent(thumbKey)}`;
-		} catch {
-			// Thumbnail is optional, continue without it
-		}
-	}
-
 	// Build artifact data
-	const schema = isVideo ? 'video-v1' : 'image-v1';
-	const dataBlob = isVideo
-		? {
-				videoUrl: mediaUrl,
-				thumbnailUrl,
-				description: item.mediaFile.filename || undefined
-			}
-		: {
-				imageUrl: mediaUrl,
-				description: item.mediaFile.filename || undefined
-			};
+	const schema = 'image-v1';
+	const dataBlob = {
+		imageUrl: mediaUrl,
+		description: item.mediaFile.filename || undefined
+	};
 
 	// Create artifact
 	const [artifact] = await db

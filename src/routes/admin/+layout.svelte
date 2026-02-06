@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { useClerkContext } from 'svelte-clerk';
 	import { adminStore } from '$lib/stores/admin.svelte';
+	import { artifactSchemas } from '$lib/schemas/artifacts';
 	import ExportImportModal from './ExportImportModal.svelte';
 	import type { AttributeDraft } from './ProjectEditor.svelte';
 
@@ -504,6 +505,28 @@
 								<span class={`inline-block h-1.5 w-1.5 rounded-full ${googlePhotosConnected ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
 							</a>
 						</li>
+					</ul>
+				</div>
+
+				<!-- Schemas -->
+				<div>
+					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Schemas</p>
+					<ul class="space-y-0.5">
+						{#each artifactSchemas as schema (schema.name)}
+							<li>
+								<a
+									href={`/admin/schemas/${schema.name}`}
+									class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
+										$page.url.pathname === '/admin/schemas/' + schema.name
+											? 'bg-slate-900 text-white'
+											: 'text-slate-600 hover:bg-slate-50'
+									}`}
+								>
+									<span class="font-medium">{schema.label}</span>
+									<span class={`text-[10px] font-mono ${$page.url.pathname === '/admin/schemas/' + schema.name ? 'text-white/50' : 'text-slate-400'}`}>{schema.name}</span>
+								</a>
+							</li>
+						{/each}
 					</ul>
 				</div>
 			</div>

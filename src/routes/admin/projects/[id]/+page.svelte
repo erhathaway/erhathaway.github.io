@@ -5,11 +5,7 @@
 	import { adminStore } from '$lib/stores/admin.svelte';
 	import { SignedIn, SignedOut, useClerkContext } from 'svelte-clerk';
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
-	import ImageArtifactEditor from '$lib/schemas/artifacts/image-v1/Editor.svelte';
-	import ImageArtifactAdminList from '$lib/schemas/artifacts/image-v1/AdminList.svelte';
-	import VideoArtifactAdminList from '$lib/schemas/artifacts/video-v1/AdminList.svelte';
-	import { artifactSchemas, validateArtifactData } from '$lib/schemas/artifacts';
-	import { createImageV1Draft, type ImageV1Data } from '$lib/schemas/artifacts/image-v1/validator';
+	import { artifactSchemas, validateArtifactData, getArtifactSchema, getArtifactComponent } from '$lib/schemas/artifacts';
 	import GooglePhotosPickerModal from '$lib/components/GooglePhotosPickerModal.svelte';
 
 	type Category = {
@@ -66,11 +62,12 @@
 	let pageError = $state('');
 	let pageSuccess = $state('');
 
-	const initialSchema = artifactSchemas[0]?.name ?? 'image-v1';
-	const initialDraft = createImageV1Draft();
+	const initialSchemaDef = artifactSchemas[0];
+	const initialSchema = initialSchemaDef?.name ?? 'image-v1';
+	const initialDraft = initialSchemaDef?.createDraft() ?? { imageUrl: '', description: '' };
 	const initialValidation = validateArtifactData(initialSchema, initialDraft);
 	let artifactSchema: string = $state(initialSchema);
-	let artifactDraft = $state<ImageV1Data>(initialDraft);
+	let artifactDraft = $state<Record<string, unknown>>(initialDraft as Record<string, unknown>);
 	let artifactDraftErrors = $state<string[]>(initialValidation.ok ? [] : initialValidation.errors);
 	let artifactIsPublished = $state(false);
 	let artifactIsCover = $state(false);
@@ -81,7 +78,7 @@
 	});
 	let editingArtifactId = $state<number | null>(null);
 	let showEditArtifactModal = $state(false);
-	let editArtifactDraft = $state<ImageV1Data>(createImageV1Draft());
+	let editArtifactDraft = $state<Record<string, unknown>>(initialSchemaDef?.createDraft() as Record<string, unknown>);
 	let editArtifactErrors = $state<string[]>([]);
 	let editArtifactIsPublished = $state(false);
 	let editArtifactUploadState = $state<{ uploading: boolean; error: string | null }>({
@@ -111,6 +108,12 @@
 		return neighbors;
 	});
 
+	const CreateEditorComp = $derived(getArtifactComponent(artifactSchema, 'adminEditor'));
+	const editArtifactSchema = $derived(
+		editingArtifactId !== null ? (artifacts.find(a => a.id === editingArtifactId)?.schema ?? artifactSchema) : artifactSchema
+	);
+	const EditEditorComp = $derived(getArtifactComponent(editArtifactSchema, 'adminEditor'));
+
 	let editingField = $state<'name' | 'displayName' | 'description' | null>(null);
 	let editName = $state('');
 	let editDisplayName = $state('');
@@ -129,11 +132,10 @@
 		const nextSchema = target?.value ?? '';
 		artifactSchema = nextSchema;
 		artifactUploadState = { uploading: false, error: null };
-		if (nextSchema !== 'image-v1') {
-			return;
-		}
-		const nextDraft = createImageV1Draft();
-		artifactDraft = nextDraft;
+		const schema = getArtifactSchema(nextSchema);
+		if (!schema) return;
+		const nextDraft = schema.createDraft();
+		artifactDraft = nextDraft as Record<string, unknown>;
 		const validation = validateArtifactData(nextSchema, nextDraft);
 		artifactDraftErrors = validation.ok ? [] : validation.errors;
 	}
@@ -440,7 +442,8 @@
 		}
 
 		artifactSchema = schema;
-		artifactDraft = createImageV1Draft();
+		const schemaDef = getArtifactSchema(schema);
+		artifactDraft = (schemaDef?.createDraft() ?? { imageUrl: '', description: '' }) as Record<string, unknown>;
 		artifactDraftErrors = [];
 		artifactIsPublished = false;
 		artifactIsCover = false;
@@ -448,7 +451,7 @@
 		pageSuccess = 'Artifact created.';
 	}
 
-	function handleArtifactDraftChange(next: ImageV1Data) {
+	function handleArtifactDraftChange(next: Record<string, unknown>) {
 		artifactDraft = next;
 		const validation = validateArtifactData(artifactSchema, next);
 		artifactDraftErrors = validation.ok ? [] : validation.errors;
@@ -487,13 +490,14 @@
 	}
 
 	function startArtifactEdit(artifact: ProjectArtifact) {
-		if (artifact.schema !== 'image-v1') {
+		if (!getArtifactComponent(artifact.schema, 'adminEditor')) {
 			pageError = 'Unsupported schema for editing.';
 			return;
 		}
+		const schemaDef = getArtifactSchema(artifact.schema);
 		const validation = validateArtifactData(artifact.schema, artifact.dataBlob);
 		editingArtifactId = artifact.id;
-		editArtifactDraft = validation.ok ? (validation.value as ImageV1Data) : createImageV1Draft();
+		editArtifactDraft = validation.ok ? (validation.value as Record<string, unknown>) : ((schemaDef?.createDraft() ?? {}) as Record<string, unknown>);
 		editArtifactErrors = validation.ok ? [] : validation.errors;
 		editArtifactIsPublished = artifact.isPublished;
 		editArtifactIsCover = artifact.isCover;
@@ -503,7 +507,7 @@
 
 	function cancelArtifactEdit() {
 		editingArtifactId = null;
-		editArtifactDraft = createImageV1Draft();
+		editArtifactDraft = (initialSchemaDef?.createDraft() ?? {}) as Record<string, unknown>;
 		editArtifactErrors = [];
 		editArtifactIsPublished = false;
 		editArtifactIsCover = false;
@@ -516,14 +520,13 @@
 	}
 
 	function getArtifactImageUrl(artifact: ProjectArtifact): string {
-		if (artifact.schema !== 'image-v1') return '';
-		const data = artifact.dataBlob as ImageV1Data;
-		return data?.imageUrl ?? '';
+		const data = artifact.dataBlob as Record<string, unknown> | null;
+		return typeof data?.imageUrl === 'string' ? data.imageUrl : '';
 	}
 
-	function handleEditArtifactDraftChange(next: ImageV1Data) {
+	function handleEditArtifactDraftChange(next: Record<string, unknown>) {
 		editArtifactDraft = next;
-		const validation = validateArtifactData('image-v1', next);
+		const validation = validateArtifactData(editArtifactSchema, next);
 		editArtifactErrors = validation.ok ? [] : validation.errors;
 	}
 
@@ -537,7 +540,7 @@
 			pageError = 'Wait for the image upload to finish.';
 			return;
 		}
-		const validation = validateArtifactData('image-v1', editArtifactDraft);
+		const validation = validateArtifactData(editArtifactSchema, editArtifactDraft);
 		if (!validation.ok) {
 			editArtifactErrors = validation.errors;
 			return;
@@ -554,7 +557,7 @@
 				Authorization: `Bearer ${token}`
 			},
 			body: JSON.stringify({
-				schema: 'image-v1',
+				schema: editArtifactSchema,
 				dataBlob: validation.value,
 				isPublished: editArtifactIsPublished
 			})
@@ -1049,6 +1052,7 @@
 
 				<!-- Existing Artifacts -->
 				{#each artifacts as artifact (artifact.id)}
+					{@const AdminListComp = getArtifactComponent(artifact.schema, 'adminList')}
 					<div
 						class="rounded-2xl border border-slate-200 bg-white p-5 flex flex-col gap-3 cursor-pointer hover:border-slate-300 hover:shadow-md transition-all duration-200"
 						onclick={() => startArtifactEdit(artifact)}
@@ -1118,10 +1122,8 @@
 							</div>
 						</div>
 						<div>
-							{#if artifact.schema === 'image-v1'}
-								<ImageArtifactAdminList data={artifact.dataBlob as ImageV1Data} />
-							{:else if artifact.schema === 'video-v1'}
-								<VideoArtifactAdminList data={artifact.dataBlob as import('$lib/schemas/artifacts/video-v1/validator').VideoV1Data} />
+							{#if AdminListComp}
+								<AdminListComp data={artifact.dataBlob} />
 							{:else}
 								<p class="text-xs text-slate-400">Unsupported schema.</p>
 							{/if}
@@ -1161,12 +1163,14 @@
 				</div>
 
 				<form class="px-5 py-4 grid gap-3" onsubmit={createArtifact}>
-					<ImageArtifactEditor
-						value={artifactDraft}
-						onChange={handleArtifactDraftChange}
-						onUpload={handleArtifactUpload}
-						onUploadStateChange={handleArtifactUploadStateChange}
-					/>
+					{#if CreateEditorComp}
+						<CreateEditorComp
+							value={artifactDraft}
+							onChange={handleArtifactDraftChange}
+							onUpload={handleArtifactUpload}
+							onUploadStateChange={handleArtifactUploadStateChange}
+						/>
+					{/if}
 					{#if artifactDraftErrors.length > 0 || artifactUploadState.error}
 						<p class="text-xs font-medium text-red-600">
 							{[...artifactDraftErrors, artifactUploadState.error].filter(Boolean).join('; ')}
@@ -1240,6 +1244,7 @@
 				{@const scale = absOffset === 1 ? 0.75 : 0.5}
 				{@const opacity = absOffset === 1 ? 0.8 : 0.5}
 				{@const translateX = sign * (absOffset === 1 ? 380 : 600)}
+				{@const NeighborAdminListComp = getArtifactComponent(artifact.schema, 'adminList')}
 				<button
 					type="button"
 					class="absolute top-1/2 left-1/2 z-40 cursor-pointer rounded-2xl bg-white shadow-lg ring-1 ring-white/10 hover:ring-white/40 transition-all duration-300 overflow-hidden w-64 text-left"
@@ -1269,10 +1274,8 @@
 								</span>
 							{/if}
 						</div>
-						{#if artifact.schema === 'image-v1'}
-							<ImageArtifactAdminList data={artifact.dataBlob as ImageV1Data} />
-						{:else if artifact.schema === 'video-v1'}
-							<VideoArtifactAdminList data={artifact.dataBlob as import('$lib/schemas/artifacts/video-v1/validator').VideoV1Data} />
+						{#if NeighborAdminListComp}
+							<NeighborAdminListComp data={artifact.dataBlob} />
 						{/if}
 					</div>
 				</button>
@@ -1323,12 +1326,14 @@
 				</div>
 
 				<div class="px-5 py-4 grid gap-3">
-					<ImageArtifactEditor
-						value={editArtifactDraft}
-						onChange={handleEditArtifactDraftChange}
-						onUpload={handleArtifactUpload}
-						onUploadStateChange={handleEditArtifactUploadStateChange}
-					/>
+					{#if EditEditorComp}
+						<EditEditorComp
+							value={editArtifactDraft}
+							onChange={handleEditArtifactDraftChange}
+							onUpload={handleArtifactUpload}
+							onUploadStateChange={handleEditArtifactUploadStateChange}
+						/>
+					{/if}
 					{#if editArtifactErrors.length > 0 || editArtifactUploadState.error}
 						<p class="text-xs font-medium text-red-600">
 							{[...editArtifactErrors, editArtifactUploadState.error].filter(Boolean).join('; ')}

@@ -1,133 +1,96 @@
-# Artifact Schema Rendering System — Spec Discussion
+# Artifact Schema Component Registry
 
-## Goal
+## Overview
 
-Create a system to dynamically resolve and render the correct schema-specific component for each artifact in every rendering context, replacing manual `if/else` chains.
-
----
-
-## Current State
-
-Each schema (`image-v1`, `video-v1`) has these components in `src/lib/schemas/artifacts/<schema>/`:
-
-| Component | Exists for image-v1 | Exists for video-v1 |
-|-----------|---------------------|---------------------|
-| `Editor.svelte` | Yes | Yes |
-| `Viewer.svelte` | Yes | Yes |
-| `AdminList.svelte` | Yes | Yes |
-| `Cover.svelte` | Yes | **No** |
-
-There's also a generic `ArtifactView.svelte` dispatcher in `src/lib/components/artifacts/` but it's unused.
-
-The admin page (`/admin/projects/[id]`) uses manual `if/else` chains to pick the right component, and **editing is hardcoded to image-v1 only** — video-v1 artifacts can't be edited.
+Each artifact schema (currently only `image-v1`) provides a set of rendering components for different contexts. A central registry maps schema names to their components, replacing manual `if/else` chains.
 
 ---
 
-## Proposed Rendering Contexts
+## Architecture
 
-| Context Name | Current Component | Notes |
-|-----------|-------------------|-------|
-| Public display | `Viewer.svelte` | Used on project detail page |
-| Public enlarged display | None? | Lightbox/modal view? |
-| Admin project cover | `Cover.svelte` | Missing for video-v1 |
-| Admin artifact display | `AdminList.svelte` | Thumbnail in admin grid |
-| Admin artifact edit display | `Editor.svelte` | Only schema-specific content |
-| Admin artifact enlarged display | None | Expanded preview in admin? |
+### Schema directory structure
+
+Each schema lives in `src/lib/schemas/artifacts/<schema>/` and exports:
+
+- `validator.ts` — schema metadata, TypeScript type, `createDraft()`, and `validate()` function
+- `components.ts` — maps component contexts to Svelte components
+- `Editor.svelte`, `Viewer.svelte`, `AdminList.svelte`, `Cover.svelte` — the actual components
+
+### Central registry (`src/lib/schemas/artifacts/index.ts`)
+
+Exports:
+- `artifactSchemas` — array of schema definitions (with `name`, `label`, `description`, `validate`, `createDraft`)
+- `artifactComponentRegistry` — maps `ArtifactSchemaName → ArtifactComponentContext → Component`
+- `getArtifactSchema(name)` — returns the schema definition or `null`
+- `getArtifactComponent(schema, context)` — returns the component or `null`
+- `validateArtifactData(schema, payload)` — validates data against a schema
+
+### Component contexts
+
+| Context | Component | Usage |
+|---------|-----------|-------|
+| `adminEditor` | `Editor.svelte` | Admin create/edit modals |
+| `adminList` | `AdminList.svelte` | Admin artifact grid cards |
+| `adminProjectCover` | `Cover.svelte` | Project cover display in admin |
+| `publicViewLandingPage` | `Viewer.svelte` | Public landing page gallery |
+| `publicViewProjectPage` | `Viewer.svelte` | Public project detail page |
+
+### Prop interfaces per context
+
+- **adminEditor**: `{ value?: SchemaData; onChange?: (value: SchemaData) => void; onUpload?: (file: File) => Promise<string>; onUploadStateChange?: (state: { uploading: boolean; error: string | null }) => void }`
+- **adminList**: `{ data: SchemaData; className?: string }`
+- **adminProjectCover**: `{ data: SchemaData; className?: string }`
+- **publicViewLandingPage**: `{ data: SchemaData; className?: string }`
+- **publicViewProjectPage**: `{ data: SchemaData; className?: string }`
 
 ---
 
-## Editor Interface Contract
+## Usage
 
-The Editor should only handle schema-specific content (e.g., image + description for image-v1). Generic concerns like schema name display, draft/cover toggles, and save buttons live in the parent wrapper.
-
-Current `Editor.svelte` props:
-
-```typescript
-{
-  value?: SchemaData;
-  onChange?: (value: SchemaData) => void;
-  onUpload?: (file: File) => Promise<string>;
-  onUploadStateChange?: (state: { uploading: boolean; error: string | null }) => void;
-}
-```
-
-### Interface question
-
-Should all rendering contexts share a common minimal interface, or should each context define its own? For example:
-- **Editors** need `value`, `onChange`, `onUpload`
-- **Viewers/displays** only need `data` (read-only)
-- **Cover** only needs `data` + maybe `className`
-
----
-
-## Registry Pattern
-
-Replace all `if/else schema === 'image-v1'` chains with a central registry:
-
-```typescript
-const registry = {
-  'image-v1': {
-    editor: ImageEditor,
-    viewer: ImageViewer,
-    adminList: ImageAdminList,
-    cover: ImageCover,
-    // ...
-  },
-  'video-v1': {
-    editor: VideoEditor,
-    viewer: VideoViewer,
-    adminList: VideoAdminList,
-    // cover: missing — fallback?
-  }
-}
-```
-
-Then resolver components per context, e.g.:
+### Rendering a component dynamically
 
 ```svelte
-<ArtifactEditor schema="image-v1" {value} {onChange} />
-<ArtifactViewer schema="image-v1" {data} />
-<ArtifactCover schema="image-v1" {data} />
+{@const ViewerComp = getArtifactComponent(artifact.schema, 'publicViewProjectPage')}
+{#if ViewerComp}
+  <ViewerComp data={artifact.dataBlob} />
+{:else}
+  <p>Unsupported schema</p>
+{/if}
 ```
 
+### Creating a draft for a schema
+
+```typescript
+const schema = getArtifactSchema('image-v1');
+const draft = schema?.createDraft(); // { imageUrl: '', description: '' }
+```
+
+### Adding a new schema
+
+1. Create `src/lib/schemas/artifacts/<name>/validator.ts` with schema metadata, type, `createDraft`, and `validate`
+2. Create component files: `Editor.svelte`, `Viewer.svelte`, `AdminList.svelte`, `Cover.svelte`
+3. Create `src/lib/schemas/artifacts/<name>/components.ts` exporting the component map
+4. Add the schema to `src/lib/schemas/artifacts/index.ts`:
+   - Import validator + components
+   - Add to `ArtifactSchemaName` union
+   - Add definition to `artifactSchemas` array
+   - Add entry to `artifactComponentRegistry`
+   - Add to `ArtifactDataBySchema` type map
+
+No other files need to change — all consumers use the registry.
+
 ---
 
-## Open Questions
+## File reference
 
-1. **Public display vs public enlarged display** — What's the distinction? Is "public display" the gallery grid item on the home page, and "enlarged" is when you click into the project detail? Or is "enlarged" a lightbox/modal overlay?
-
-2. **Admin enlarged display** — Is this a full-preview modal in the admin? Like clicking an artifact in the admin grid to see it larger without entering edit mode?
-
-3. **Fallbacks** — When a schema doesn't implement a context (like video-v1 missing Cover), should there be a generic fallback component, or should it be an error?
-
-4. **Interface per context** — One shared interface for all contexts, or separate interfaces per context type (editor vs read-only)?
-
----
-
-## File Reference
-
-### Schema definitions
-- `src/lib/schemas/artifacts/index.ts` — Central registry
-- `src/lib/schemas/artifacts/image-v1/validator.ts`
-- `src/lib/schemas/artifacts/video-v1/validator.ts`
-
-### Components (image-v1)
-- `src/lib/schemas/artifacts/image-v1/Editor.svelte`
-- `src/lib/schemas/artifacts/image-v1/Viewer.svelte`
-- `src/lib/schemas/artifacts/image-v1/AdminList.svelte`
-- `src/lib/schemas/artifacts/image-v1/Cover.svelte`
-
-### Components (video-v1)
-- `src/lib/schemas/artifacts/video-v1/Editor.svelte`
-- `src/lib/schemas/artifacts/video-v1/Viewer.svelte`
-- `src/lib/schemas/artifacts/video-v1/AdminList.svelte`
-- **Missing:** `Cover.svelte`
-
-### Generic dispatcher (unused)
-- `src/lib/components/artifacts/ArtifactView.svelte`
-
-### Admin integration
-- `src/routes/admin/projects/[id]/+page.svelte`
-
-### Database
-- `src/lib/server/db/schema.ts` — Tables: `projects`, `project_artifacts`, `project_cover_artifact`
+| File | Purpose |
+|------|---------|
+| `src/lib/schemas/artifacts/index.ts` | Central registry, types, resolver functions |
+| `src/lib/schemas/artifacts/image-v1/validator.ts` | Schema definition + validation |
+| `src/lib/schemas/artifacts/image-v1/components.ts` | Component map for image-v1 |
+| `src/lib/schemas/artifacts/image-v1/Editor.svelte` | Editor component |
+| `src/lib/schemas/artifacts/image-v1/Viewer.svelte` | Viewer component |
+| `src/lib/schemas/artifacts/image-v1/AdminList.svelte` | Admin list card component |
+| `src/lib/schemas/artifacts/image-v1/Cover.svelte` | Cover display component |
+| `src/lib/components/artifacts/ArtifactView.svelte` | Generic viewer dispatcher |
+| `src/routes/admin/projects/[id]/+page.svelte` | Admin project page (uses registry) |
