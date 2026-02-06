@@ -13,7 +13,7 @@
 
   const wrapperClass = $derived.by(() => {
     if (variant === 'tile') {
-      return 'w-full h-full text-walnut flex items-center';
+      return 'relative w-full h-full text-walnut flex items-center overflow-hidden';
     }
     return 'hover-inline-card text-walnut py-12 flex items-center';
   });
@@ -34,15 +34,22 @@
     if (variant !== 'tile') return '';
     return tileAlign === 'right' ? 'justify-end text-right' : 'justify-start text-left';
   });
+
+  const tileBgOriginX = $derived.by(() => {
+    if (variant !== 'tile') return '28%';
+    return tileAlign === 'right' ? '72%' : '28%';
+  });
 </script>
 
 {#if item}
-  <div
-    class={wrapperClass}
-    style={variant === 'tile'
-      ? 'background: radial-gradient(circle at bottom right, #F5F1EB 0%, #FFFFFF 65%, #F5F1EB 100%);'
-      : undefined}
-  >
+  <div class={wrapperClass}>
+    {#if variant === 'tile'}
+      <div
+        class="absolute inset-0 animate-hover-tile-bg"
+        style="--hover-tile-bg-origin-x: {tileBgOriginX}; background: radial-gradient(circle at bottom right, #F5F1EB 0%, #FFFFFF 65%, #F5F1EB 100%);"
+        aria-hidden="true"
+      ></div>
+    {/if}
     <div class={innerClass}>
       <div class="project-header-block {blockAlignClass}">
       <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3 vt-exclude-namecard" style="view-transition-name: hover-info-category;">

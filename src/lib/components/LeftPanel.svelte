@@ -4,7 +4,23 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
 
-  let { isMobile = false, onItemClick, onNameClick, hasTransitionNames = true, showNameCard = true, hoverInfoInWall = false }: { isMobile?: boolean, onItemClick?: () => void, onNameClick?: () => void, hasTransitionNames?: boolean, showNameCard?: boolean, hoverInfoInWall?: boolean } = $props();
+  let {
+    isMobile = false,
+    onItemClick,
+    onNameClick,
+    hasTransitionNames = true,
+    showNameCard = true,
+    hoverInfoInWall = false,
+    bottomAlignNav = false
+  }: {
+    isMobile?: boolean;
+    onItemClick?: () => void;
+    onNameClick?: () => void;
+    hasTransitionNames?: boolean;
+    showNameCard?: boolean;
+    hoverInfoInWall?: boolean;
+    bottomAlignNav?: boolean;
+  } = $props();
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
   let navEl = $state<HTMLElement | null>(null);
@@ -87,7 +103,7 @@
 
     <!-- Scrollable Navigation Area -->
     <nav
-      class="flex-1 overflow-y-auto {slideUpActive ? 'animate-slide-up' : ''} min-h-0 max-h-full scrollbar-hide pb-[50%] -mx-8 {showNameCard ? 'pt-12 mt-16' : 'pt-8 mt-8'}"
+      class="flex-1 overflow-y-auto {slideUpActive ? 'animate-slide-up' : ''} min-h-0 max-h-full scrollbar-hide -mx-8 {bottomAlignNav ? 'flex flex-col justify-end pb-10 pt-0 mt-0' : showNameCard ? 'pt-12 mt-16 pb-[50%]' : 'pt-8 mt-8 pb-[50%]'}"
       style="animation-delay: 0.4s"
       onanimationend={handleSlideUpDone}
       onanimationcancel={handleSlideUpDone}
