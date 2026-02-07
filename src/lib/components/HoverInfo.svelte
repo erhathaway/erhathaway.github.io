@@ -80,18 +80,18 @@
     <div class={innerClass}>
       <div class={projectHeaderClass} style={projectHeaderStyle}>
       <div class={tileTextWrapClass}>
-        <h3 class={titleClass} style="view-transition-name: hover-info-title; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e;">
+        <h3 class={titleClass} style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e;">
           {item.name}
         </h3>
 
         {#if item.description?.trim()}
-          <p class={descriptionClass} style="view-transition-name: hover-info-description; font-family: 'DM Sans', sans-serif; color: #6b5c4f; {isTile ? 'letter-spacing: 0.01em;' : ''}">
+          <p class={descriptionClass} style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; {isTile ? 'letter-spacing: 0.01em;' : ''}">
             {item.description}
           </p>
         {/if}
 
         {#if item.metadata}
-          <div class="flex gap-6 vt-exclude-namecard {dockSide === 'right' ? 'justify-end text-right' : 'justify-start text-left'}" style="view-transition-name: hover-info-meta;">
+          <div class="flex gap-6 vt-exclude-namecard {dockSide === 'right' ? 'justify-end text-right' : 'justify-start text-left'}">
             {#each Object.entries(item.metadata) as [key, value] (key)}
               <div class="flex flex-col gap-1.5 {dockSide === 'right' ? 'items-end' : 'items-start'}">
                 <span class={metaKeyClass} style="color: #a08e7a;">{key}</span>
