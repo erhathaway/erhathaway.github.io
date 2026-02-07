@@ -100,6 +100,7 @@
 
   const dockTargetItemId = $derived.by(() => (dockTarget?.target === 'item' ? dockTarget.id : null));
   const dockSide = $derived.by(() => dockTarget?.dockSide ?? 'left');
+  const hasDockTarget = $derived.by(() => dockTarget !== null);
 </script>
 
 <main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-thin" onmouseleave={handleGalleryLeave}>
@@ -159,6 +160,7 @@
         dockHoverItem={hoveredItem}
         dockHoverTargetId={dockTargetItemId}
         dockHoverSourceId={hoveredItem?.id ?? null}
+        dockHasTarget={hasDockTarget}
         dockSide={dockSide}
       />
     {/each}

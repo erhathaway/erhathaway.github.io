@@ -32,6 +32,16 @@
     return 'hover-inline-inner w-full';
   });
 
+  const projectHeaderClass = $derived.by(() => {
+    if (!isTile) return 'project-header-block text-left';
+    return dockSide === 'right' ? 'text-right' : 'text-left';
+  });
+  const projectHeaderStyle = $derived.by(() => {
+    if (!isTile) return undefined;
+    // Keep the text width inside the trapezoid on small tiles.
+    return 'width: min(240px, 40%); max-width: min(240px, 40%);';
+  });
+
   const titleClass = $derived.by(() =>
     isTile
       ? 'font-display text-2xl sm:text-3xl font-semibold leading-tight mb-3 vt-exclude-namecard'
@@ -65,7 +75,7 @@
       ></div>
     {/if}
     <div class={innerClass}>
-      <div class="project-header-block text-left">
+      <div class={projectHeaderClass} style={projectHeaderStyle}>
       <div class={tileTextWrapClass}>
         <p class={tileCategoryClass} style="view-transition-name: hover-info-category;">
           {item.categories.join(' · ') || 'Uncategorized'}
@@ -82,9 +92,9 @@
         {/if}
 
         {#if item.metadata}
-          <div class="flex gap-8 vt-exclude-namecard justify-start text-left" style="view-transition-name: hover-info-meta;">
+          <div class="flex gap-8 vt-exclude-namecard {dockSide === 'right' ? 'justify-end text-right' : 'justify-start text-left'}" style="view-transition-name: hover-info-meta;">
             {#each Object.entries(item.metadata) as [key, value] (key)}
-              <div class="flex flex-col gap-1 items-start">
+              <div class="flex flex-col gap-1 {dockSide === 'right' ? 'items-end' : 'items-start'}">
                 <span class={metaKeyClass}>{key}</span>
                 <span class={metaValueClass}>{formatMetadata(key, value)}</span>
               </div>

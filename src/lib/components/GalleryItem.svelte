@@ -12,6 +12,7 @@
     dockHoverItem = null,
     dockHoverTargetId = null,
     dockHoverSourceId = null,
+    dockHasTarget = false,
     dockSide = 'left'
   }: {
     item: PortfolioItem;
@@ -20,6 +21,7 @@
     dockHoverItem?: PortfolioItem | null;
     dockHoverTargetId?: number | null;
     dockHoverSourceId?: number | null;
+    dockHasTarget?: boolean;
     dockSide?: 'left' | 'right';
   } = $props();
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
@@ -74,6 +76,7 @@
     if (!hoverInfoInWall) return false;
     if (!isHovered) return false;
     // If a dock target exists, suppress the hovered-tile overlay so only the docked tile shows it.
+    if (dockHasTarget) return false;
     if (isDockSource && dockHoverTargetId !== null) return false;
     return true;
   });
