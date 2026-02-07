@@ -27,7 +27,7 @@
 
   const innerClass = $derived.by(() => {
     if (variant === 'tile') {
-      return dockSide === 'right' ? 'w-full px-7 py-8 flex justify-end' : 'w-full px-7 py-8 flex';
+      return dockSide === 'right' ? 'w-full pl-7 pr-8 py-8 flex justify-end' : 'w-full px-7 py-8 flex';
     }
     return 'hover-inline-inner w-full';
   });
@@ -63,7 +63,10 @@
       : 'text-[10px] font-medium tracking-widest uppercase text-copper mb-3 vt-exclude-namecard'
   );
 
-  const tileTextWrapClass = $derived.by(() => (isTile ? 'relative z-10 max-w-[72%]' : ''));
+  const tileTextWrapClass = $derived.by(() => {
+    if (!isTile) return '';
+    return dockSide === 'right' ? 'relative z-10 max-w-[72%] ml-auto' : 'relative z-10 max-w-[72%]';
+  });
 </script>
 
 {#if item}
