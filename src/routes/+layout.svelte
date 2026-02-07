@@ -506,7 +506,7 @@
 				<!-- Card background that morphs from the left panel card -->
 				<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
 					{#if portfolio.namecardImage}
-						<div class="w-[min(500px,90vw)] pointer-events-auto rounded-sm overflow-hidden" style="view-transition-name: name-card-bg;">
+						<div class="relative w-[min(500px,90vw)] pointer-events-auto rounded-sm overflow-hidden" style="view-transition-name: name-card-bg;">
 							<img
 								src={portfolio.namecardImage.imageUrl}
 								alt="Ethan Hathaway"
@@ -516,8 +516,8 @@
 								style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
 								draggable="false"
 							/>
-							<div class="p-6 flex flex-col items-center text-center" style="background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); backdrop-filter: blur(12px);">
-								<div class="flex flex-col gap-4 text-sm tracking-[0.18em] uppercase text-walnut/60">
+							<div class="absolute inset-x-0 bottom-0 p-6 flex justify-center">
+								<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-walnut/60">
 									<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
 									<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-instagram">Instagram</a>
 									<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors" style="view-transition-name: social-link-contact">Contact</a>
