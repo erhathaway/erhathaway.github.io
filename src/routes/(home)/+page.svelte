@@ -14,6 +14,16 @@
 
 <svelte:head>
   <meta name="description" content="Woodworking, pottery, and other things I make." />
+  <meta property="og:title" content="Ethan Hathaway" />
+  <meta property="og:description" content="Woodworking, pottery, and other things I make." />
+  <meta property="og:type" content="website" />
+  {#if data.namecardImage}
+    <meta property="og:image" content={data.namecardImage.imageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={data.namecardImage.imageUrl} />
+  {/if}
+  <meta name="twitter:title" content="Ethan Hathaway" />
+  <meta name="twitter:description" content="Woodworking, pottery, and other things I make." />
 </svelte:head>
 
 <GalleryGrid />
