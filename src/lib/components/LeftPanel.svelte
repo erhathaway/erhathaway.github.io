@@ -24,6 +24,7 @@
   } = $props();
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
+  const activeNamecardImage = $derived(isProjectPage ? portfolio.projectNamecardImage : activeNamecardImage);
   let navEl = $state<HTMLElement | null>(null);
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animations after their first run.
@@ -67,7 +68,7 @@
   onanimationcancel={handleSlideInDone}
 >
   {#if showNameCard}
-    {#if portfolio.namecardImage}
+    {#if activeNamecardImage}
       <!-- Namecard image replaces gradient + text -->
       <div
         class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] overflow-hidden z-0 {onNameClick ? 'cursor-pointer' : ''}"
@@ -78,12 +79,12 @@
         tabindex={onNameClick ? 0 : -1}
       >
         <img
-          src={portfolio.namecardImage.imageUrl}
+          src={activeNamecardImage.imageUrl}
           alt="Ethan Hathaway"
           class="w-full h-full object-cover"
-          style:object-position="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
-          style:transform="scale({portfolio.namecardImage.zoom})"
-          style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+          style:object-position="{activeNamecardImage.positionX}% {activeNamecardImage.positionY}%"
+          style:transform="scale({activeNamecardImage.zoom})"
+          style:transform-origin="{activeNamecardImage.positionX}% {activeNamecardImage.positionY}%"
           draggable="false"
         />
       </div>
@@ -116,7 +117,7 @@
 
   <!-- Main Content Area -->
   <div class="flex-1 flex flex-col p-8 relative z-0 min-h-0 {showNameCard ? 'pt-4' : ''}">
-    {#if showNameCard && !portfolio.namecardImage}
+    {#if showNameCard && !activeNamecardImage}
       <p
         class="namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 {slideUpActive ? 'animate-slide-up' : ''}"
         style="animation-delay: 0.2s;"

@@ -206,13 +206,16 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	// --- Site Settings ---
 	let exportSiteSettings: ExportSiteSettings | undefined;
-	const [namecardRow] = await db
-		.select()
-		.from(siteSettings)
-		.where(eq(siteSettings.key, 'namecard_image'));
 
-	if (namecardRow) {
-		const ncSetting = namecardRow.value as NamecardImageSetting;
+	const processNamecardSetting = async (settingKey: string) => {
+		const [row] = await db
+			.select()
+			.from(siteSettings)
+			.where(eq(siteSettings.key, settingKey));
+
+		if (!row) return null;
+
+		const ncSetting = row.value as NamecardImageSetting;
 		const ncExport: NonNullable<ExportSiteSettings['namecardImage']> = {
 			imageUrl: ncSetting.imageUrl,
 			positionX: ncSetting.positionX,
@@ -246,7 +249,16 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			}
 		}
 
-		exportSiteSettings = { namecardImage: ncExport };
+		return ncExport;
+	};
+
+	const namecardExport = await processNamecardSetting('namecard_image');
+	const projectNamecardExport = await processNamecardSetting('project_namecard_image');
+
+	if (namecardExport || projectNamecardExport) {
+		exportSiteSettings = {};
+		if (namecardExport) exportSiteSettings.namecardImage = namecardExport;
+		if (projectNamecardExport) exportSiteSettings.projectNamecardImage = projectNamecardExport;
 	}
 
 	const manifest: ExportManifest = {

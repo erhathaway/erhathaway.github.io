@@ -6,9 +6,17 @@
 
 	type Props = {
 		getToken: () => Promise<string | null>;
+		apiPath?: string;
+		title?: string;
+		subtitle?: string;
 	};
 
-	let { getToken }: Props = $props();
+	let {
+		getToken,
+		apiPath = 'namecard-image',
+		title = 'Namecard Image',
+		subtitle = 'Optional image for the gallery namecard tile'
+	}: Props = $props();
 
 	let setting = $state<NamecardImageSetting | null>(null);
 	let loading = $state(true);
@@ -41,7 +49,7 @@
 			const token = await getToken();
 			const headers: Record<string, string> = {};
 			if (token) headers.Authorization = `Bearer ${token}`;
-			const response = await fetch('/api/admin/site-settings/namecard-image', { headers });
+			const response = await fetch(`/api/admin/site-settings/${apiPath}`, { headers });
 			if (response.ok) {
 				const data = await response.json();
 				if (data) {
@@ -112,7 +120,7 @@
 			const token = await getToken();
 			if (!token) throw new Error('Sign in to save settings.');
 
-			const response = await fetch('/api/admin/site-settings/namecard-image', {
+			const response = await fetch(`/api/admin/site-settings/${apiPath}`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
@@ -147,7 +155,7 @@
 			const token = await getToken();
 			if (!token) throw new Error('Sign in to remove settings.');
 
-			const response = await fetch('/api/admin/site-settings/namecard-image', {
+			const response = await fetch(`/api/admin/site-settings/${apiPath}`, {
 				method: 'DELETE',
 				headers: { Authorization: `Bearer ${token}` }
 			});
@@ -177,8 +185,8 @@
 <section class="mt-10 pt-8 border-t border-slate-200">
 	<div class="flex items-center justify-between mb-5">
 		<div>
-			<h2 class="text-sm font-semibold text-slate-900">Namecard Image</h2>
-			<p class="text-xs text-slate-500 mt-0.5">Optional image for the gallery namecard tile</p>
+			<h2 class="text-sm font-semibold text-slate-900">{title}</h2>
+			<p class="text-xs text-slate-500 mt-0.5">{subtitle}</p>
 		</div>
 	</div>
 

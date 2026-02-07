@@ -15,6 +15,7 @@ class PortfolioStore {
   projects = $state<Project[]>([]);
   categories = $state<CategoryInfo[]>([]);
   namecardImage = $state<NamecardImageSetting | null>(null);
+  projectNamecardImage = $state<NamecardImageSetting | null>(null);
   loading = $state(false);
 
   allItems = $derived.by(() => {
@@ -75,14 +76,16 @@ class PortfolioStore {
   async loadProjects() {
     this.loading = true;
     try {
-      const [projects, catRes, namecardRes] = await Promise.all([
+      const [projects, catRes, namecardRes, projectNamecardRes] = await Promise.all([
         ProjectsAPI.getAll(),
         fetch('/api/categories').then(r => r.ok ? r.json() : []),
-        fetch('/api/site-settings/namecard-image').then(r => r.ok ? r.json() : null)
+        fetch('/api/site-settings/namecard-image').then(r => r.ok ? r.json() : null),
+        fetch('/api/site-settings/project-namecard-image').then(r => r.ok ? r.json() : null)
       ]);
       this.projects = projects;
       this.categories = catRes;
       this.namecardImage = namecardRes;
+      this.projectNamecardImage = projectNamecardRes;
     } catch (error) {
       console.error('Failed to load projects:', error);
     } finally {

@@ -47,6 +47,7 @@
 	/>
 	<ProjectManager {getToken} />
 	<NamecardImageSettings {getToken} />
+	<NamecardImageSettings {getToken} apiPath="project-namecard-image" title="Project Page Namecard" subtitle="Optional image for the left panel on project pages" />
 </SignedIn>
 
 <SignedOut>

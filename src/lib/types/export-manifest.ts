@@ -15,6 +15,14 @@ export interface ExportSiteSettings {
 		imageHash?: string;
 		_localImagePath?: string;
 	};
+	projectNamecardImage?: {
+		imageUrl: string;
+		positionX: number;
+		positionY: number;
+		zoom: number;
+		imageHash?: string;
+		_localImagePath?: string;
+	};
 }
 
 export interface ExportCategory {

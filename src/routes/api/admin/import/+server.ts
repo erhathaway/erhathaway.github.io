@@ -238,12 +238,15 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	}
 
 	// --- Process Site Settings ---
-	if (manifest.siteSettings?.namecardImage) {
-		const nc = manifest.siteSettings.namecardImage;
-		let imageUrl = nc.imageUrl;
+	const importNamecardSetting = async (
+		data: NonNullable<typeof manifest.siteSettings>['namecardImage'],
+		settingKey: string
+	) => {
+		if (!data) return;
+		let imageUrl = data.imageUrl;
 
-		if (nc._localImagePath) {
-			const newUrl = await uploadImage(zip, nc._localImagePath, bucket, summary);
+		if (data._localImagePath) {
+			const newUrl = await uploadImage(zip, data._localImagePath, bucket, summary);
 			if (newUrl) {
 				imageUrl = newUrl;
 			}
@@ -251,17 +254,17 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 		const value = {
 			imageUrl,
-			positionX: nc.positionX,
-			positionY: nc.positionY,
-			zoom: nc.zoom
+			positionX: data.positionX,
+			positionY: data.positionY,
+			zoom: data.zoom
 		};
 
-		await db.delete(siteSettings).where(eq(siteSettings.key, 'namecard_image'));
-		await db.insert(siteSettings).values({
-			key: 'namecard_image',
-			value
-		});
-	}
+		await db.delete(siteSettings).where(eq(siteSettings.key, settingKey));
+		await db.insert(siteSettings).values({ key: settingKey, value });
+	};
+
+	await importNamecardSetting(manifest.siteSettings?.namecardImage, 'namecard_image');
+	await importNamecardSetting(manifest.siteSettings?.projectNamecardImage, 'project_namecard_image');
 
 	return json({ success: true, summary }, { headers: corsHeaders });
 };
