@@ -3,9 +3,27 @@
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
   let { data }: { data: PageData } = $props();
 
   const item = $derived(portfolio.allItems.find(i => i.id === data.projectId));
+
+  type Artifact = { id: number; schema: string; dataBlob: unknown; isCover: boolean };
+  let artifacts: Artifact[] = $state([]);
+
+  async function loadArtifacts(projectId: number) {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/artifacts`);
+      if (res.ok) {
+        artifacts = await res.json();
+      }
+    } catch {
+      // best-effort
+    }
+  }
+
+  // Non-cover published artifacts
+  const additionalArtifacts = $derived(artifacts.filter(a => !a.isCover));
 
   // Clear hover state when landing on a project page
   onMount(() => {
@@ -14,6 +32,7 @@
     if (portfolio.allItems.length === 0 && !portfolio.loading) {
       portfolio.loadProjects();
     }
+    loadArtifacts(data.projectId);
   });
 </script>
 
@@ -96,15 +115,14 @@
       </div>
       {/if}
 
-      <!-- Additional images grid -->
-      <div class="grid grid-cols-2 gap-4 mb-12">
-        <div class="relative aspect-square overflow-hidden rounded-lg">
-          <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {item.gradientColors} opacity-80"></div>
+      <!-- Additional artifacts -->
+      {#if additionalArtifacts.length > 0}
+        <div class="grid grid-cols-2 gap-4 mb-12">
+          {#each additionalArtifacts as artifact (artifact.id)}
+            <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+          {/each}
         </div>
-        <div class="relative aspect-square overflow-hidden rounded-lg">
-          <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {item.gradientColors} opacity-60"></div>
-        </div>
-      </div>
+      {/if}
     </div>
 </main>
 {/key}
