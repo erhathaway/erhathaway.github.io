@@ -44,7 +44,7 @@
 
   const titleClass = $derived.by(() =>
     isTile
-      ? 'text-2xl sm:text-3xl font-semibold leading-tight mb-5 vt-exclude-namecard'
+      ? 'text-3xl sm:text-4xl leading-tight mb-5 vt-exclude-namecard'
       : 'font-display text-3xl font-semibold text-walnut leading-tight mb-4 vt-exclude-namecard'
   );
   const descriptionClass = $derived.by(() =>
