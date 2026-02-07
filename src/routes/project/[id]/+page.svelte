@@ -55,7 +55,7 @@
     <!-- Hero: text + cover side by side -->
     <div class="flex min-h-screen items-center">
       <!-- Left: project info -->
-      <div class="w-80 shrink-0 self-stretch flex flex-col p-8 pt-10" style="background: linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%);">
+      <div class="w-80 shrink-0 self-stretch flex flex-col p-8 pt-10">
         <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-10 text-sm" onclick={(event) => {
           event.preventDefault();
           goto('/', { state: { hoverId: item.id } });
