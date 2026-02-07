@@ -35,6 +35,7 @@
   type DockTarget =
     | { target: 'item'; id: number; dockSide: 'left' | 'right' }
     | { target: 'namecard'; dockSide: 'left' | 'right' }
+    | { target: 'filler'; dockSide: 'left' | 'right' }
     | null;
 
   const hoveredItem = $derived(portfolio.hoveredItem);
@@ -51,6 +52,23 @@
 
   const itemTilesCount = $derived.by(() => {
     return portfolio.filteredItems.length + (homeNamecardInGallery ? 1 : 0);
+  });
+
+  const displayTileCount = $derived.by(() => itemTilesCount);
+  const fillerSpan = $derived.by(() => {
+    const remainder = displayTileCount % 3;
+    if (remainder === 0) return 0;
+    return 3 - remainder; // 1 or 2
+  });
+  const fillerStartDisplayIndex = $derived.by(() => displayTileCount);
+  const fillerClass = $derived.by(() => {
+    if (fillerSpan === 2) {
+      return 'col-span-2 aspect-[2/1]';
+    }
+    if (fillerSpan === 1) {
+      return 'col-span-1 aspect-square';
+    }
+    return '';
   });
 
   const dockTarget = $derived.by((): DockTarget => {
@@ -72,7 +90,16 @@
     const pick = (allowNamecard: boolean): DockTarget => {
       for (const candidate of candidates) {
         if (candidate.displayIndex < 0) continue;
-        if (candidate.displayIndex >= itemTilesCount) continue;
+        if (candidate.displayIndex >= itemTilesCount) {
+          if (
+            fillerSpan > 0 &&
+            candidate.displayIndex >= fillerStartDisplayIndex &&
+            candidate.displayIndex < fillerStartDisplayIndex + fillerSpan
+          ) {
+            return { target: 'filler', dockSide: candidate.dockSide };
+          }
+          continue;
+        }
 
         if (homeNamecardInGallery && candidate.displayIndex === 0) {
           if (allowNamecard) return { target: 'namecard', dockSide: candidate.dockSide };
@@ -101,24 +128,6 @@
   const dockTargetItemId = $derived.by(() => (dockTarget?.target === 'item' ? dockTarget.id : null));
   const dockSide = $derived.by(() => dockTarget?.dockSide ?? 'left');
   const hasDockTarget = $derived.by(() => dockTarget !== null);
-
-  const displayTileCount = $derived.by(() => {
-    return portfolio.filteredItems.length + (homeNamecardInGallery ? 1 : 0);
-  });
-  const fillerSpan = $derived.by(() => {
-    const remainder = displayTileCount % 3;
-    if (remainder === 0) return 0;
-    return 3 - remainder; // 1 or 2
-  });
-  const fillerClass = $derived.by(() => {
-    if (fillerSpan === 2) {
-      return 'col-span-2 aspect-[2/1]';
-    }
-    if (fillerSpan === 1) {
-      return 'col-span-1 aspect-square';
-    }
-    return '';
-  });
 </script>
 
 <main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-thin" onmouseleave={handleGalleryLeave}>
@@ -183,7 +192,13 @@
       />
     {/each}
     {#if fillerSpan > 0}
-      <div class="gallery-item relative overflow-hidden border {fillerClass}" aria-hidden="true" style="border-color: rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));"></div>
+      <div class="gallery-item relative overflow-hidden border {fillerClass}" aria-hidden="true" style="border-color: rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));">
+        {#if hoveredItem && dockTarget?.target === 'filler'}
+          <div class="absolute inset-0 z-20 pointer-events-none">
+            <HoverInfo item={hoveredItem} variant="tile" dockSide={dockSide} />
+          </div>
+        {/if}
+      </div>
     {/if}
     {#if browser && $page.url.pathname === '/'}
       <div class="col-span-3">
