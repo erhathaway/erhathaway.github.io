@@ -1,10 +1,14 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import GalleryGrid from '$lib/components/GalleryGrid.svelte';
   import { portfolio } from '$lib/stores/portfolio.svelte';
 
-  onMount(() => {
-    portfolio.loadProjects();
+  let { data } = $props();
+
+  $effect(() => {
+    portfolio.projects = data.projects;
+    portfolio.categories = data.categories;
+    portfolio.namecardImage = data.namecardImage;
+    portfolio.projectNamecardImage = data.projectNamecardImage;
   });
 </script>
 
