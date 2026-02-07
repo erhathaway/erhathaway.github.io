@@ -70,6 +70,17 @@
   });
 </script>
 
+<svelte:head>
+  {#if data.meta}
+    {@const year = data.meta.year ? ` (${data.meta.year})` : ''}
+    <meta name="description" content={data.meta.description
+      ? `${data.meta.name}${year} — ${data.meta.description}`
+      : `${data.meta.name}${year} by Ethan Hathaway.`} />
+  {:else}
+    <meta name="description" content="A project by Ethan Hathaway." />
+  {/if}
+</svelte:head>
+
 {#if !item}
   <main class="h-screen flex items-center justify-center bg-charcoal">
     {#if portfolio.loading}

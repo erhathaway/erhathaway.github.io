@@ -8,4 +8,8 @@
   });
 </script>
 
+<svelte:head>
+  <meta name="description" content="Woodworking, pottery, and other things I make." />
+</svelte:head>
+
 <GalleryGrid />
