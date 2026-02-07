@@ -38,6 +38,9 @@
   const hasNext = $derived(currentIndex >= 0 && currentIndex < portfolio.filteredItems.length - 1);
 
   function handleKeydown(e: KeyboardEvent) {
+    // Don't hijack browser back/forward (Cmd+Arrow) or any modified arrow keys
+    if (e.metaKey || e.ctrlKey) return;
+
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       const offset = e.key === 'ArrowLeft' ? -1 : 1;
@@ -48,7 +51,7 @@
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       if (!mainEl) return;
       e.preventDefault();
-      const fast = e.shiftKey || e.altKey || e.metaKey;
+      const fast = e.shiftKey || e.altKey;
       const amount = (e.key === 'ArrowUp' ? -1 : 1) * (fast ? window.innerHeight : 200);
       mainEl.scrollBy({ top: amount, behavior: 'smooth' });
     }
