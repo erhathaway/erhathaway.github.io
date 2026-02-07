@@ -4,9 +4,10 @@
 
 	interface Props {
 		onOpenModal: () => void;
+		inline?: boolean;
 	}
 
-	let { onOpenModal }: Props = $props();
+	let { onOpenModal, inline = false }: Props = $props();
 
 	const ctx = useClerkContext();
 	const isSignedIn = $derived(ctx.auth.userId !== null);
@@ -39,7 +40,7 @@
 	{:else}
 		<a
 			href="/admin"
-			class="fixed top-4 right-4 text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors z-50"
+			class="{inline ? '' : 'fixed top-4 right-4 z-50'} text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors"
 		>
 			{@render letterReveal('Admin', 0.8)}
 		</a>
@@ -47,7 +48,7 @@
 {:else}
 	<button
 		onclick={onOpenModal}
-		class="fixed top-4 right-4 text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors z-50"
+		class="{inline ? '' : 'fixed top-4 right-4 z-50'} text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors"
 	>
 		{@render letterReveal('Admin', 0.8)}
 	</button>

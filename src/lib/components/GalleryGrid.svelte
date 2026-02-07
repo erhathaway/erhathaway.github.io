@@ -5,6 +5,7 @@
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
   import HoverInfo from './HoverInfo.svelte';
+  import AuthButton from './AuthButton.svelte';
 
   function handleGalleryLeave() {
     portfolio.setHoveredItem(null);
@@ -208,7 +209,7 @@
           class="relative overflow-hidden border backdrop-blur-md"
           style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08)); background-color: #f3e9e1;"
         >
-          <div class="px-8 py-6 flex items-center justify-center">
+          <div class="relative px-8 py-6 flex items-center justify-center">
             <div class="flex flex-wrap justify-center gap-3">
               <a
                 href="https://github.com/erhathaway"
@@ -229,6 +230,9 @@
                 class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream transition-all duration-300"
                 style="background: rgba(245, 241, 235, 0.94);"
               >Contact</a>
+            </div>
+            <div class="absolute right-8 top-1/2 -translate-y-1/2">
+              <AuthButton inline onOpenModal={() => window.dispatchEvent(new Event('auth:open-login'))} />
             </div>
           </div>
         </div>

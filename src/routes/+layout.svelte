@@ -266,6 +266,9 @@
 		};
 		window.addEventListener('namecard:open', handleNameCardOpen);
 
+		const handleAuthOpen = () => { showLoginModal = true; };
+		window.addEventListener('auth:open-login', handleAuthOpen);
+
 		const unsubscribe = page.subscribe(($page) => {
 			const hoverId = $page.state?.hoverId as number | undefined;
 			if (hoverId && hoverId !== appliedHoverId) {
@@ -277,6 +280,7 @@
 		return () => {
 			window.removeEventListener('resize', handleResize);
 			window.removeEventListener('namecard:open', handleNameCardOpen);
+			window.removeEventListener('auth:open-login', handleAuthOpen);
 			unsubscribe();
 		};
 	});
@@ -461,9 +465,6 @@
 			</div>
 		{/if}
 		<div class="vt-exclude-namecard" style="view-transition-name: auth-button">
-			{#if !isProjectPage}
-				<AuthButton onOpenModal={() => showLoginModal = true} />
-			{/if}
 		</div>
 		{#if stickyBottomUiEnabled && panelTransitionNames}
 			<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none vt-exclude-namecard" style="view-transition-name: social-links">
