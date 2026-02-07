@@ -59,6 +59,7 @@ export interface ExportArtifact {
 	coverPositionY?: number;
 	coverZoom?: number;
 	_localImagePath?: string;
+	_localHoverImagePath?: string;
 }
 
 export type ConflictResolution = 'clobber' | 'merge' | 'skip';

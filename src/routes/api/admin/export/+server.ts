@@ -151,29 +151,53 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			};
 
 			// Try to fetch and include the image
-			if (artifact.schema === 'image-v1' && dataBlob.imageUrl && bucket) {
-				const key = extractR2Key(String(dataBlob.imageUrl));
-				if (key && !imageMap.has(key)) {
-					try {
-						const obj = await bucket.get(key);
-						if (obj) {
-							const buffer = await obj.arrayBuffer();
-							imageMap.set(key, buffer);
-							const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-							const hashHex = Array.from(new Uint8Array(hashBuffer))
-								.map((b) => b.toString(16).padStart(2, '0'))
-								.join('');
-							imageHashMap.set(key, hashHex);
+			if (artifact.schema === 'image-v1' && bucket) {
+				// Main image
+				if (dataBlob.imageUrl) {
+					const key = extractR2Key(String(dataBlob.imageUrl));
+					if (key && !imageMap.has(key)) {
+						try {
+							const obj = await bucket.get(key);
+							if (obj) {
+								const buffer = await obj.arrayBuffer();
+								imageMap.set(key, buffer);
+								const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+								const hashHex = Array.from(new Uint8Array(hashBuffer))
+									.map((b) => b.toString(16).padStart(2, '0'))
+									.join('');
+								imageHashMap.set(key, hashHex);
+							}
+						} catch {
+							// Skip image if fetch fails
 						}
-					} catch {
-						// Skip image if fetch fails
+					}
+					if (key && imageMap.has(key)) {
+						const localPath = `images/${key.replace(/^artifacts\//, '')}`;
+						exportArtifact._localImagePath = localPath;
+						exportArtifact.dataBlob = { ...dataBlob, imageUrl: localPath };
+						exportArtifact.imageHash = imageHashMap.get(key);
 					}
 				}
-				if (key && imageMap.has(key)) {
-					const localPath = `images/${key.replace(/^artifacts\//, '')}`;
-					exportArtifact._localImagePath = localPath;
-					exportArtifact.dataBlob = { ...dataBlob, imageUrl: localPath };
-					exportArtifact.imageHash = imageHashMap.get(key);
+
+				// Hover image
+				if (dataBlob.hoverImageUrl) {
+					const hoverKey = extractR2Key(String(dataBlob.hoverImageUrl));
+					if (hoverKey && !imageMap.has(hoverKey)) {
+						try {
+							const obj = await bucket.get(hoverKey);
+							if (obj) {
+								const buffer = await obj.arrayBuffer();
+								imageMap.set(hoverKey, buffer);
+							}
+						} catch {
+							// Skip hover image if fetch fails
+						}
+					}
+					if (hoverKey && imageMap.has(hoverKey)) {
+						const localPath = `images/${hoverKey.replace(/^artifacts\//, '')}`;
+						exportArtifact._localHoverImagePath = localPath;
+						exportArtifact.dataBlob = { ...exportArtifact.dataBlob, hoverImageUrl: localPath };
+					}
 				}
 			}
 

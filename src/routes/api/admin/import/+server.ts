@@ -349,10 +349,18 @@ async function createProject(
 	for (const artifact of proj.artifacts) {
 		const dataBlob = { ...artifact.dataBlob };
 
-		if (artifact._localImagePath && artifact.schema === 'image-v1') {
-			const newUrl = await uploadImage(zip, artifact._localImagePath, bucket, summary);
-			if (newUrl) {
-				dataBlob.imageUrl = newUrl;
+		if (artifact.schema === 'image-v1') {
+			if (artifact._localImagePath) {
+				const newUrl = await uploadImage(zip, artifact._localImagePath, bucket, summary);
+				if (newUrl) {
+					dataBlob.imageUrl = newUrl;
+				}
+			}
+			if (artifact._localHoverImagePath) {
+				const newUrl = await uploadImage(zip, artifact._localHoverImagePath, bucket, summary);
+				if (newUrl) {
+					dataBlob.hoverImageUrl = newUrl;
+				}
 			}
 		}
 
@@ -547,15 +555,28 @@ async function mergeProject(
 
 		const dataBlob = { ...artifact.dataBlob };
 
-		if (artifact._localImagePath && artifact.schema === 'image-v1') {
-			const newUrl = await uploadImage(
-				zip,
-				artifact._localImagePath,
-				bucket,
-				summary
-			);
-			if (newUrl) {
-				dataBlob.imageUrl = newUrl;
+		if (artifact.schema === 'image-v1') {
+			if (artifact._localImagePath) {
+				const newUrl = await uploadImage(
+					zip,
+					artifact._localImagePath,
+					bucket,
+					summary
+				);
+				if (newUrl) {
+					dataBlob.imageUrl = newUrl;
+				}
+			}
+			if (artifact._localHoverImagePath) {
+				const newUrl = await uploadImage(
+					zip,
+					artifact._localHoverImagePath,
+					bucket,
+					summary
+				);
+				if (newUrl) {
+					dataBlob.hoverImageUrl = newUrl;
+				}
 			}
 		}
 
