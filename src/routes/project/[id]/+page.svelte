@@ -25,6 +25,11 @@
   // Non-cover published artifacts
   const additionalArtifacts = $derived(artifacts.filter(a => !a.isCover));
 
+  // Reload artifacts whenever the project changes
+  $effect(() => {
+    loadArtifacts(data.projectId);
+  });
+
   // Clear hover state when landing on a project page
   onMount(() => {
     portfolio.hoveredItemId = null;
@@ -32,7 +37,6 @@
     if (portfolio.allItems.length === 0 && !portfolio.loading) {
       portfolio.loadProjects();
     }
-    loadArtifacts(data.projectId);
   });
 </script>
 
