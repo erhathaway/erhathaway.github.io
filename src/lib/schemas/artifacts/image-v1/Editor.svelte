@@ -25,6 +25,12 @@
 	let isDragOver = $state(false);
 	let step = $state<'idle' | 'pick-source'>('idle');
 
+	// Hover image state
+	let hoverFileInput: HTMLInputElement | null = null;
+	let hoverUploading = $state(false);
+	let hoverUploadError = $state<string | null>(null);
+	let hoverPreviewUrl = $state<string | null>(null);
+
 	const hasImage = $derived(!!displayUrl);
 
 	const setUploadState = (next: { uploading: boolean; error: string | null }) => {
@@ -40,7 +46,8 @@
 			description: (target?.value ?? '').trim() || undefined,
 			positionX: current.positionX,
 			positionY: current.positionY,
-			zoom: current.zoom
+			zoom: current.zoom,
+			hoverImageUrl: current.hoverImageUrl
 		};
 		onChange?.(next);
 	};
@@ -51,8 +58,62 @@
 			description: current.description?.trim() || undefined,
 			positionX: x,
 			positionY: y,
-			zoom: z
+			zoom: z,
+			hoverImageUrl: current.hoverImageUrl
 		});
+	};
+
+	const handleHoverFile = async (file: File) => {
+		if (!onUpload) return;
+		hoverUploading = true;
+		hoverUploadError = null;
+		if (hoverPreviewUrl) URL.revokeObjectURL(hoverPreviewUrl);
+		hoverPreviewUrl = URL.createObjectURL(file);
+		try {
+			const uploadedUrl = await onUpload(file);
+			onChange?.({
+				...current,
+				imageUrl: current.imageUrl?.trim() || '',
+				description: current.description?.trim() || undefined,
+				hoverImageUrl: uploadedUrl
+			});
+			await tick();
+			hoverUploading = false;
+			if (hoverPreviewUrl) { URL.revokeObjectURL(hoverPreviewUrl); hoverPreviewUrl = null; }
+		} catch (err) {
+			hoverUploadError = err instanceof Error ? err.message : 'Upload failed.';
+			hoverUploading = false;
+			if (current.hoverImageUrl && hoverPreviewUrl) { URL.revokeObjectURL(hoverPreviewUrl); hoverPreviewUrl = null; }
+		}
+	};
+
+	const handleHoverFileInput = async (event: Event) => {
+		event.stopPropagation();
+		const target = event.currentTarget as HTMLInputElement | null;
+		const file = target?.files?.[0];
+		if (!file) return;
+		await handleHoverFile(file);
+		if (target) target.value = '';
+	};
+
+	const removeHoverImage = () => {
+		if (hoverPreviewUrl) { URL.revokeObjectURL(hoverPreviewUrl); hoverPreviewUrl = null; }
+		onChange?.({
+			...current,
+			imageUrl: current.imageUrl?.trim() || '',
+			description: current.description?.trim() || undefined,
+			hoverImageUrl: undefined
+		});
+	};
+
+	const hoverDisplayUrl = $derived.by(() => {
+		if (hoverUploading && hoverPreviewUrl) return hoverPreviewUrl;
+		return current.hoverImageUrl ?? '';
+	});
+
+	const attachHoverFileInput = (node: HTMLInputElement) => {
+		hoverFileInput = node;
+		return { destroy() { if (hoverFileInput === node) hoverFileInput = null; } };
 	};
 
 	const clearPreview = () => {
@@ -82,7 +143,8 @@
 				description: current.description?.trim() || undefined,
 				positionX: current.positionX,
 				positionY: current.positionY,
-				zoom: current.zoom
+				zoom: current.zoom,
+				hoverImageUrl: current.hoverImageUrl
 			});
 			await tick();
 			setUploadState({ uploading: false, error: null });
@@ -175,6 +237,7 @@
 
 	onDestroy(() => {
 		clearPreview();
+		if (hoverPreviewUrl) URL.revokeObjectURL(hoverPreviewUrl);
 	});
 </script>
 
@@ -319,6 +382,61 @@
 			zoom={current.zoom ?? 1}
 			onChange={handlePositionChange}
 		/>
+
+		<!-- Hover image (optional) -->
+		<div class="flex flex-col gap-2">
+			<div class="flex items-center justify-between">
+				<span class="text-xs font-medium text-slate-500">Hover image</span>
+				{#if hoverDisplayUrl}
+					<button
+						type="button"
+						class="text-[11px] text-slate-400 hover:text-red-500 transition-colors duration-150"
+						onclick={removeHoverImage}
+					>
+						Remove
+					</button>
+				{/if}
+			</div>
+			{#if hoverDisplayUrl}
+				<div class="relative rounded-lg overflow-hidden border border-slate-200">
+					<img
+						src={hoverDisplayUrl}
+						alt="Hover preview"
+						class="w-full max-h-32 object-cover"
+						class:opacity-50={hoverUploading}
+					/>
+					{#if hoverUploading}
+						<div class="absolute inset-0 flex items-center justify-center">
+							<div class="flex items-center gap-2 bg-white/90 rounded-lg px-3 py-1.5">
+								<div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-600"></div>
+								<span class="text-xs font-medium text-slate-700">Uploading...</span>
+							</div>
+						</div>
+					{/if}
+				</div>
+			{:else}
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="flex items-center justify-center gap-2 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 hover:border-slate-300 py-4 cursor-pointer transition-colors duration-150"
+					onclick={() => hoverFileInput?.click()}
+				>
+					<svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
+					</svg>
+					<span class="text-xs text-slate-400">Add hover image</span>
+				</div>
+			{/if}
+			{#if hoverUploadError}
+				<p class="text-xs font-medium text-red-600">{hoverUploadError}</p>
+			{/if}
+			<input
+				type="file"
+				accept="image/*"
+				class="sr-only"
+				{@attach attachHoverFileInput}
+				onchange={handleHoverFileInput}
+			/>
+		</div>
 	{/if}
 
 	{#if errors.length > 0}

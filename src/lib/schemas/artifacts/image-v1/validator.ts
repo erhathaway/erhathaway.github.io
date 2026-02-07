@@ -10,6 +10,7 @@ export type ImageV1Data = {
 	positionX?: number;
 	positionY?: number;
 	zoom?: number;
+	hoverImageUrl?: string;
 };
 
 export const createImageV1Draft = (): ImageV1Data => ({
@@ -53,6 +54,11 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 		errors.push('zoom must be a number');
 	}
 
+	const hoverImageUrl = data.hoverImageUrl;
+	if (hoverImageUrl !== undefined && typeof hoverImageUrl !== 'string') {
+		errors.push('hoverImageUrl must be a string');
+	}
+
 	if (errors.length > 0) {
 		return { ok: false, errors };
 	}
@@ -64,7 +70,8 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 			description: typeof description === 'string' ? description.trim() || undefined : undefined,
 			...(typeof positionX === 'number' ? { positionX } : {}),
 			...(typeof positionY === 'number' ? { positionY } : {}),
-			...(typeof zoom === 'number' ? { zoom } : {})
+			...(typeof zoom === 'number' ? { zoom } : {}),
+			...(typeof hoverImageUrl === 'string' && hoverImageUrl.trim() ? { hoverImageUrl: hoverImageUrl.trim() } : {})
 		}
 	};
 };

@@ -7,6 +7,7 @@ export interface PortfolioItem {
   description: string;
   metadata: Record<string, string>;
   image?: string;
+  hoverImage?: string;
   gridSize?: GridSize;
   gradientColors: string;
   coverPosition?: { x: number; y: number; zoom: number };

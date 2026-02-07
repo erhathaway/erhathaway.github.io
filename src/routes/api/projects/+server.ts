@@ -82,11 +82,13 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	const result = rows.map((row) => {
 		let coverImageUrl: string | null = null;
+		let coverHoverImageUrl: string | null = null;
 		if (row.coverArtifactDataBlob) {
 			const blob = typeof row.coverArtifactDataBlob === 'string'
 				? JSON.parse(row.coverArtifactDataBlob)
 				: row.coverArtifactDataBlob;
 			coverImageUrl = blob?.imageUrl ?? null;
+			coverHoverImageUrl = blob?.hoverImageUrl ?? null;
 		}
 		return {
 			id: row.id,
@@ -95,6 +97,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			description: row.description,
 			isPublished: row.isPublished,
 			coverImageUrl,
+			coverHoverImageUrl,
 			coverPositionX: row.coverPositionX ?? 50,
 			coverPositionY: row.coverPositionY ?? 50,
 			coverZoom: row.coverZoom ?? 1,

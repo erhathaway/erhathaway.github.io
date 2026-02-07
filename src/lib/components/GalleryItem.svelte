@@ -98,12 +98,23 @@
     <img
       src={item.image}
       alt={item.name}
-      class="w-full h-full object-cover"
+      class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''}"
       style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
       style:transform="scale({item.coverPosition?.zoom ?? 1})"
       style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
       loading="lazy"
     />
+    {#if item.hoverImage}
+      <img
+        src={item.hoverImage}
+        alt={item.name}
+        class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+        style:transform="scale({item.coverPosition?.zoom ?? 1})"
+        style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+        loading="lazy"
+      />
+    {/if}
   {:else}
     <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {item.gradientColors}"></div>
   {/if}

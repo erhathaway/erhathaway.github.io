@@ -5,6 +5,7 @@ interface Project {
 	description: string | null;
 	isPublished: boolean;
 	coverImageUrl: string | null;
+	coverHoverImageUrl: string | null;
 	coverPositionX: number;
 	coverPositionY: number;
 	coverZoom: number;
