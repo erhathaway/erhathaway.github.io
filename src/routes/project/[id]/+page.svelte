@@ -31,6 +31,27 @@
     loadArtifacts(data.projectId);
   });
 
+  let mainEl = $state<HTMLElement | null>(null);
+
+  const currentIndex = $derived(portfolio.filteredItems.findIndex(i => i.id === data.projectId));
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const offset = e.key === 'ArrowLeft' ? -1 : 1;
+      const nextIndex = currentIndex + offset;
+      if (nextIndex >= 0 && nextIndex < portfolio.filteredItems.length) {
+        goto(`/project/${portfolio.filteredItems[nextIndex].id}`);
+      }
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      if (!mainEl) return;
+      e.preventDefault();
+      const fast = e.shiftKey || e.altKey || e.metaKey;
+      const amount = (e.key === 'ArrowUp' ? -1 : 1) * (fast ? window.innerHeight : 200);
+      mainEl.scrollBy({ top: amount, behavior: 'smooth' });
+    }
+  }
+
   // Clear hover state when landing on a project page
   onMount(() => {
     portfolio.hoveredItemId = null;
@@ -38,6 +59,9 @@
     if (portfolio.allItems.length === 0 && !portfolio.loading) {
       portfolio.loadProjects();
     }
+
+    window.addEventListener('keydown', handleKeydown);
+    return () => window.removeEventListener('keydown', handleKeydown);
   });
 </script>
 
@@ -51,7 +75,7 @@
   </main>
 {:else}
 {#key item.id}
-<main class="h-screen overflow-y-auto bg-charcoal" style="border-left: 1px solid #00000024;">
+<main bind:this={mainEl} class="h-screen overflow-y-auto bg-charcoal" style="border-left: 1px solid #00000024;">
     <!-- Hero: text + cover side by side -->
     <div class="flex min-h-screen items-center">
       <!-- Left: project info -->
