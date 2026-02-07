@@ -35,6 +35,9 @@ export interface ExportArtifact {
 	dataBlob: Record<string, unknown>;
 	isPublished: boolean;
 	isCover?: boolean;
+	coverPositionX?: number;
+	coverPositionY?: number;
+	coverZoom?: number;
 	_localImagePath?: string;
 }
 

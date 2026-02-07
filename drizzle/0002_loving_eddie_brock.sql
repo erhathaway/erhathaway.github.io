@@ -1,0 +1,1 @@
+ALTER TABLE `project_cover_artifact` ADD `zoom` real DEFAULT 1 NOT NULL;

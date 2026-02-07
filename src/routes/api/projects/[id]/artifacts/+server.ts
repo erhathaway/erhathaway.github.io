@@ -113,7 +113,10 @@ export const GET: RequestHandler = async ({ params, request, locals, platform })
 			schema: projectArtifacts.schema,
 			dataBlob: projectArtifacts.dataBlob,
 			isPublished: projectArtifacts.isPublished,
-			coverArtifactId: projectCoverArtifact.artifactId
+			coverArtifactId: projectCoverArtifact.artifactId,
+			coverPositionX: projectCoverArtifact.positionX,
+			coverPositionY: projectCoverArtifact.positionY,
+			coverZoom: projectCoverArtifact.zoom
 		})
 		.from(projectArtifacts)
 		.leftJoin(
@@ -127,7 +130,10 @@ export const GET: RequestHandler = async ({ params, request, locals, platform })
 
 	const normalized = rows.map((row) => ({
 		...normalizeArtifactRow(row),
-		isCover: row.coverArtifactId !== null
+		isCover: row.coverArtifactId !== null,
+		coverPositionX: row.coverPositionX ?? 50,
+		coverPositionY: row.coverPositionY ?? 50,
+		coverZoom: row.coverZoom ?? 1
 	}));
 
 	return json(normalized, { headers: corsHeaders });

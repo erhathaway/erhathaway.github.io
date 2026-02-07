@@ -1,4 +1,4 @@
-import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 export const projects = sqliteTable('projects', {
@@ -55,7 +55,10 @@ export const projectCoverArtifact = sqliteTable('project_cover_artifact', {
 		.references(() => projects.id, { onDelete: 'cascade' }),
 	artifactId: integer('artifact_id')
 		.notNull()
-		.references(() => projectArtifacts.id, { onDelete: 'cascade' })
+		.references(() => projectArtifacts.id, { onDelete: 'cascade' }),
+	positionX: real('position_x').notNull().default(50),
+	positionY: real('position_y').notNull().default(50),
+	zoom: real('zoom').notNull().default(1)
 });
 
 export const integrations = sqliteTable('integrations', {

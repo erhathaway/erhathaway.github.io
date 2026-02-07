@@ -29,7 +29,8 @@ class PortfolioStore {
         metadata,
         image: project.coverImageUrl ?? undefined,
         gridSize: 'regular',
-        gradientColors: 'from-[#C7D2D8] via-[#B8C5CE] to-[#D0DAE0]'
+        gradientColors: 'from-[#C7D2D8] via-[#B8C5CE] to-[#D0DAE0]',
+        coverPosition: { x: project.coverPositionX ?? 50, y: project.coverPositionY ?? 50, zoom: project.coverZoom ?? 1 }
       } satisfies PortfolioItem;
     });
   });

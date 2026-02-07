@@ -39,7 +39,13 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.where(eq(projectCoverArtifact.projectId, projectId));
 
 	return json(
-		{ projectId, artifactId: row?.artifactId ?? null },
+		{
+			projectId,
+			artifactId: row?.artifactId ?? null,
+			positionX: row?.positionX ?? 50,
+			positionY: row?.positionY ?? 50,
+			zoom: row?.zoom ?? 1
+		},
 		{ headers: corsHeaders }
 	);
 };
@@ -65,6 +71,10 @@ export const PUT: RequestHandler = async ({ params, request, locals, platform })
 		throw error(400, 'artifactId must be a positive integer');
 	}
 
+	const positionX = typeof body.positionX === 'number' ? body.positionX : 50;
+	const positionY = typeof body.positionY === 'number' ? body.positionY : 50;
+	const zoom = typeof body.zoom === 'number' ? body.zoom : 1;
+
 	// Delete any existing cover for this project, then insert the new one.
 	// The unique constraint on project_id ensures only one cover per project.
 	await db
@@ -73,9 +83,9 @@ export const PUT: RequestHandler = async ({ params, request, locals, platform })
 
 	await db
 		.insert(projectCoverArtifact)
-		.values({ projectId, artifactId });
+		.values({ projectId, artifactId, positionX, positionY, zoom });
 
-	return json({ projectId, artifactId }, { headers: corsHeaders });
+	return json({ projectId, artifactId, positionX, positionY, zoom }, { headers: corsHeaders });
 };
 
 export const DELETE: RequestHandler = async ({ params, request, locals, platform }) => {

@@ -9,4 +9,5 @@ export interface PortfolioItem {
   image?: string;
   gridSize?: GridSize;
   gradientColors: string;
+  coverPosition?: { x: number; y: number; zoom: number };
 }

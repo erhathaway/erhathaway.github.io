@@ -123,9 +123,14 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			.from(projectArtifacts)
 			.where(eq(projectArtifacts.projectId, project.id));
 
-		// Get cover artifact ID
+		// Get cover artifact ID and position
 		const [coverRow] = await db
-			.select({ artifactId: projectCoverArtifact.artifactId })
+			.select({
+				artifactId: projectCoverArtifact.artifactId,
+				positionX: projectCoverArtifact.positionX,
+				positionY: projectCoverArtifact.positionY,
+				zoom: projectCoverArtifact.zoom
+			})
 			.from(projectCoverArtifact)
 			.where(eq(projectCoverArtifact.projectId, project.id));
 		const coverArtifactId = coverRow?.artifactId ?? null;
@@ -139,12 +144,14 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 					: artifact.dataBlob;
 			dataBlob = { ...dataBlob };
 
+			const isCover = artifact.id === coverArtifactId;
 			const exportArtifact: ExportArtifact = {
 				id: artifact.id,
 				schema: artifact.schema,
 				dataBlob,
 				isPublished: artifact.isPublished,
-				isCover: artifact.id === coverArtifactId
+				isCover,
+				...(isCover && coverRow ? { coverPositionX: coverRow.positionX, coverPositionY: coverRow.positionY, coverZoom: coverRow.zoom } : {})
 			};
 
 			// Try to fetch and include the image

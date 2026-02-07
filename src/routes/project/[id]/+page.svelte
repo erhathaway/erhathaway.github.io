@@ -100,6 +100,8 @@
             src={item.image}
             alt={item.name}
             class="w-full h-full object-cover"
+            style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+            style:transform="scale({item.coverPosition?.zoom ?? 1})"
             loading="lazy"
           />
         {:else}

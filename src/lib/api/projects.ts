@@ -5,6 +5,9 @@ interface Project {
 	description: string | null;
 	isPublished: boolean;
 	coverImageUrl: string | null;
+	coverPositionX: number;
+	coverPositionY: number;
+	coverZoom: number;
 	categories: string[];
 	navAttributes: Array<{ name: string; value: string }>;
 }

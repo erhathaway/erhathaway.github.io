@@ -7,6 +7,7 @@
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
 	import { artifactSchemas, validateArtifactData, getArtifactSchema, getArtifactComponent } from '$lib/schemas/artifacts';
 	import GooglePhotosPickerModal from '$lib/components/GooglePhotosPickerModal.svelte';
+	import CoverPositionEditor from '$lib/components/CoverPositionEditor.svelte';
 
 	type Category = {
 		id: number;
@@ -38,6 +39,9 @@
 		dataBlob: unknown;
 		isPublished: boolean;
 		isCover: boolean;
+		coverPositionX: number;
+		coverPositionY: number;
+		coverZoom: number;
 	};
 
 	type PageProps = {
@@ -86,6 +90,9 @@
 		error: null
 	});
 	let editArtifactIsCover = $state(false);
+	let editCoverPositionX = $state(50);
+	let editCoverPositionY = $state(50);
+	let editCoverZoom = $state(1);
 
 	let addArtifactStep = $state<'idle' | 'pick-source'>('idle');
 	let googlePhotosConnected = $state(false);
@@ -503,6 +510,9 @@
 		editArtifactErrors = validation.ok ? [] : validation.errors;
 		editArtifactIsPublished = artifact.isPublished;
 		editArtifactIsCover = artifact.isCover;
+		editCoverPositionX = artifact.coverPositionX ?? 50;
+		editCoverPositionY = artifact.coverPositionY ?? 50;
+		editCoverZoom = artifact.coverZoom ?? 1;
 		editArtifactUploadState = { uploading: false, error: null };
 		showEditArtifactModal = true;
 	}
@@ -513,6 +523,9 @@
 		editArtifactErrors = [];
 		editArtifactIsPublished = false;
 		editArtifactIsCover = false;
+		editCoverPositionX = 50;
+		editCoverPositionY = 50;
+		editCoverZoom = 1;
 		editArtifactUploadState = { uploading: false, error: null };
 		showEditArtifactModal = false;
 	}
@@ -572,19 +585,26 @@
 		const wasCover = updated.isCover;
 		artifacts = artifacts.map((artifact) => (artifact.id === updated.id ? updated : artifact));
 
-		// Handle cover toggle
-		if (editArtifactIsCover && !wasCover) {
+		// Handle cover toggle and position
+		if (editArtifactIsCover) {
+			// Always PUT when cover is on — position may have changed even if already cover
 			const coverRes = await fetch(`/api/projects/${projectId}/cover`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ artifactId: editingArtifactId })
+				body: JSON.stringify({ artifactId: editingArtifactId, positionX: editCoverPositionX, positionY: editCoverPositionY, zoom: editCoverZoom })
 			});
 			if (!coverRes.ok) {
 				pageError = 'Artifact saved but failed to set as cover.';
 				cancelArtifactEdit();
 				return;
 			}
-			artifacts = artifacts.map((a) => ({ ...a, isCover: a.id === editingArtifactId }));
+			artifacts = artifacts.map((a) => ({
+				...a,
+				isCover: a.id === editingArtifactId,
+				coverPositionX: a.id === editingArtifactId ? editCoverPositionX : a.coverPositionX,
+				coverPositionY: a.id === editingArtifactId ? editCoverPositionY : a.coverPositionY,
+				coverZoom: a.id === editingArtifactId ? editCoverZoom : a.coverZoom
+			}));
 		} else if (!editArtifactIsCover && wasCover) {
 			const coverRes = await fetch(`/api/projects/${projectId}/cover`, {
 				method: 'DELETE',
@@ -905,7 +925,7 @@
 
 			if (artifactResponse.ok) {
 				const artifact = await artifactResponse.json();
-				artifacts = [{ ...artifact, projectId, isCover: false }, ...artifacts];
+				artifacts = [{ ...artifact, projectId, isCover: false, coverPositionX: 50, coverPositionY: 50, coverZoom: 1 }, ...artifacts];
 				pageSuccess = 'Uploaded 1 image.';
 			} else {
 				pageError = 'Failed to create artifact.';
@@ -951,7 +971,7 @@
 
 				if (response.ok) {
 					const artifact = await response.json();
-					created.push({ ...artifact, projectId, isCover: false });
+					created.push({ ...artifact, projectId, isCover: false, coverPositionX: 50, coverPositionY: 50, coverZoom: 1 });
 				}
 			} catch {
 				// continue with remaining files
@@ -1470,7 +1490,16 @@
 					</button>
 				</div>
 
-				<div class="px-5 py-4 grid gap-3">
+				<div class="px-5 py-4 grid gap-3 max-h-[70vh] overflow-y-auto">
+					{#if editArtifactIsCover && getArtifactImageUrl(artifacts.find(a => a.id === editingArtifactId)!)}
+						<CoverPositionEditor
+							imageUrl={getArtifactImageUrl(artifacts.find(a => a.id === editingArtifactId)!)}
+							positionX={editCoverPositionX}
+							positionY={editCoverPositionY}
+							zoom={editCoverZoom}
+							onChange={(x, y, z) => { editCoverPositionX = x; editCoverPositionY = y; editCoverZoom = z; }}
+						/>
+					{/if}
 					{#if EditEditorComp}
 						<EditEditorComp
 							value={editArtifactDraft}
@@ -1607,7 +1636,7 @@
 			{projectId}
 			{getToken}
 			onImported={(imported) => {
-				artifacts = [...imported.map(a => ({ ...a, projectId, isCover: false })), ...artifacts];
+				artifacts = [...imported.map(a => ({ ...a, projectId, isCover: false, coverPositionX: 50, coverPositionY: 50, coverZoom: 1 })), ...artifacts];
 				showGooglePhotosPickerModal = false;
 				pageSuccess = `Imported ${imported.length} item${imported.length !== 1 ? 's' : ''} from Google Photos.`;
 			}}

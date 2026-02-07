@@ -330,6 +330,9 @@ async function createProject(
 
 	// Insert artifacts with image upload
 	let coverArtifactId: number | null = null;
+	let coverPositionX = 50;
+	let coverPositionY = 50;
+	let coverZoom = 1;
 	for (const artifact of proj.artifacts) {
 		const dataBlob = { ...artifact.dataBlob };
 
@@ -355,12 +358,21 @@ async function createProject(
 
 		if (artifact.isCover) {
 			coverArtifactId = created.id;
+			coverPositionX = artifact.coverPositionX ?? 50;
+			coverPositionY = artifact.coverPositionY ?? 50;
+			coverZoom = artifact.coverZoom ?? 1;
 		}
 	}
 
 	if (coverArtifactId !== null) {
 		await db.delete(projectCoverArtifact).where(eq(projectCoverArtifact.projectId, projectId));
-		await db.insert(projectCoverArtifact).values({ projectId, artifactId: coverArtifactId });
+		await db.insert(projectCoverArtifact).values({
+			projectId,
+			artifactId: coverArtifactId,
+			positionX: coverPositionX,
+			positionY: coverPositionY,
+			zoom: coverZoom
+		});
 	}
 }
 
@@ -461,6 +473,9 @@ async function mergeProject(
 	}
 
 	let coverArtifactId: number | null = null;
+	let coverPositionX = 50;
+	let coverPositionY = 50;
+	let coverZoom = 1;
 
 	for (const artifact of proj.artifacts) {
 		// Match by artifact ID
@@ -468,6 +483,9 @@ async function mergeProject(
 			summary.artifactsSkipped++;
 			if (artifact.isCover) {
 				coverArtifactId = artifact.id;
+				coverPositionX = artifact.coverPositionX ?? 50;
+				coverPositionY = artifact.coverPositionY ?? 50;
+			coverZoom = artifact.coverZoom ?? 1;
 			}
 			continue;
 		}
@@ -479,6 +497,9 @@ async function mergeProject(
 				summary.artifactsSkipped++;
 				if (artifact.isCover) {
 					coverArtifactId = matchedId;
+					coverPositionX = artifact.coverPositionX ?? 50;
+					coverPositionY = artifact.coverPositionY ?? 50;
+			coverZoom = artifact.coverZoom ?? 1;
 				}
 				continue;
 			}
@@ -509,6 +530,9 @@ async function mergeProject(
 						summary.artifactsSkipped++;
 						if (artifact.isCover) {
 							coverArtifactId = existing.id;
+							coverPositionX = artifact.coverPositionX ?? 50;
+							coverPositionY = artifact.coverPositionY ?? 50;
+			coverZoom = artifact.coverZoom ?? 1;
 						}
 						foundByR2Hash = true;
 						break;
@@ -551,6 +575,9 @@ async function mergeProject(
 
 		if (artifact.isCover) {
 			coverArtifactId = created.id;
+			coverPositionX = artifact.coverPositionX ?? 50;
+			coverPositionY = artifact.coverPositionY ?? 50;
+			coverZoom = artifact.coverZoom ?? 1;
 		}
 	}
 
@@ -560,6 +587,12 @@ async function mergeProject(
 			.where(eq(projectCoverArtifact.projectId, existingProjectId));
 		await db
 			.insert(projectCoverArtifact)
-			.values({ projectId: existingProjectId, artifactId: coverArtifactId });
+			.values({
+				projectId: existingProjectId,
+				artifactId: coverArtifactId,
+				positionX: coverPositionX,
+				positionY: coverPositionY,
+				zoom: coverZoom
+			});
 	}
 }

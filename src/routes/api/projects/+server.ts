@@ -41,7 +41,10 @@ export const GET: RequestHandler = async ({ request, locals, platform }) => {
 			displayName: projects.displayName,
 			description: projects.description,
 			isPublished: projects.isPublished,
-			coverArtifactDataBlob: projectArtifacts.dataBlob
+			coverArtifactDataBlob: projectArtifacts.dataBlob,
+			coverPositionX: projectCoverArtifact.positionX,
+			coverPositionY: projectCoverArtifact.positionY,
+			coverZoom: projectCoverArtifact.zoom
 		})
 		.from(projects)
 		.leftJoin(projectCoverArtifact, eq(projects.id, projectCoverArtifact.projectId))
@@ -106,6 +109,9 @@ export const GET: RequestHandler = async ({ request, locals, platform }) => {
 			description: row.description,
 			isPublished: row.isPublished,
 			coverImageUrl,
+			coverPositionX: row.coverPositionX ?? 50,
+			coverPositionY: row.coverPositionY ?? 50,
+			coverZoom: row.coverZoom ?? 1,
 			categories: catsByProject.get(row.id) ?? [],
 			navAttributes: attrsByProject.get(row.id) ?? []
 		};
