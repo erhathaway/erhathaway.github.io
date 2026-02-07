@@ -8,9 +8,13 @@ import { verifyClerkAuth } from '$lib/server/auth';
 const clerkHandle = withClerkHandler();
 
 const dbHandle: Handle = async ({ event, resolve }) => {
-	const db = event.platform?.env?.DB;
-	if (db) {
-		event.locals.db = getDb(db);
+	try {
+		const db = event.platform?.env?.DB;
+		if (db) {
+			event.locals.db = getDb(db);
+		}
+	} catch {
+		// platform.env access throws during prerendering — skip DB setup
 	}
 	return resolve(event);
 };
