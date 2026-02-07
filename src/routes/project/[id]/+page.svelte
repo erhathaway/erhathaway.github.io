@@ -34,6 +34,8 @@
   let mainEl = $state<HTMLElement | null>(null);
 
   const currentIndex = $derived(portfolio.filteredItems.findIndex(i => i.id === data.projectId));
+  const hasPrev = $derived(currentIndex > 0);
+  const hasNext = $derived(currentIndex >= 0 && currentIndex < portfolio.filteredItems.length - 1);
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
@@ -112,6 +114,7 @@
               {/each}
             </div>
           {/if}
+
         </div>
       </div>
 
@@ -147,6 +150,30 @@
           {/if}
         </div>
       </div>
+    </div>
+
+    <!-- Scroll up/down arrows -->
+    <div class="sticky bottom-4 left-4 z-10 ml-4 flex flex-col gap-1 w-fit">
+      <button
+        type="button"
+        class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
+        onclick={() => mainEl?.scrollBy({ top: -200, behavior: 'smooth' })}
+        aria-label="Scroll up"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
+        onclick={() => mainEl?.scrollBy({ top: 200, behavior: 'smooth' })}
+        aria-label="Scroll down"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
     </div>
 
     <!-- Additional artifacts -->

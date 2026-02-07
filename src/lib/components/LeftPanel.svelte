@@ -3,6 +3,7 @@
   import ItemList from './ItemList.svelte';
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
 
   let {
@@ -25,6 +26,14 @@
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
   const activeNamecardImage = $derived(isProjectPage ? portfolio.projectNamecardImage : portfolio.namecardImage);
+
+  const activeProjectId = $derived.by(() => {
+    const match = $page.url.pathname.match(/^\/project\/(\d+)/);
+    return match ? parseInt(match[1]) : null;
+  });
+  const currentIndex = $derived(activeProjectId !== null ? portfolio.filteredItems.findIndex(i => i.id === activeProjectId) : -1);
+  const hasPrev = $derived(currentIndex > 0);
+  const hasNext = $derived(currentIndex >= 0 && currentIndex < portfolio.filteredItems.length - 1);
   let navEl = $state<HTMLElement | null>(null);
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animations after their first run.
@@ -131,5 +140,33 @@
 
       <!-- Admin Link (scrolls with content) -->
     </nav>
+
+    {#if isProjectPage && currentIndex >= 0}
+      <div class="flex items-center gap-3 px-8 pb-2 pt-3 shrink-0">
+        <button
+          type="button"
+          class="p-1.5 rounded-lg transition-colors duration-150 {hasPrev ? 'text-ash hover:text-copper cursor-pointer' : 'text-ash/20 cursor-default'}"
+          disabled={!hasPrev}
+          onclick={() => hasPrev && goto(`/project/${portfolio.filteredItems[currentIndex - 1].id}`)}
+          aria-label="Previous project"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span class="text-[10px] tracking-widest uppercase text-ash/40">{currentIndex + 1} / {portfolio.filteredItems.length}</span>
+        <button
+          type="button"
+          class="p-1.5 rounded-lg transition-colors duration-150 {hasNext ? 'text-ash hover:text-copper cursor-pointer' : 'text-ash/20 cursor-default'}"
+          disabled={!hasNext}
+          onclick={() => hasNext && goto(`/project/${portfolio.filteredItems[currentIndex + 1].id}`)}
+          aria-label="Next project"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    {/if}
   </div>
 </aside>
