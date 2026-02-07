@@ -102,7 +102,8 @@
       style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
       style:transform="scale({item.coverPosition?.zoom ?? 1})"
       style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-      loading="lazy"
+      loading={index < 6 ? 'eager' : 'lazy'}
+      fetchpriority={index < 6 ? 'high' : undefined}
     />
     {#if item.hoverImage}
       <img
@@ -112,7 +113,7 @@
         style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
         style:transform="scale({item.coverPosition?.zoom ?? 1})"
         style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-        loading="lazy"
+        loading={index < 6 ? 'eager' : 'lazy'}
       />
     {/if}
   {:else}
