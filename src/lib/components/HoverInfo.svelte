@@ -49,13 +49,13 @@
   );
   const descriptionClass = $derived.by(() =>
     isTile
-      ? 'text-sm sm:text-base leading-relaxed mb-5 vt-exclude-namecard'
+      ? 'text-sm sm:text-base leading-loose mb-6 vt-exclude-namecard'
       : 'text-base text-ash leading-relaxed mb-6 vt-exclude-namecard'
   );
   const metaKeyClass = $derived.by(() =>
-    isTile ? 'text-[10px] tracking-wider uppercase text-walnut' : 'text-[10px] tracking-wider uppercase text-ash'
+    isTile ? 'text-[9px] tracking-[0.25em] uppercase' : 'text-[10px] tracking-wider uppercase text-ash'
   );
-  const metaValueClass = $derived.by(() => (isTile ? 'font-display text-base text-walnut' : 'font-display text-base text-walnut'));
+  const metaValueClass = $derived.by(() => (isTile ? 'text-sm' : 'font-display text-base text-walnut'));
 
   const tileCategoryClass = $derived.by(() =>
     isTile
@@ -80,7 +80,7 @@
     <div class={innerClass}>
       <div class={projectHeaderClass} style={projectHeaderStyle}>
       <div class={tileTextWrapClass}>
-        <h3 class={titleClass} style="view-transition-name: hover-info-title; font-family: 'Playfair Display', Georgia, serif;">
+        <h3 class={titleClass} style="view-transition-name: hover-info-title; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e;">
           {item.name}
         </h3>
 
