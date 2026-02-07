@@ -71,7 +71,7 @@
     {#if activeNamecardImage}
       <!-- Namecard image replaces gradient + text -->
       <div
-        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] overflow-hidden z-0 {onNameClick ? 'cursor-pointer' : ''}"
+        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] overflow-hidden z-0 {isProjectPage ? 'rounded-b-2xl' : ''} {onNameClick ? 'cursor-pointer' : ''}"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
         onclick={() => onNameClick?.()}
         onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }}
