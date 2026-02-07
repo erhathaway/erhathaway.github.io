@@ -71,12 +71,8 @@
     {#if activeNamecardImage}
       <!-- Namecard image replaces gradient + text -->
       <div
-        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] overflow-hidden z-0 {isProjectPage ? 'rounded-b-xl' : ''} {onNameClick ? 'cursor-pointer' : ''}"
+        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] overflow-hidden z-0 {isProjectPage ? 'rounded-b-xl' : ''}"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
-        onclick={() => onNameClick?.()}
-        onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }}
-        role="button"
-        tabindex={onNameClick ? 0 : -1}
       >
         <img
           src={activeNamecardImage.imageUrl}
@@ -93,17 +89,13 @@
     {:else}
       <!-- Background rectangle behind name and tagline -->
       <div
-        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] border backdrop-blur-md z-0 {onNameClick ? 'cursor-pointer' : ''}"
+        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] border backdrop-blur-md z-0"
         style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1));"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
-        onclick={() => onNameClick?.()}
-        onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }}
-        role="button"
-        tabindex={onNameClick ? 0 : -1}
       ></div>
 
       <!-- Fixed Header - Always on top -->
-      <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent {onNameClick ? 'cursor-pointer' : ''}" onclick={() => onNameClick?.()} onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }} role="button" tabindex={onNameClick ? 0 : -1}>
+      <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent">
         <span
           class="namecard-vt text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block {slideUpActive ? 'animate-slide-up' : ''}"
           style="animation-delay: 0.1s; font-family: 'Playfair Display', Georgia, serif;"

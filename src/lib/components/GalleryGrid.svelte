@@ -134,11 +134,10 @@
 <main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-thin" onmouseleave={handleGalleryLeave}>
   <div class="grid grid-cols-3 gap-0.5 p-0.5 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid">
     {#if homeNamecardInGallery}
-      <button
-        type="button"
-        class="gallery-item group relative aspect-square overflow-hidden cursor-pointer block focus:outline-none focus-visible:ring-2 focus-visible:ring-copper"
-        onclick={openNamecardModal}
+      <div
+        class="gallery-item group relative aspect-square overflow-hidden block"
         onmouseenter={handleNamecardTileEnter}
+        role="img"
         aria-label="About Ethan Hathaway"
       >
         {#if portfolio.namecardImage}
@@ -179,7 +178,7 @@
             <HoverInfo item={hoveredItem} variant="tile" dockSide={dockSide} />
           </div>
         {/if}
-      </button>
+      </div>
     {/if}
     {#each portfolio.filteredItems as item, index (item.id)}
       <GalleryItem
