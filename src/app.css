@@ -97,18 +97,6 @@
     max-width: 256px;
   }
 
-  .project-header-wrap {
-    position: relative;
-    padding: 2rem;
-    padding-top: 7.5rem;
-  }
-
-  .project-header-back {
-    position: absolute;
-    top: 2rem;
-    left: 2rem;
-  }
-
   .hover-inline-card {
     display: block;
     position: relative;

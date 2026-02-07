@@ -52,79 +52,71 @@
 {:else}
 {#key item.id}
 <main class="h-screen overflow-y-auto bg-charcoal">
-    <!-- Project header that matches hover info styling -->
-    <div class="bg-cream text-walnut">
-      <div class="max-w-6xl mx-auto project-header-wrap">
-        <a href="/" class="project-header-back inline-flex items-center gap-2 text-ash hover:text-copper transition-colors" onclick={(event) => {
+    <!-- Hero: text + cover side by side -->
+    <div class="flex min-h-screen items-center">
+      <!-- Left: project info -->
+      <div class="w-80 shrink-0 self-stretch flex flex-col p-8 pt-10" style="background: linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%);">
+        <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-10 text-sm" onclick={(event) => {
           event.preventDefault();
           goto('/', { state: { hoverId: item.id } });
         }}>
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to gallery
+          Back
         </a>
 
-        <div class="project-header-block">
-          <p class="text-[10px] font-medium tracking-widest uppercase text-copper mb-3 vt-exclude-namecard">
+        <div class="flex-1 flex flex-col justify-center">
+          <p class="text-[10px] font-medium tracking-widest uppercase mb-3 vt-exclude-namecard" style="color: #a08e7a;">
             {item.categories.join(' · ') || 'Uncategorized'}
           </p>
-          <h1 class="font-display text-3xl font-semibold text-walnut leading-tight mb-4 vt-exclude-namecard">
+          <h1 class="text-3xl leading-tight mb-5 vt-exclude-namecard" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e;">
             {item.name}
           </h1>
-          <p class="text-base text-ash leading-relaxed mb-6 vt-exclude-namecard">
-            {item.description}
-          </p>
+          {#if item.description}
+            <p class="text-sm leading-loose mb-8 vt-exclude-namecard" style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; letter-spacing: 0.01em;">
+              {item.description}
+            </p>
+          {/if}
           {#if Object.keys(item.metadata).length > 0}
-            <div class="flex gap-8 vt-exclude-namecard">
+            <div class="flex flex-col gap-4 vt-exclude-namecard">
               {#each Object.entries(item.metadata) as [key, value] (key)}
-                <div class="flex flex-col gap-1">
-                  <span class="text-[10px] tracking-wider uppercase text-ash">{key}</span>
-                  <span class="font-display text-base text-walnut">{value}</span>
+                <div class="flex flex-col gap-1.5">
+                  <span class="text-[11px] tracking-[0.2em] uppercase" style="color: #a08e7a;">{key}</span>
+                  <span class="text-base" style="font-family: 'Cormorant Garamond', Georgia, serif; color: #3d2e1e;">{value}</span>
                 </div>
               {/each}
             </div>
           {/if}
         </div>
       </div>
+
+      <!-- Right: cover image -->
+      <div class="flex-1 min-w-0 flex items-center justify-center p-8">
+        <div
+          class="relative h-[67vh] aspect-square max-w-full overflow-hidden rounded-lg vt-exclude-namecard"
+          style="view-transition-name: project-image-{item.id}"
+        >
+          {#if item.image}
+            <img
+              src={item.image}
+              alt={item.name}
+              class="w-full h-full object-cover"
+              style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+              style:transform="scale({item.coverPosition?.zoom ?? 1})"
+              style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+              loading="lazy"
+            />
+          {:else}
+            <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {item.gradientColors}"></div>
+          {/if}
+        </div>
+      </div>
     </div>
 
-    <div class="max-w-6xl mx-auto p-8">
-
-      <!-- Large image -->
-      <div
-        class="relative aspect-square overflow-hidden rounded-lg mb-12 vt-exclude-namecard"
-        style="view-transition-name: project-image-{item.id}"
-      >
-        {#if item.image}
-          <img
-            src={item.image}
-            alt={item.name}
-            class="w-full h-full object-cover"
-            style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-            style:transform="scale({item.coverPosition?.zoom ?? 1})"
-            style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-            loading="lazy"
-          />
-        {:else}
-          <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {item.gradientColors}"></div>
-        {/if}
-      </div>
-
-      <!-- Project details -->
-      {#if Object.keys(item.metadata).length > 0}
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-        {#each Object.entries(item.metadata) as [key, value] (key)}
-          <div>
-            <p class="text-xs tracking-wider uppercase text-cream/50 mb-2">{key}</p>
-            <p class="font-display text-xl text-cream">{value}</p>
-          </div>
-        {/each}
-      </div>
-      {/if}
-
-      <!-- Additional artifacts -->
-      {#if additionalArtifacts.length > 0}
+    <!-- Additional artifacts -->
+    {#if additionalArtifacts.length > 0}
+      <div class="max-w-6xl mx-auto p-8">
         <div class="columns-2 gap-4 mb-12">
           {#each additionalArtifacts as artifact (artifact.id)}
             <div class="mb-4 break-inside-avoid">
@@ -132,8 +124,8 @@
             </div>
           {/each}
         </div>
-      {/if}
-    </div>
+      </div>
+    {/if}
 </main>
 {/key}
 {/if}
