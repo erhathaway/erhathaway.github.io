@@ -44,7 +44,7 @@
 
   const titleClass = $derived.by(() =>
     isTile
-      ? 'font-display text-2xl sm:text-3xl font-semibold leading-tight mb-3 vt-exclude-namecard'
+      ? 'text-2xl sm:text-3xl font-semibold leading-tight mb-3 vt-exclude-namecard'
       : 'font-display text-3xl font-semibold text-walnut leading-tight mb-4 vt-exclude-namecard'
   );
   const descriptionClass = $derived.by(() =>
@@ -84,7 +84,7 @@
           {item.categories.join(' · ') || 'Uncategorized'}
         </p>
 
-        <h3 class={titleClass} style="view-transition-name: hover-info-title;">
+        <h3 class={titleClass} style="view-transition-name: hover-info-title; font-family: 'Playfair Display', Georgia, serif;">
           {item.name}
         </h3>
 
