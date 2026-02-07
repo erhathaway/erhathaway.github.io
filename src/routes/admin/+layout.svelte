@@ -7,7 +7,7 @@
 	import ExportImportModal from './ExportImportModal.svelte';
 	import type { AttributeDraft } from './ProjectEditor.svelte';
 
-	let { children } = $props();
+	let { children, data } = $props();
 	const ctx = useClerkContext();
 	const isSignedIn = $derived(ctx.auth.userId !== null);
 	const activeProjectId = $derived(Number($page.params?.id ?? 0));
@@ -20,6 +20,9 @@
 	let navSuccess = $state('');
 	let googlePhotosConnected = $state(false);
 	let mainDragOver = $state(false);
+	let showClearAllModal = $state(false);
+	let clearConfirmText = $state('');
+	let clearingData = $state(false);
 
 	let newCategoryName = $state('');
 	let newCategoryDisplayName = $state('');
@@ -95,6 +98,36 @@
 		} catch (err) {
 			console.error(err);
 			navError = err instanceof Error ? err.message : 'Unable to load admin data.';
+		}
+	}
+
+	async function handleClearAllData() {
+		clearingData = true;
+		navError = '';
+		navSuccess = '';
+		try {
+			const token = await getToken();
+			if (!token) {
+				navError = 'Sign in to clear data.';
+				return;
+			}
+			const response = await fetch('/api/admin/clear-all-data', {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` }
+			});
+			if (!response.ok) {
+				const body = await response.json().catch(() => null);
+				navError = body?.message || 'Failed to clear data.';
+				return;
+			}
+			navSuccess = 'All data cleared.';
+			showClearAllModal = false;
+			clearConfirmText = '';
+			await loadNavData();
+		} catch (err) {
+			navError = err instanceof Error ? err.message : 'Failed to clear data.';
+		} finally {
+			clearingData = false;
 		}
 	}
 
@@ -432,6 +465,18 @@
 					</svg>
 					Export / Import
 				</button>
+				{#if data.isDev}
+					<button
+						type="button"
+						onclick={() => (showClearAllModal = true)}
+						class="w-full flex items-center gap-2 rounded-xl border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:border-red-400 hover:bg-red-50 transition-all duration-150"
+					>
+						<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+						</svg>
+						Clear All Data
+					</button>
+				{/if}
 			</div>
 
 			<!-- Nav Lists -->
@@ -884,6 +929,67 @@
 			void loadNavData();
 		}}
 	/>
+{/if}
+
+<!-- Clear All Data Modal -->
+{#if showClearAllModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+		<button
+			type="button"
+			class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+			aria-label="Close modal"
+			onclick={() => { showClearAllModal = false; clearConfirmText = ''; }}
+		></button>
+		<div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+			<!-- Header -->
+			<div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-red-100">
+				<h3 class="text-base font-semibold text-red-600">Clear All Data</h3>
+				<button
+					type="button"
+					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					onclick={() => { showClearAllModal = false; clearConfirmText = ''; }}
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+
+			<!-- Body -->
+			<div class="px-6 py-5 grid gap-4">
+				<p class="text-sm text-slate-600">
+					This will permanently delete <strong>all projects, categories, integrations, settings, and uploaded files</strong>. This cannot be undone.
+				</p>
+				<label class="grid gap-1.5">
+					<span class="text-xs font-medium text-slate-600">Type <strong>DELETE</strong> to confirm</span>
+					<input
+						bind:value={clearConfirmText}
+						class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 font-mono placeholder:text-slate-400 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-900/10 transition-all duration-150"
+						placeholder="DELETE"
+					/>
+				</label>
+
+				<!-- Footer -->
+				<div class="flex items-center gap-2.5 pt-3 border-t border-slate-100 mt-1">
+					<button
+						type="button"
+						disabled={clearConfirmText !== 'DELETE' || clearingData}
+						onclick={handleClearAllData}
+						class="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+					>
+						{clearingData ? 'Clearing...' : 'Clear All Data'}
+					</button>
+					<button
+						type="button"
+						onclick={() => { showClearAllModal = false; clearConfirmText = ''; }}
+						class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					>
+						Cancel
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
 {/if}
 
 <!-- Edit Category Modal -->
