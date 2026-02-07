@@ -5,6 +5,7 @@
 	import CategoryPills from '$lib/components/CategoryPills.svelte';
 	import LoginModal from '$lib/components/LoginModal.svelte';
 	import AuthButton from '$lib/components/AuthButton.svelte';
+	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
 	import { portfolio } from '$lib/stores/portfolio.svelte';
 	import { onNavigate, goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -433,6 +434,7 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <ClerkProvider>
+	<PostHogIdentify />
 	{#if isAdminPage}
 		<div class="min-h-screen bg-cream text-walnut">
 			{@render children()}
