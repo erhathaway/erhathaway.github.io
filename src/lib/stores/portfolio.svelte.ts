@@ -1,5 +1,6 @@
 import { type PortfolioItem } from '$lib/data/items';
 import { ProjectsAPI, type Project } from '$lib/api/projects';
+import type { NamecardImageSetting } from '$lib/types/site-settings';
 
 export interface CategoryInfo {
   name: string;
@@ -13,6 +14,7 @@ class PortfolioStore {
   hoverUpdatesSuppressed = $state(false);
   projects = $state<Project[]>([]);
   categories = $state<CategoryInfo[]>([]);
+  namecardImage = $state<NamecardImageSetting | null>(null);
   loading = $state(false);
 
   allItems = $derived.by(() => {
@@ -73,12 +75,14 @@ class PortfolioStore {
   async loadProjects() {
     this.loading = true;
     try {
-      const [projects, catRes] = await Promise.all([
+      const [projects, catRes, namecardRes] = await Promise.all([
         ProjectsAPI.getAll(),
-        fetch('/api/categories').then(r => r.ok ? r.json() : [])
+        fetch('/api/categories').then(r => r.ok ? r.json() : []),
+        fetch('/api/site-settings/namecard-image').then(r => r.ok ? r.json() : null)
       ]);
       this.projects = projects;
       this.categories = catRes;
+      this.namecardImage = namecardRes;
     } catch (error) {
       console.error('Failed to load projects:', error);
     } finally {

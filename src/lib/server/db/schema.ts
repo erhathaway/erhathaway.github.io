@@ -70,6 +70,12 @@ export const integrations = sqliteTable('integrations', {
 	updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`)
 });
 
+export const siteSettings = sqliteTable('site_settings', {
+	key: text('key').primaryKey(),
+	value: text('value', { mode: 'json' }).notNull(),
+	updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`)
+});
+
 export const artifactMetadata = sqliteTable('artifact_metadata', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	artifactId: integer('artifact_id')

@@ -2,6 +2,7 @@
 	import { SignedIn, SignedOut, useClerkContext } from 'svelte-clerk';
 	import CategoryManager from './CategoryManager.svelte';
 	import ProjectManager from './ProjectManager.svelte';
+	import NamecardImageSettings from './NamecardImageSettings.svelte';
 	import { adminStore } from '$lib/stores/admin.svelte';
 
 	type Category = {
@@ -45,6 +46,7 @@
 		{setCategoriesLoaded}
 	/>
 	<ProjectManager {getToken} />
+	<NamecardImageSettings {getToken} />
 </SignedIn>
 
 <SignedOut>

@@ -8,7 +8,8 @@ import {
 	projectCategories,
 	projectArtifacts,
 	projectAttributes,
-	projectCoverArtifact
+	projectCoverArtifact,
+	siteSettings
 } from '$lib/server/db/schema';
 import type { Db } from '$lib/server/db';
 import type {
@@ -234,6 +235,32 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			);
 			summary.projectsMerged++;
 		}
+	}
+
+	// --- Process Site Settings ---
+	if (manifest.siteSettings?.namecardImage) {
+		const nc = manifest.siteSettings.namecardImage;
+		let imageUrl = nc.imageUrl;
+
+		if (nc._localImagePath) {
+			const newUrl = await uploadImage(zip, nc._localImagePath, bucket, summary);
+			if (newUrl) {
+				imageUrl = newUrl;
+			}
+		}
+
+		const value = {
+			imageUrl,
+			positionX: nc.positionX,
+			positionY: nc.positionY,
+			zoom: nc.zoom
+		};
+
+		await db.delete(siteSettings).where(eq(siteSettings.key, 'namecard_image'));
+		await db.insert(siteSettings).values({
+			key: 'namecard_image',
+			value
+		});
 	}
 
 	return json({ success: true, summary }, { headers: corsHeaders });

@@ -8,15 +8,18 @@ import {
 	projectCategories,
 	projectArtifacts,
 	projectAttributes,
-	projectCoverArtifact
+	projectCoverArtifact,
+	siteSettings
 } from '$lib/server/db/schema';
 import type {
 	ExportManifest,
 	ExportCategory,
 	ExportProject,
 	ExportArtifact,
-	ExportAttribute
+	ExportAttribute,
+	ExportSiteSettings
 } from '$lib/types/export-manifest';
+import type { NamecardImageSetting } from '$lib/types/site-settings';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
@@ -201,11 +204,57 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		isPublished: c.isPublished
 	}));
 
+	// --- Site Settings ---
+	let exportSiteSettings: ExportSiteSettings | undefined;
+	const [namecardRow] = await db
+		.select()
+		.from(siteSettings)
+		.where(eq(siteSettings.key, 'namecard_image'));
+
+	if (namecardRow) {
+		const ncSetting = namecardRow.value as NamecardImageSetting;
+		const ncExport: NonNullable<ExportSiteSettings['namecardImage']> = {
+			imageUrl: ncSetting.imageUrl,
+			positionX: ncSetting.positionX,
+			positionY: ncSetting.positionY,
+			zoom: ncSetting.zoom
+		};
+
+		if (ncSetting.imageUrl && bucket) {
+			const key = extractR2Key(ncSetting.imageUrl);
+			if (key && !imageMap.has(key)) {
+				try {
+					const obj = await bucket.get(key);
+					if (obj) {
+						const buffer = await obj.arrayBuffer();
+						imageMap.set(key, buffer);
+						const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+						const hashHex = Array.from(new Uint8Array(hashBuffer))
+							.map((b) => b.toString(16).padStart(2, '0'))
+							.join('');
+						imageHashMap.set(key, hashHex);
+					}
+				} catch {
+					// Skip image if fetch fails
+				}
+			}
+			if (key && imageMap.has(key)) {
+				const localPath = `images/${key.replace(/^artifacts\//, '')}`;
+				ncExport._localImagePath = localPath;
+				ncExport.imageUrl = localPath;
+				ncExport.imageHash = imageHashMap.get(key);
+			}
+		}
+
+		exportSiteSettings = { namecardImage: ncExport };
+	}
+
 	const manifest: ExportManifest = {
 		version: 1,
 		exportedAt: new Date().toISOString(),
 		categories: exportCategories,
-		projects: exportProjects
+		projects: exportProjects,
+		...(exportSiteSettings ? { siteSettings: exportSiteSettings } : {})
 	};
 
 	zip.file('manifest.json', JSON.stringify(manifest, null, 2));

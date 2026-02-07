@@ -42,24 +42,37 @@
         onmouseenter={handleNamecardTileEnter}
         aria-label="About Ethan Hathaway"
       >
-        <div
-          class="namecard-vt absolute inset-0 border backdrop-blur-md transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-          style="view-transition-name: name-card-bg; border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); background-color: #f3e9e1;"
-        ></div>
-        <div class="relative z-10 h-full p-7 flex flex-col justify-center gap-6 text-walnut">
-          <span
-            class="namecard-vt text-[44px] font-normal leading-[1.05] block"
-            style="font-family: 'Playfair Display', Georgia, serif; view-transition-name: name-text"
-          >
-            Ethan<br />Hathaway
-          </span>
-          <p
-            class="namecard-vt text-[12px] tracking-[0.32em] uppercase text-ash/80"
-            style="view-transition-name: subtitle-text"
-          >
-            Things I Make
-          </p>
-        </div>
+        {#if portfolio.namecardImage}
+          <img
+            src={portfolio.namecardImage.imageUrl}
+            alt="Ethan Hathaway"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+            style:object-position="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+            style:transform="scale({portfolio.namecardImage.zoom})"
+            style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+            style="view-transition-name: name-card-bg"
+            draggable="false"
+          />
+        {:else}
+          <div
+            class="namecard-vt absolute inset-0 border backdrop-blur-md transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+            style="view-transition-name: name-card-bg; border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); background-color: #f3e9e1;"
+          ></div>
+          <div class="relative z-10 h-full p-7 flex flex-col justify-center gap-6 text-walnut">
+            <span
+              class="namecard-vt text-[44px] font-normal leading-[1.05] block"
+              style="font-family: 'Playfair Display', Georgia, serif; view-transition-name: name-text"
+            >
+              Ethan<br />Hathaway
+            </span>
+            <p
+              class="namecard-vt text-[12px] tracking-[0.32em] uppercase text-ash/80"
+              style="view-transition-name: subtitle-text"
+            >
+              Things I Make
+            </p>
+          </div>
+        {/if}
       </button>
     {/if}
     {#each portfolio.filteredItems as item, index (item.id)}

@@ -3,6 +3,18 @@ export interface ExportManifest {
 	exportedAt: string;
 	categories: ExportCategory[];
 	projects: ExportProject[];
+	siteSettings?: ExportSiteSettings;
+}
+
+export interface ExportSiteSettings {
+	namecardImage?: {
+		imageUrl: string;
+		positionX: number;
+		positionY: number;
+		zoom: number;
+		imageHash?: string;
+		_localImagePath?: string;
+	};
 }
 
 export interface ExportCategory {
