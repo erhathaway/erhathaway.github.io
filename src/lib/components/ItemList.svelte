@@ -171,7 +171,7 @@
             <span
               class="item-label block px-8"
               class:active-project={isActive}
-              style="font-size: {isActive ? 1.125 * scale : 0.875 * scale}rem; opacity: {Math.pow(scale, 3)};"
+              style="font-family: 'Playfair Display', Georgia, serif; font-size: {isActive ? 1.125 * scale : 0.875 * scale}rem; opacity: {Math.pow(scale, 3)};"
             >
               {item.name}
             </span>
