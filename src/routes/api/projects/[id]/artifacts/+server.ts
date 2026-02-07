@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { and, eq } from 'drizzle-orm';
 import { error, json } from '@sveltejs/kit';
-import { projectArtifacts, projects } from '$lib/server/db/schema';
+import { projectArtifacts, projectCoverArtifact, projects } from '$lib/server/db/schema';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
@@ -49,6 +49,12 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		throw error(404, 'Project not found');
 	}
 
+	const [coverRow] = await db
+		.select({ artifactId: projectCoverArtifact.artifactId })
+		.from(projectCoverArtifact)
+		.where(eq(projectCoverArtifact.projectId, projectId));
+	const coverArtifactId = coverRow?.artifactId ?? null;
+
 	const rows = await db
 		.select({
 			id: projectArtifacts.id,
@@ -60,7 +66,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.from(projectArtifacts)
 		.where(and(eq(projectArtifacts.projectId, projectId), eq(projectArtifacts.isPublished, true)));
 
-	const normalized = rows.map((row) => normalizeArtifactRow(row));
+	const normalized = rows.map((row) => ({
+		...normalizeArtifactRow(row),
+		isCover: row.id === coverArtifactId
+	}));
 
 	return json(normalized, { headers: corsHeaders });
 };

@@ -22,8 +22,9 @@
     }
   }
 
-  // Non-cover published artifacts
-  const additionalArtifacts = $derived(artifacts.filter(a => !a.isCover));
+  // Non-cover published artifacts (hide cover if it exists)
+  const hasCover = $derived(!!item?.image);
+  const additionalArtifacts = $derived(hasCover ? artifacts.filter(a => !a.isCover) : artifacts);
 
   // Reload artifacts whenever the project changes
   $effect(() => {
@@ -92,7 +93,7 @@
 
       <!-- Large image -->
       <div
-        class="relative aspect-[16/9] overflow-hidden rounded-lg mb-12 vt-exclude-namecard"
+        class="relative aspect-square overflow-hidden rounded-lg mb-12 vt-exclude-namecard"
         style="view-transition-name: project-image-{item.id}"
       >
         {#if item.image}
