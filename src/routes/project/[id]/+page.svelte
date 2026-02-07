@@ -51,7 +51,7 @@
   </main>
 {:else}
 {#key item.id}
-<main class="h-screen overflow-y-auto bg-charcoal">
+<main class="h-screen overflow-y-auto bg-charcoal" style="border-left: 1px solid #00000024;">
     <!-- Hero: text + cover side by side -->
     <div class="flex min-h-screen items-center">
       <!-- Left: project info -->
