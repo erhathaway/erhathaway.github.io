@@ -73,8 +73,8 @@
   <div class={wrapperClass}>
     {#if isTile}
       <div
-        class="absolute inset-0 bg-white/95"
-        style="clip-path: {tileClipPath};"
+        class="absolute inset-0"
+        style="background: rgba(253, 245, 230, 0.95); clip-path: {tileClipPath};"
       ></div>
     {/if}
     <div class={innerClass}>
