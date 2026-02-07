@@ -33,6 +33,11 @@
 		const value = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
 		return value === '1' || value === 'true' || value === 'yes' || value === 'on';
 	})();
+	const stickyBottomUiEnabled = (() => {
+		const raw = env.PUBLIC_STICKY_BOTTOM_UI;
+		const value = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+		return value === '1' || value === 'true' || value === 'yes' || value === 'on';
+	})();
 	const homeCardMode = $derived(isHomePage && homeNamecardInGallery);
 	const showLeftPanelNameCard = $derived(isProjectPage || !homeNamecardInGallery);
 	const NAME_CARD_TRIGGER_NAMES_OFF_CLASS = 'namecard-trigger-names-off';
@@ -460,7 +465,7 @@
 				<AuthButton onOpenModal={() => showLoginModal = true} />
 			{/if}
 		</div>
-		{#if panelTransitionNames}
+		{#if stickyBottomUiEnabled && panelTransitionNames}
 			<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none vt-exclude-namecard" style="view-transition-name: social-links">
 				<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
 					<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
@@ -471,24 +476,26 @@
 				</div>
 			</div>
 		{/if}
-		<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0 vt-exclude-namecard" style="view-transition-name: bottom-bar">
-			{#if isProjectPage}
-				<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
-					event.preventDefault();
-					const projectId = $page.params?.id ? parseInt($page.params.id) : null;
-					goto('/', projectId ? { state: { hoverId: projectId } } : undefined);
-				}}>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-					</svg>
-					Back
-				</a>
-			{:else}
-				<div class="pointer-events-auto rounded-[1px] {homeCardMode ? 'px-0 py-0 bg-cream/85 backdrop-blur-md' : ''}">
-					<CategoryPills cardMode={homeCardMode} />
-				</div>
-			{/if}
-		</div>
+		{#if stickyBottomUiEnabled}
+			<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0 vt-exclude-namecard" style="view-transition-name: bottom-bar">
+				{#if isProjectPage}
+					<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
+						event.preventDefault();
+						const projectId = $page.params?.id ? parseInt($page.params.id) : null;
+						goto('/', projectId ? { state: { hoverId: projectId } } : undefined);
+					}}>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+						</svg>
+						Back
+					</a>
+				{:else}
+					<div class="pointer-events-auto rounded-[1px] {homeCardMode ? 'px-0 py-0 bg-cream/85 backdrop-blur-md' : ''}">
+						<CategoryPills cardMode={homeCardMode} />
+					</div>
+				{/if}
+			</div>
+		{/if}
 		{#if nameCardCloseMaskPhase !== 'hidden'}
 			<div
 				class="fixed inset-0 z-[297] pointer-events-none bg-white/85 backdrop-blur-sm transition-opacity duration-[120ms]"
