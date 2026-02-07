@@ -505,21 +505,42 @@
 				<div class="absolute inset-0 bg-white/85 backdrop-blur-sm" style="view-transition-name: name-card-backdrop" onclick={collapseNameCard}></div>
 				<!-- Card background that morphs from the left panel card -->
 				<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-					<div class="w-[min(500px,90vw)] pointer-events-auto rounded-sm" style="view-transition-name: name-card-bg; background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); border: 1px solid rgba(138,128,120,0.15); backdrop-filter: blur(12px);">
-						<div class="p-10 pt-12 pb-8 flex flex-col items-center text-center">
-							<span class="text-[48px] font-normal text-walnut leading-[1.2] mb-4 block" style="font-family: 'Playfair Display', Georgia, serif; view-transition-name: name-text">
-								Ethan<br>Hathaway
-							</span>
-							<p class="text-[11px] tracking-[0.32em] uppercase text-ash/80 mb-10" style="view-transition-name: subtitle-text">
-								Things I Make
-							</p>
-							<div class="flex flex-col gap-4 text-sm tracking-[0.18em] uppercase text-walnut/60">
-								<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
-								<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-instagram">Instagram</a>
-								<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors" style="view-transition-name: social-link-contact">Contact</a>
+					{#if portfolio.namecardImage}
+						<div class="w-[min(500px,90vw)] pointer-events-auto rounded-sm overflow-hidden" style="view-transition-name: name-card-bg;">
+							<img
+								src={portfolio.namecardImage.imageUrl}
+								alt="Ethan Hathaway"
+								class="w-full aspect-square object-cover"
+								style:object-position="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+								style:transform="scale({portfolio.namecardImage.zoom})"
+								style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+								draggable="false"
+							/>
+							<div class="p-6 flex flex-col items-center text-center" style="background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); backdrop-filter: blur(12px);">
+								<div class="flex flex-col gap-4 text-sm tracking-[0.18em] uppercase text-walnut/60">
+									<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
+									<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-instagram">Instagram</a>
+									<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors" style="view-transition-name: social-link-contact">Contact</a>
+								</div>
 							</div>
 						</div>
-					</div>
+					{:else}
+						<div class="w-[min(500px,90vw)] pointer-events-auto rounded-sm" style="view-transition-name: name-card-bg; background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); border: 1px solid rgba(138,128,120,0.15); backdrop-filter: blur(12px);">
+							<div class="p-10 pt-12 pb-8 flex flex-col items-center text-center">
+								<span class="text-[48px] font-normal text-walnut leading-[1.2] mb-4 block" style="font-family: 'Playfair Display', Georgia, serif; view-transition-name: name-text">
+									Ethan<br>Hathaway
+								</span>
+								<p class="text-[11px] tracking-[0.32em] uppercase text-ash/80 mb-10" style="view-transition-name: subtitle-text">
+									Things I Make
+								</p>
+								<div class="flex flex-col gap-4 text-sm tracking-[0.18em] uppercase text-walnut/60">
+									<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
+									<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-instagram">Instagram</a>
+									<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors" style="view-transition-name: social-link-contact">Contact</a>
+								</div>
+							</div>
+						</div>
+					{/if}
 				</div>
 			</div>
 		{/if}

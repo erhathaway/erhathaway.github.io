@@ -1,6 +1,7 @@
 <script lang="ts">
   import CategoryPills from './CategoryPills.svelte';
   import ItemList from './ItemList.svelte';
+  import { portfolio } from '$lib/stores/portfolio.svelte';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
 
@@ -66,32 +67,54 @@
   onanimationcancel={handleSlideInDone}
 >
   {#if showNameCard}
-    <!-- Background rectangle behind name and tagline -->
-    <div
-      class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] border backdrop-blur-md z-0 {onNameClick ? 'cursor-pointer' : ''}"
-      style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1));"
-      style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
-      onclick={() => onNameClick?.()}
-      onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }}
-      role="button"
-      tabindex={onNameClick ? 0 : -1}
-    ></div>
-
-    <!-- Fixed Header - Always on top -->
-    <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent {onNameClick ? 'cursor-pointer' : ''}" onclick={() => onNameClick?.()} onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }} role="button" tabindex={onNameClick ? 0 : -1}>
-      <span
-        class="namecard-vt text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block {slideUpActive ? 'animate-slide-up' : ''}"
-        style="animation-delay: 0.1s; font-family: 'Playfair Display', Georgia, serif;"
-        style:view-transition-name={hasTransitionNames ? 'name-text' : undefined}
+    {#if portfolio.namecardImage}
+      <!-- Namecard image replaces gradient + text -->
+      <div
+        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] overflow-hidden z-0 {onNameClick ? 'cursor-pointer' : ''}"
+        style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
+        onclick={() => onNameClick?.()}
+        onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }}
+        role="button"
+        tabindex={onNameClick ? 0 : -1}
       >
-        Ethan<br>Hathaway
-      </span>
-    </div>
+        <img
+          src={portfolio.namecardImage.imageUrl}
+          alt="Ethan Hathaway"
+          class="w-full h-full object-cover"
+          style:object-position="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+          style:transform="scale({portfolio.namecardImage.zoom})"
+          style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+          draggable="false"
+        />
+      </div>
+    {:else}
+      <!-- Background rectangle behind name and tagline -->
+      <div
+        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] border backdrop-blur-md z-0 {onNameClick ? 'cursor-pointer' : ''}"
+        style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1));"
+        style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
+        onclick={() => onNameClick?.()}
+        onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }}
+        role="button"
+        tabindex={onNameClick ? 0 : -1}
+      ></div>
+
+      <!-- Fixed Header - Always on top -->
+      <div class="p-8 pt-10 pb-0 z-30 relative bg-transparent {onNameClick ? 'cursor-pointer' : ''}" onclick={() => onNameClick?.()} onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }} role="button" tabindex={onNameClick ? 0 : -1}>
+        <span
+          class="namecard-vt text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block {slideUpActive ? 'animate-slide-up' : ''}"
+          style="animation-delay: 0.1s; font-family: 'Playfair Display', Georgia, serif;"
+          style:view-transition-name={hasTransitionNames ? 'name-text' : undefined}
+        >
+          Ethan<br>Hathaway
+        </span>
+      </div>
+    {/if}
   {/if}
 
   <!-- Main Content Area -->
   <div class="flex-1 flex flex-col p-8 relative z-0 min-h-0 {showNameCard ? 'pt-4' : ''}">
-    {#if showNameCard}
+    {#if showNameCard && !portfolio.namecardImage}
       <p
         class="namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 {slideUpActive ? 'animate-slide-up' : ''}"
         style="animation-delay: 0.2s;"
