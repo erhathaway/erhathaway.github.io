@@ -87,6 +87,8 @@
           draggable="false"
         />
       </div>
+      <!-- Spacer to match the flow-space the header text would occupy -->
+      <div class="h-[130px] shrink-0"></div>
     {:else}
       <!-- Background rectangle behind name and tagline -->
       <div
