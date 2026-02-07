@@ -11,6 +11,7 @@
 	import { ClerkProvider } from 'svelte-clerk';
 	import { onMount, tick } from 'svelte';
 	import { env } from '$env/dynamic/public';
+	import { initPostHog } from '$lib/posthog';
 
 	let { children } = $props();
 	const isProjectPage = $derived($page.route.id?.includes('/project/'));
@@ -246,6 +247,8 @@
 	}
 
 	onMount(() => {
+		initPostHog(env.PUBLIC_POSTHOG_KEY ?? '');
+
 		// Ensure the trigger-name suppression class matches initial state on first paint/hydration.
 		setPanelTransitionNames(panelTransitionNames);
 

@@ -66,6 +66,7 @@
 	"type": "module",
 	"dependencies": {
 		"jszip": "^3.10.1",
+		"posthog-js": "^1.342.1",
 		"svelte-clerk": "^0.20.3"
 	}
 }
