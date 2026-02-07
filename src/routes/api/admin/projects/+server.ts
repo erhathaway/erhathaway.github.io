@@ -125,10 +125,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const isPublished = payload.isPublished ?? false;
 
-	const [created] = await db
-		.insert(projects)
-		.values({ name, displayName, description, isPublished })
-		.returning();
+	let created;
+	try {
+		[created] = await db
+			.insert(projects)
+			.values({ name, displayName, description, isPublished })
+			.returning();
+	} catch (e) {
+		const cause = e instanceof Error ? (e.cause as Error)?.message ?? e.message : String(e);
+		if (cause.includes('UNIQUE constraint failed')) {
+			throw error(409, `A project with the name "${name}" already exists`);
+		}
+		throw error(500, cause);
+	}
 
 	return json(created, { status: 201, headers: corsHeaders });
 };
