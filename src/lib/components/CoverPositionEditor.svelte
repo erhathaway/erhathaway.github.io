@@ -43,19 +43,16 @@
 
 		const containerW = containerRect.width;
 		const containerH = containerRect.height;
-		const containerAspect = containerW / containerH;
-		const imageAspect = naturalW / naturalH;
 
-		let excessX = 0;
-		let excessY = 0;
+		// object-fit: cover scale factor
+		const coverScale = Math.max(containerW / naturalW, containerH / naturalH);
+		// After cover + zoom, the rendered image dimensions on screen
+		const renderedW = naturalW * coverScale * zoom;
+		const renderedH = naturalH * coverScale * zoom;
 
-		if (imageAspect > containerAspect) {
-			const scaledW = containerH * imageAspect;
-			excessX = (scaledW - containerW) * zoom;
-		} else {
-			const scaledH = containerW / imageAspect;
-			excessY = (scaledH - containerH) * zoom;
-		}
+		// Total excess in each axis (pixels on screen)
+		const excessX = Math.max(0, renderedW - containerW);
+		const excessY = Math.max(0, renderedH - containerH);
 
 		const dx = e.clientX - startPointer.x;
 		const dy = e.clientY - startPointer.y;
@@ -129,6 +126,7 @@
 			class="w-full h-full object-cover pointer-events-none transition-transform duration-100"
 			style:object-position="{positionX}% {positionY}%"
 			style:transform="scale({zoom})"
+			style:transform-origin="{positionX}% {positionY}%"
 			draggable="false"
 		/>
 		{#if editing}
@@ -146,7 +144,7 @@
 			<span class="text-[11px] text-slate-400 w-10 shrink-0">Zoom</span>
 			<input
 				type="range"
-				min="1"
+				min="0.5"
 				max="2"
 				step="0.01"
 				value={zoom}
