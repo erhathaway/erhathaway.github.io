@@ -173,6 +173,7 @@
         {/if}
 
         {#if hoveredItem && dockTarget?.target === 'namecard'}
+          <div class="absolute inset-0 z-10 bg-black/25 pointer-events-none"></div>
           <div class="absolute inset-0 z-20 pointer-events-none">
             <HoverInfo item={hoveredItem} variant="tile" dockSide={dockSide} />
           </div>
@@ -194,6 +195,7 @@
     {#if fillerSpan > 0}
       <div class="gallery-item relative overflow-hidden border {fillerClass}" aria-hidden="true" style="border-color: rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));">
         {#if hoveredItem && dockTarget?.target === 'filler'}
+          <div class="absolute inset-0 z-10 bg-black/25 pointer-events-none"></div>
           <div class="absolute inset-0 z-20 pointer-events-none">
             <HoverInfo item={hoveredItem} variant="tile" dockSide={dockSide} />
           </div>

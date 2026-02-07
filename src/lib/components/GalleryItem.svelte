@@ -123,11 +123,13 @@
   </span>
 
   {#if showDockedHover}
+    <div class="absolute inset-0 z-10 bg-black/25 pointer-events-none"></div>
     <div class="absolute inset-0 z-20 pointer-events-none">
       <HoverInfo item={dockHoverItem} variant="tile" dockSide={dockSide} />
     </div>
   {:else if shouldShowFallbackHover}
     <!-- Fallback: if no dock target was found, show hover info on the hovered tile -->
+    <div class="absolute inset-0 z-10 bg-black/25 pointer-events-none"></div>
     <div class="absolute inset-0 z-20 pointer-events-none">
       <HoverInfo item={item} variant="tile" dockSide="left" />
     </div>
