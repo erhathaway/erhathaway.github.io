@@ -40,10 +40,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	}
 
 	const body = await request.json();
-	const { projectId, item, isPublished = false } = body as {
+	const { projectId, item, isPublished = false, skipDescription = false } = body as {
 		projectId: number;
 		item: PickedMediaItem;
 		isPublished?: boolean;
+		skipDescription?: boolean;
 	};
 
 	if (!projectId || !item?.mediaFile?.baseUrl) {
@@ -93,10 +94,12 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const mediaUrl = `/${key}`;
 
 	const schema = 'image-v1';
-	const dataBlob = {
-		imageUrl: mediaUrl,
-		description: item.mediaFile.filename || undefined
+	const dataBlob: Record<string, unknown> = {
+		imageUrl: mediaUrl
 	};
+	if (!skipDescription) {
+		dataBlob.description = item.mediaFile.filename || undefined;
+	}
 
 	const [artifact] = await db
 		.insert(projectArtifacts)

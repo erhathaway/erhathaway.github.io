@@ -29,9 +29,11 @@
 		getToken: () => Promise<string | null>;
 		onImported: (artifacts: ImportedArtifact[]) => void;
 		onClose: () => void;
+		isPublished?: boolean;
+		skipDescription?: boolean;
 	};
 
-	let { projectId, getToken, onImported, onClose }: Props = $props();
+	let { projectId, getToken, onImported, onClose, isPublished = false, skipDescription = false }: Props = $props();
 
 	type Step = 'creating' | 'waiting' | 'loading-items' | 'confirm' | 'importing' | 'done' | 'error';
 	let step = $state<Step>('creating');
@@ -228,7 +230,8 @@
 					body: JSON.stringify({
 						projectId,
 						item,
-						isPublished: false
+						isPublished,
+						skipDescription
 					})
 				});
 

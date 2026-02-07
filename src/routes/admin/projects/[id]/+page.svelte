@@ -73,7 +73,7 @@
 	let artifactSchema: string = $state(initialSchema);
 	let artifactDraft = $state<Record<string, unknown>>(initialDraft as Record<string, unknown>);
 	let artifactDraftErrors = $state<string[]>(initialValidation.ok ? [] : initialValidation.errors);
-	let artifactIsPublished = $state(false);
+	let artifactIsPublished = $state(true);
 	let artifactIsCover = $state(false);
 	let showCreateArtifactModal = $state(false);
 	let artifactUploadState = $state<{ uploading: boolean; error: string | null }>({
@@ -99,6 +99,9 @@
 	let showGooglePhotosPickerModal = $state(false);
 	let dropUploading = $state(false);
 	let dropProgress = $state({ done: 0, total: 0 });
+
+	let defaultPublishNew = $state(true);
+	let defaultSkipDescription = $state(true);
 
 	let editingArtifactIndex = $derived(
 		editingArtifactId !== null ? artifacts.findIndex((a) => a.id === editingArtifactId) : -1
@@ -454,7 +457,7 @@
 		const schemaDef = getArtifactSchema(schema);
 		artifactDraft = (schemaDef?.createDraft() ?? { imageUrl: '', description: '' }) as Record<string, unknown>;
 		artifactDraftErrors = [];
-		artifactIsPublished = false;
+		artifactIsPublished = defaultPublishNew;
 		artifactIsCover = false;
 		showCreateArtifactModal = false;
 		pageSuccess = 'Artifact created.';
@@ -910,6 +913,10 @@
 
 			const { url } = await uploadResponse.json();
 
+			const dataBlob: Record<string, unknown> = { imageUrl: url };
+			if (!defaultSkipDescription) {
+				dataBlob.description = imageUrl.split('/').pop()?.split('?')[0] || 'image';
+			}
 			const artifactResponse = await fetch(`/api/admin/projects/${projectId}/artifacts`, {
 				method: 'POST',
 				headers: {
@@ -918,8 +925,8 @@
 				},
 				body: JSON.stringify({
 					schema: 'image-v1',
-					dataBlob: { imageUrl: url, description: imageUrl.split('/').pop()?.split('?')[0] || 'image' },
-					isPublished: false
+					dataBlob,
+					isPublished: defaultPublishNew
 				})
 			});
 
@@ -956,6 +963,10 @@
 		for (const file of files) {
 			try {
 				const url = await handleArtifactUpload(file);
+				const dataBlob: Record<string, unknown> = { imageUrl: url };
+				if (!defaultSkipDescription) {
+					dataBlob.description = file.name;
+				}
 				const response = await fetch(`/api/admin/projects/${projectId}/artifacts`, {
 					method: 'POST',
 					headers: {
@@ -964,8 +975,8 @@
 					},
 					body: JSON.stringify({
 						schema: 'image-v1',
-						dataBlob: { imageUrl: url, description: file.name },
-						isPublished: false
+						dataBlob,
+						isPublished: defaultPublishNew
 					})
 				});
 
@@ -1129,6 +1140,34 @@
 				<div>
 					<h2 class="text-lg font-semibold text-slate-900">Artifacts</h2>
 					<p class="text-sm text-slate-500 mt-0.5">Versioned data snapshots for the project.</p>
+				</div>
+				<div class="flex items-center gap-4">
+					<div class="flex items-center gap-2">
+						<button
+							type="button"
+							role="switch"
+							aria-checked={defaultPublishNew}
+							aria-label="Auto-publish new artifacts"
+							onclick={() => { defaultPublishNew = !defaultPublishNew; }}
+							class={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${defaultPublishNew ? 'bg-emerald-500' : 'bg-slate-200'}`}
+						>
+							<span class={`pointer-events-none inline-block h-3 w-3 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${defaultPublishNew ? 'translate-x-[13px]' : 'translate-x-[2px]'}`}></span>
+						</button>
+						<span class="text-[11px] text-slate-500">Auto-publish</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<button
+							type="button"
+							role="switch"
+							aria-checked={defaultSkipDescription}
+							aria-label="Skip description on new artifacts"
+							onclick={() => { defaultSkipDescription = !defaultSkipDescription; }}
+							class={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${defaultSkipDescription ? 'bg-slate-600' : 'bg-slate-200'}`}
+						>
+							<span class={`pointer-events-none inline-block h-3 w-3 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${defaultSkipDescription ? 'translate-x-[13px]' : 'translate-x-[2px]'}`}></span>
+						</button>
+						<span class="text-[11px] text-slate-500">Skip descriptions</span>
+					</div>
 				</div>
 			</div>
 
@@ -1635,6 +1674,8 @@
 		<GooglePhotosPickerModal
 			{projectId}
 			{getToken}
+			isPublished={defaultPublishNew}
+			skipDescription={defaultSkipDescription}
 			onImported={(imported) => {
 				artifacts = [...imported.map(a => ({ ...a, projectId, isCover: false, coverPositionX: 50, coverPositionY: 50, coverZoom: 1 })), ...artifacts];
 				showGooglePhotosPickerModal = false;
