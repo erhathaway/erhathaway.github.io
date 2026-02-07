@@ -213,33 +213,11 @@
           class="relative overflow-hidden border backdrop-blur-md"
           style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08)); background-color: #f3e9e1;"
         >
-          <div class="relative px-8 py-6 flex items-center justify-center">
-            <div class="flex flex-wrap justify-center gap-3">
-              <a
-                href="https://github.com/erhathaway"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:text-[#3d2e1e] transition-all duration-300"
-                style="background: rgba(245, 241, 235, 0.94); --hover-bg: rgba(253, 245, 230, 0.95);"
-                onmouseenter={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(253, 245, 230, 0.95)'}
-                onmouseleave={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(245, 241, 235, 0.94)'}
-              >GitHub</a>
-              <a
-                href="https://instagram.com/erhathaway"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:text-[#3d2e1e] transition-all duration-300"
-                style="background: rgba(245, 241, 235, 0.94); --hover-bg: rgba(253, 245, 230, 0.95);"
-                onmouseenter={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(253, 245, 230, 0.95)'}
-                onmouseleave={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(245, 241, 235, 0.94)'}
-              >Instagram</a>
-              <a
-                href="mailto:erhathaway@gmail.com"
-                class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:text-[#3d2e1e] transition-all duration-300"
-                style="background: rgba(245, 241, 235, 0.94); --hover-bg: rgba(253, 245, 230, 0.95);"
-                onmouseenter={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(253, 245, 230, 0.95)'}
-                onmouseleave={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(245, 241, 235, 0.94)'}
-              >Contact</a>
+          <div class="relative px-8 py-5 flex items-center justify-center">
+            <div class="flex gap-6 text-[11px] tracking-[0.2em] uppercase text-ash/50" style="font-family: 'DM Sans', sans-serif; font-weight: 500;">
+              <a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">GitHub</a>
+              <a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">Instagram</a>
+              <a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors duration-300">Contact</a>
             </div>
             <div class="absolute right-8 top-1/2 -translate-y-1/2">
               <AuthButton inline onOpenModal={() => window.dispatchEvent(new Event('auth:open-login'))} />
