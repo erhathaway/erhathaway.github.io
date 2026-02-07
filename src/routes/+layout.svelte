@@ -442,9 +442,11 @@
 		<AuthButton onOpenModal={() => showLoginModal = true} />
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 	{:else}
-		<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[200] vt-exclude-namecard" style="view-transition-name: left-bar"></div>
+		{#if !isHomePage}
+			<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[200] vt-exclude-namecard" style="view-transition-name: left-bar"></div>
+		{/if}
 
-		<div class="font-body bg-charcoal text-cream h-screen flex ml-[12px]">
+		<div class="font-body bg-charcoal text-cream h-screen flex {isHomePage ? '' : 'ml-[12px]'}">
 			<!-- Left spacer only on project pages on larger screens -->
 			{#if isProjectPage}
 				<div class="hidden sm:block w-80 shrink-0"></div>
