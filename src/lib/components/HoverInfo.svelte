@@ -80,10 +80,6 @@
     <div class={innerClass}>
       <div class={projectHeaderClass} style={projectHeaderStyle}>
       <div class={tileTextWrapClass}>
-        <p class={tileCategoryClass} style="view-transition-name: hover-info-category;">
-          {item.categories.join(' · ') || 'Uncategorized'}
-        </p>
-
         <h3 class={titleClass} style="view-transition-name: hover-info-title; font-family: 'Playfair Display', Georgia, serif;">
           {item.name}
         </h3>
