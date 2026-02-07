@@ -44,18 +44,18 @@
 
   const titleClass = $derived.by(() =>
     isTile
-      ? 'text-2xl sm:text-3xl font-semibold leading-tight mb-3 vt-exclude-namecard'
+      ? 'text-2xl sm:text-3xl font-semibold leading-tight mb-5 vt-exclude-namecard'
       : 'font-display text-3xl font-semibold text-walnut leading-tight mb-4 vt-exclude-namecard'
   );
   const descriptionClass = $derived.by(() =>
     isTile
-      ? 'text-sm sm:text-base leading-loose mb-6 vt-exclude-namecard'
+      ? 'text-sm sm:text-base leading-loose mb-8 vt-exclude-namecard'
       : 'text-base text-ash leading-relaxed mb-6 vt-exclude-namecard'
   );
   const metaKeyClass = $derived.by(() =>
-    isTile ? 'text-[9px] tracking-[0.25em] uppercase' : 'text-[10px] tracking-wider uppercase text-ash'
+    isTile ? 'text-[11px] tracking-[0.2em] uppercase' : 'text-[10px] tracking-wider uppercase text-ash'
   );
-  const metaValueClass = $derived.by(() => (isTile ? 'text-sm' : 'font-display text-base text-walnut'));
+  const metaValueClass = $derived.by(() => (isTile ? 'text-base' : 'font-display text-base text-walnut'));
 
   const tileCategoryClass = $derived.by(() =>
     isTile
@@ -85,17 +85,17 @@
         </h3>
 
         {#if item.description?.trim()}
-          <p class={descriptionClass} style="view-transition-name: hover-info-description;">
+          <p class={descriptionClass} style="view-transition-name: hover-info-description; font-family: 'DM Sans', sans-serif; color: #6b5c4f; {isTile ? 'letter-spacing: 0.01em;' : ''}">
             {item.description}
           </p>
         {/if}
 
         {#if item.metadata}
-          <div class="flex gap-8 vt-exclude-namecard {dockSide === 'right' ? 'justify-end text-right' : 'justify-start text-left'}" style="view-transition-name: hover-info-meta;">
+          <div class="flex gap-6 vt-exclude-namecard {dockSide === 'right' ? 'justify-end text-right' : 'justify-start text-left'}" style="view-transition-name: hover-info-meta;">
             {#each Object.entries(item.metadata) as [key, value] (key)}
-              <div class="flex flex-col gap-1 {dockSide === 'right' ? 'items-end' : 'items-start'}">
-                <span class={metaKeyClass}>{key}</span>
-                <span class={metaValueClass}>{formatMetadata(key, value)}</span>
+              <div class="flex flex-col gap-1.5 {dockSide === 'right' ? 'items-end' : 'items-start'}">
+                <span class={metaKeyClass} style="color: #a08e7a;">{key}</span>
+                <span class={metaValueClass} style="font-family: 'Cormorant Garamond', Georgia, serif; color: #3d2e1e;">{formatMetadata(key, value)}</span>
               </div>
             {/each}
           </div>
