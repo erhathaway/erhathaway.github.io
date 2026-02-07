@@ -117,9 +117,11 @@
 
       <!-- Additional artifacts -->
       {#if additionalArtifacts.length > 0}
-        <div class="grid grid-cols-2 gap-4 mb-12">
+        <div class="columns-2 gap-4 mb-12">
           {#each additionalArtifacts as artifact (artifact.id)}
-            <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+            <div class="mb-4 break-inside-avoid">
+              <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+            </div>
           {/each}
         </div>
       {/if}
