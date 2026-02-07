@@ -4,6 +4,7 @@
   import { env } from '$env/dynamic/public';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
+  import HoverInfo from './HoverInfo.svelte';
 
   function handleGalleryLeave() {
     portfolio.setHoveredItem(null);
@@ -30,6 +31,75 @@
   const hiddenCount = $derived.by(() => {
     return portfolio.allItems.length - portfolio.filteredItems.length;
   });
+
+  type DockTarget =
+    | { target: 'item'; id: number; dockSide: 'left' | 'right' }
+    | { target: 'namecard'; dockSide: 'left' | 'right' }
+    | null;
+
+  const hoveredItem = $derived(portfolio.hoveredItem);
+
+  const hoveredFilteredIndex = $derived.by(() => {
+    if (!hoveredItem) return -1;
+    return portfolio.filteredItems.findIndex((it) => it.id === hoveredItem.id);
+  });
+
+  const hoveredDisplayIndex = $derived.by(() => {
+    if (hoveredFilteredIndex < 0) return -1;
+    return hoveredFilteredIndex + (homeNamecardInGallery ? 1 : 0);
+  });
+
+  const itemTilesCount = $derived.by(() => {
+    return portfolio.filteredItems.length + (homeNamecardInGallery ? 1 : 0);
+  });
+
+  const dockTarget = $derived.by((): DockTarget => {
+    if (!hoveredItem) return null;
+    if (hoveredDisplayIndex < 0) return null;
+
+    const col = hoveredDisplayIndex % 3;
+    const candidates: Array<{ displayIndex: number; dockSide: 'left' | 'right' }> = [];
+
+    // Candidate on the right: dock trapezoid on the left edge (toward hovered tile)
+    if (col < 2) {
+      candidates.push({ displayIndex: hoveredDisplayIndex + 1, dockSide: 'left' });
+    }
+    // Candidate on the left: dock trapezoid on the right edge (toward hovered tile)
+    if (col > 0) {
+      candidates.push({ displayIndex: hoveredDisplayIndex - 1, dockSide: 'right' });
+    }
+
+    const pick = (allowNamecard: boolean): DockTarget => {
+      for (const candidate of candidates) {
+        if (candidate.displayIndex < 0) continue;
+        if (candidate.displayIndex >= itemTilesCount) continue;
+
+        if (homeNamecardInGallery && candidate.displayIndex === 0) {
+          if (allowNamecard) return { target: 'namecard', dockSide: candidate.dockSide };
+          continue;
+        }
+
+        const itemIndex = candidate.displayIndex - (homeNamecardInGallery ? 1 : 0);
+        if (itemIndex < 0 || itemIndex >= portfolio.filteredItems.length) continue;
+        return { target: 'item', id: portfolio.filteredItems[itemIndex].id, dockSide: candidate.dockSide };
+      }
+      return null;
+    };
+
+    // Prefer docking onto a real image tile (skip the title card).
+    const withoutNamecard = pick(false);
+    if (withoutNamecard) return withoutNamecard;
+
+    // If there are no other images, allow docking onto the title card.
+    if (homeNamecardInGallery && portfolio.filteredItems.length <= 1) {
+      return pick(true);
+    }
+
+    return null;
+  });
+
+  const dockTargetItemId = $derived.by(() => (dockTarget?.target === 'item' ? dockTarget.id : null));
+  const dockSide = $derived.by(() => dockTarget?.dockSide ?? 'left');
 </script>
 
 <main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-thin" onmouseleave={handleGalleryLeave}>
@@ -73,6 +143,12 @@
             </p>
           </div>
         {/if}
+
+        {#if hoveredItem && dockTarget?.target === 'namecard'}
+          <div class="absolute inset-0 z-20 pointer-events-none">
+            <HoverInfo item={hoveredItem} variant="tile" dockSide={dockSide} />
+          </div>
+        {/if}
       </button>
     {/if}
     {#each portfolio.filteredItems as item, index (item.id)}
@@ -80,6 +156,10 @@
         {item}
         index={homeNamecardInGallery ? index + 1 : index}
         hoverInfoInWall={homeNamecardInGallery}
+        dockHoverItem={hoveredItem}
+        dockHoverTargetId={dockTargetItemId}
+        dockHoverSourceId={hoveredItem?.id ?? null}
+        dockSide={dockSide}
       />
     {/each}
     {#if browser && $page.url.pathname === '/'}

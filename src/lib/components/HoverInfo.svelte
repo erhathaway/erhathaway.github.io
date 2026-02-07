@@ -3,14 +3,20 @@
 
   let {
     item,
-    variant = 'inline'
-  }: { item: PortfolioItem; variant?: 'inline' | 'tile' } = $props();
+    variant = 'inline',
+    dockSide = 'left'
+  }: { item: PortfolioItem; variant?: 'inline' | 'tile'; dockSide?: 'left' | 'right' } = $props();
 
   function formatMetadata(key: string, value: string): string {
     return value;
   }
 
   const isTile = $derived(variant === 'tile');
+  const tileClipPath = $derived.by(() =>
+    dockSide === 'right'
+      ? 'polygon(40% 0%, 100% 0%, 100% 100%, 56% 100%)'
+      : 'polygon(0% 0%, 60% 0%, 44% 100%, 0% 100%)'
+  );
 
   const wrapperClass = $derived.by(() => {
     if (variant === 'tile') {
@@ -21,7 +27,7 @@
 
   const innerClass = $derived.by(() => {
     if (variant === 'tile') {
-      return 'w-full px-7 py-8';
+      return dockSide === 'right' ? 'w-full px-7 py-8 flex justify-end' : 'w-full px-7 py-8 flex';
     }
     return 'hover-inline-inner w-full';
   });
@@ -46,6 +52,8 @@
       ? 'text-[10px] font-medium tracking-widest uppercase text-walnut mb-3 vt-exclude-namecard'
       : 'text-[10px] font-medium tracking-widest uppercase text-copper mb-3 vt-exclude-namecard'
   );
+
+  const tileTextWrapClass = $derived.by(() => (isTile ? 'relative z-10 max-w-[72%]' : ''));
 </script>
 
 {#if item}
@@ -53,12 +61,12 @@
     {#if isTile}
       <div
         class="absolute inset-0 bg-white/95"
-        style="clip-path: polygon(0% 0%, 60% 0%, 44% 100%, 0% 100%);"
+        style="clip-path: {tileClipPath};"
       ></div>
     {/if}
     <div class={innerClass}>
       <div class="project-header-block text-left">
-      <div class={isTile ? 'relative z-10 max-w-[72%]' : ''}>
+      <div class={tileTextWrapClass}>
         <p class={tileCategoryClass} style="view-transition-name: hover-info-category;">
           {item.categories.join(' · ') || 'Uncategorized'}
         </p>

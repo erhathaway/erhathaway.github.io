@@ -8,11 +8,19 @@
   let {
     item,
     index = 0,
-    hoverInfoInWall = false
+    hoverInfoInWall = false,
+    dockHoverItem = null,
+    dockHoverTargetId = null,
+    dockHoverSourceId = null,
+    dockSide = 'left'
   }: {
     item: PortfolioItem;
     index?: number;
     hoverInfoInWall?: boolean;
+    dockHoverItem?: PortfolioItem | null;
+    dockHoverTargetId?: number | null;
+    dockHoverSourceId?: number | null;
+    dockSide?: 'left' | 'right';
   } = $props();
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animation after its first run.
@@ -60,6 +68,15 @@
   }
 
   const isHovered = $derived.by(() => portfolio.hoveredItemId === item.id);
+  const showDockedHover = $derived.by(() => hoverInfoInWall && dockHoverItem && dockHoverTargetId === item.id);
+  const isDockSource = $derived.by(() => dockHoverSourceId !== null && dockHoverSourceId === item.id);
+  const shouldShowFallbackHover = $derived.by(() => {
+    if (!hoverInfoInWall) return false;
+    if (!isHovered) return false;
+    // If a dock target exists, suppress the hovered-tile overlay so only the docked tile shows it.
+    if (isDockSource && dockHoverTargetId !== null) return false;
+    return true;
+  });
 
 </script>
 
@@ -91,9 +108,14 @@
     {item.id.toString().padStart(2, '0')}
   </span>
 
-  {#if hoverInfoInWall && isHovered}
+  {#if showDockedHover}
     <div class="absolute inset-0 z-20 pointer-events-none">
-      <HoverInfo item={item} variant="tile" />
+      <HoverInfo item={dockHoverItem} variant="tile" dockSide={dockSide} />
+    </div>
+  {:else if shouldShowFallbackHover}
+    <!-- Fallback: if no dock target was found, show hover info on the hovered tile -->
+    <div class="absolute inset-0 z-20 pointer-events-none">
+      <HoverInfo item={item} variant="tile" dockSide="left" />
     </div>
   {/if}
 

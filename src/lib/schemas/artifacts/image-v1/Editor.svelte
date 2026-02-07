@@ -2,6 +2,7 @@
 	import { onMount, onDestroy, tick } from 'svelte';
 	import { validateImageV1 } from './validator';
 	import type { ImageV1Data } from './validator';
+	import CoverPositionEditor from '$lib/components/CoverPositionEditor.svelte';
 
 	type Props = {
 		value?: ImageV1Data;
@@ -14,7 +15,7 @@
 
 	let { value, onChange, onUpload, onUploadStateChange, googlePhotosConnected = false, onGooglePhotosPick }: Props = $props();
 
-	const current = $derived(value ?? { imageUrl: '', description: '' });
+	const current = $derived(value ?? { imageUrl: '', description: '' } as ImageV1Data);
 	const validation = $derived.by(() => validateImageV1(current));
 	const errors = $derived(validation.ok ? [] : validation.errors);
 	let previewUrl = $state<string | null>(null);
@@ -34,11 +35,24 @@
 
 	const updateDescription = (event: Event) => {
 		const target = event.currentTarget as HTMLTextAreaElement | null;
-		const next = {
+		const next: ImageV1Data = {
 			imageUrl: current.imageUrl?.trim() || '',
-			description: (target?.value ?? '').trim() || undefined
+			description: (target?.value ?? '').trim() || undefined,
+			positionX: current.positionX,
+			positionY: current.positionY,
+			zoom: current.zoom
 		};
 		onChange?.(next);
+	};
+
+	const handlePositionChange = (x: number, y: number, z: number) => {
+		onChange?.({
+			imageUrl: current.imageUrl?.trim() || '',
+			description: current.description?.trim() || undefined,
+			positionX: x,
+			positionY: y,
+			zoom: z
+		});
 	};
 
 	const clearPreview = () => {
@@ -65,7 +79,10 @@
 			const uploadedUrl = await onUpload(file);
 			onChange?.({
 				imageUrl: uploadedUrl,
-				description: current.description?.trim() || undefined
+				description: current.description?.trim() || undefined,
+				positionX: current.positionX,
+				positionY: current.positionY,
+				zoom: current.zoom
 			});
 			await tick();
 			setUploadState({ uploading: false, error: null });
@@ -293,6 +310,16 @@
 			class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 bg-white focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150 resize-none"
 		></textarea>
 	</label>
+
+	{#if hasImage && !uploading}
+		<CoverPositionEditor
+			imageUrl={displayUrl}
+			positionX={current.positionX ?? 50}
+			positionY={current.positionY ?? 50}
+			zoom={current.zoom ?? 1}
+			onChange={handlePositionChange}
+		/>
+	{/if}
 
 	{#if errors.length > 0}
 		<p class="text-xs font-medium text-red-600">{errors.join('; ')}</p>

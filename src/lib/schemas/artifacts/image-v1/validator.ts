@@ -7,6 +7,9 @@ export const imageV1Schema = {
 export type ImageV1Data = {
 	imageUrl: string;
 	description?: string;
+	positionX?: number;
+	positionY?: number;
+	zoom?: number;
 };
 
 export const createImageV1Draft = (): ImageV1Data => ({
@@ -35,6 +38,21 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 		errors.push('description must be a string');
 	}
 
+	const positionX = data.positionX;
+	if (positionX !== undefined && typeof positionX !== 'number') {
+		errors.push('positionX must be a number');
+	}
+
+	const positionY = data.positionY;
+	if (positionY !== undefined && typeof positionY !== 'number') {
+		errors.push('positionY must be a number');
+	}
+
+	const zoom = data.zoom;
+	if (zoom !== undefined && typeof zoom !== 'number') {
+		errors.push('zoom must be a number');
+	}
+
 	if (errors.length > 0) {
 		return { ok: false, errors };
 	}
@@ -43,7 +61,10 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 		ok: true,
 		value: {
 			imageUrl: imageUrl.trim(),
-			description: typeof description === 'string' ? description.trim() || undefined : undefined
+			description: typeof description === 'string' ? description.trim() || undefined : undefined,
+			...(typeof positionX === 'number' ? { positionX } : {}),
+			...(typeof positionY === 'number' ? { positionY } : {}),
+			...(typeof zoom === 'number' ? { zoom } : {})
 		}
 	};
 };
