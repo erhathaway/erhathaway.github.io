@@ -215,20 +215,26 @@
                 href="https://github.com/erhathaway"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream transition-all duration-300"
-                style="background: rgba(245, 241, 235, 0.94);"
+                class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:text-[#3d2e1e] transition-all duration-300"
+                style="background: rgba(245, 241, 235, 0.94); --hover-bg: rgba(253, 245, 230, 0.95);"
+                onmouseenter={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(253, 245, 230, 0.95)'}
+                onmouseleave={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(245, 241, 235, 0.94)'}
               >GitHub</a>
               <a
                 href="https://instagram.com/erhathaway"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream transition-all duration-300"
-                style="background: rgba(245, 241, 235, 0.94);"
+                class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:text-[#3d2e1e] transition-all duration-300"
+                style="background: rgba(245, 241, 235, 0.94); --hover-bg: rgba(253, 245, 230, 0.95);"
+                onmouseenter={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(253, 245, 230, 0.95)'}
+                onmouseleave={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(245, 241, 235, 0.94)'}
               >Instagram</a>
               <a
                 href="mailto:erhathaway@gmail.com"
-                class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:bg-walnut hover:text-cream transition-all duration-300"
-                style="background: rgba(245, 241, 235, 0.94);"
+                class="pill inline-flex items-center px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] text-ash/70 backdrop-blur-[12px] hover:text-[#3d2e1e] transition-all duration-300"
+                style="background: rgba(245, 241, 235, 0.94); --hover-bg: rgba(253, 245, 230, 0.95);"
+                onmouseenter={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(253, 245, 230, 0.95)'}
+                onmouseleave={(e: MouseEvent) => (e.currentTarget as HTMLElement).style.background = 'rgba(245, 241, 235, 0.94)'}
               >Contact</a>
             </div>
             <div class="absolute right-8 top-1/2 -translate-y-1/2">
