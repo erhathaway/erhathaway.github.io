@@ -213,14 +213,15 @@
 		currentFilename = '';
 		importResults = { created: [], errors: [] };
 
-		const headers = await authHeaders();
-
 		for (const item of pickedItems) {
 			if (cancelled) break;
 
 			currentFilename = item.mediaFile.filename;
 
 			try {
+				// Fetch fresh auth headers per-request — Clerk JWTs expire in ~60s,
+				// and importing many images can take several minutes.
+				const headers = await authHeaders();
 				const response = await fetch('/api/admin/integrations/google-photos/import-item', {
 					method: 'POST',
 					headers: { ...headers, 'Content-Type': 'application/json' },
@@ -255,9 +256,10 @@
 
 		// Clean up the picker session
 		try {
+			const cleanupHeaders = await authHeaders();
 			await fetch(`/api/admin/integrations/google-photos/sessions/${sessionId}`, {
 				method: 'DELETE',
-				headers
+				headers: cleanupHeaders
 			});
 		} catch {
 			// Non-critical cleanup failure

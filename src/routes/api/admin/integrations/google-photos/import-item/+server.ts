@@ -73,6 +73,10 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	const mediaResponse = await downloadMedia(accessToken, item.mediaFile.baseUrl, 'PHOTO', 4096);
 
+	if (!mediaResponse.body) {
+		throw error(502, 'Empty response from Google Photos');
+	}
+
 	const contentType =
 		item.mediaFile.mimeType ||
 		mediaResponse.headers.get('Content-Type') ||
@@ -80,8 +84,10 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	const ext = mimeToExtension(contentType);
 	const key = `artifacts/${crypto.randomUUID()}.${ext}`;
-	const mediaBytes = await mediaResponse.arrayBuffer();
-	await bucket.put(key, mediaBytes, {
+	// Stream directly to R2 instead of buffering the entire image in Worker memory.
+	// Buffering large images (4096px, 5-15MB each) in rapid succession can exceed
+	// the 128MB Worker memory limit before GC reclaims previous allocations.
+	await bucket.put(key, mediaResponse.body, {
 		httpMetadata: { contentType }
 	});
 	const mediaUrl = `/${key}`;
