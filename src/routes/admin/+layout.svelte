@@ -50,7 +50,7 @@
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch('/api/categories', { headers });
+		const response = await fetch('/api/admin/categories', { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load categories');
 		}
@@ -64,7 +64,7 @@
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch('/api/projects', { headers });
+		const response = await fetch('/api/admin/projects', { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load projects');
 		}
@@ -76,7 +76,7 @@
 		try {
 			const token = await getToken();
 			if (!token) return;
-			const response = await fetch('/api/integrations/google-photos/status', {
+			const response = await fetch('/api/admin/integrations/google-photos/status', {
 				headers: { Authorization: `Bearer ${token}` }
 			});
 			if (response.ok) {
@@ -161,7 +161,7 @@
 		}
 
 		if (desiredIds.length > 0) {
-			const response = await fetch(`/api/projects/${projectId}/categories`, {
+			const response = await fetch(`/api/admin/projects/${projectId}/categories`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -191,7 +191,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/projects/${projectId}/attributes`, {
+		const response = await fetch(`/api/admin/projects/${projectId}/attributes`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -216,7 +216,7 @@
 			return;
 		}
 
-		const response = await fetch('/api/categories', {
+		const response = await fetch('/api/admin/categories', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -272,7 +272,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/categories/${editCategoryId}`, {
+		const response = await fetch(`/api/admin/categories/${editCategoryId}`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',
@@ -307,7 +307,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/categories/${editCategoryId}`, {
+		const response = await fetch(`/api/admin/categories/${editCategoryId}`, {
 			method: 'DELETE',
 			headers: {
 				Authorization: `Bearer ${token}`
@@ -335,7 +335,7 @@
 			return;
 		}
 
-		const response = await fetch('/api/projects', {
+		const response = await fetch('/api/admin/projects', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

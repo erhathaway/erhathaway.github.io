@@ -1,12 +1,19 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { projects, projectArtifacts, projectCoverArtifact, categories, projectCategories, projectAttributes } from '$lib/server/db/schema';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
-	'Access-Control-Allow-Methods': 'GET, OPTIONS',
-	'Access-Control-Allow-Headers': 'Content-Type'
+	'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+	'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+};
+
+type ProjectInput = {
+	name: string;
+	displayName: string;
+	description: string;
+	isPublished?: boolean;
 };
 
 const getDbOrThrow = (db: App.Locals['db']) => {
@@ -37,8 +44,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		})
 		.from(projects)
 		.leftJoin(projectCoverArtifact, eq(projects.id, projectCoverArtifact.projectId))
-		.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id))
-		.where(eq(projects.isPublished, true));
+		.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id));
 
 	// Fetch categories and nav attributes for all projects
 	const projectIds = rows.map((r) => r.id);
@@ -52,7 +58,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 				})
 				.from(projectCategories)
 				.innerJoin(categories, eq(projectCategories.categoryId, categories.id))
-				.where(eq(categories.isPublished, true))
 			: Promise.resolve([]),
 		projectIds.length > 0
 			? db
@@ -62,7 +67,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 					value: projectAttributes.value
 				})
 				.from(projectAttributes)
-				.where(and(eq(projectAttributes.showInNav, true), eq(projectAttributes.isPublished, true)))
+				.where(eq(projectAttributes.showInNav, true))
 			: Promise.resolve([])
 	]);
 
@@ -104,4 +109,26 @@ export const GET: RequestHandler = async ({ locals }) => {
 	});
 
 	return json(result, { headers: corsHeaders });
+};
+
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const db = getDbOrThrow(locals.db);
+
+	const payload = (await request.json()) as Partial<ProjectInput>;
+	const name = payload.name?.trim();
+	const displayName = payload.displayName?.trim() || name;
+	const description = payload.description?.trim() || null;
+
+	if (!name) {
+		throw error(400, 'name is required');
+	}
+
+	const isPublished = payload.isPublished ?? false;
+
+	const [created] = await db
+		.insert(projects)
+		.values({ name, displayName, description, isPublished })
+		.returning();
+
+	return json(created, { status: 201, headers: corsHeaders });
 };

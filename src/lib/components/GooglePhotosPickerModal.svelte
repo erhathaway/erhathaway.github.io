@@ -69,7 +69,7 @@
 		step = 'creating';
 		try {
 			const headers = await authHeaders();
-			const response = await fetch('/api/integrations/google-photos/sessions', {
+			const response = await fetch('/api/admin/integrations/google-photos/sessions', {
 				method: 'POST',
 				headers: { ...headers, 'Content-Type': 'application/json' }
 			});
@@ -117,7 +117,7 @@
 			try {
 				const headers = await authHeaders();
 				const response = await fetch(
-					`/api/integrations/google-photos/sessions/${sessionId}`,
+					`/api/admin/integrations/google-photos/sessions/${sessionId}`,
 					{ headers }
 				);
 
@@ -177,7 +177,7 @@
 				if (pageToken) params.set('pageToken', pageToken);
 
 				const response = await fetch(
-					`/api/integrations/google-photos/sessions/${sessionId}/items?${params.toString()}`,
+					`/api/admin/integrations/google-photos/sessions/${sessionId}/items?${params.toString()}`,
 					{ headers }
 				);
 
@@ -221,7 +221,7 @@
 			currentFilename = item.mediaFile.filename;
 
 			try {
-				const response = await fetch('/api/integrations/google-photos/import-item', {
+				const response = await fetch('/api/admin/integrations/google-photos/import-item', {
 					method: 'POST',
 					headers: { ...headers, 'Content-Type': 'application/json' },
 					body: JSON.stringify({
@@ -255,7 +255,7 @@
 
 		// Clean up the picker session
 		try {
-			await fetch(`/api/integrations/google-photos/sessions/${sessionId}`, {
+			await fetch(`/api/admin/integrations/google-photos/sessions/${sessionId}`, {
 				method: 'DELETE',
 				headers
 			});
@@ -283,7 +283,7 @@
 		// Clean up session
 		if (sessionId) {
 			authHeaders().then((headers) => {
-				fetch(`/api/integrations/google-photos/sessions/${sessionId}`, {
+				fetch(`/api/admin/integrations/google-photos/sessions/${sessionId}`, {
 					method: 'DELETE',
 					headers
 				}).catch(() => {});

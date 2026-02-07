@@ -91,7 +91,7 @@
 			const token = await getToken();
 			if (!token) throw new Error('Sign in to export.');
 
-			const response = await fetch('/api/export', {
+			const response = await fetch('/api/admin/export', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -207,7 +207,7 @@
 				})
 			);
 
-			const response = await fetch('/api/import', {
+			const response = await fetch('/api/admin/import', {
 				method: 'POST',
 				headers: { Authorization: `Bearer ${token}` },
 				body: formData

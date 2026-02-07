@@ -24,7 +24,7 @@
 		try {
 			const token = await getToken();
 			if (!token) return;
-			const response = await fetch('/api/integrations/google-photos/status', {
+			const response = await fetch('/api/admin/integrations/google-photos/status', {
 				headers: { Authorization: `Bearer ${token}` }
 			});
 			if (!response.ok) throw new Error('Failed to fetch status');
@@ -40,7 +40,7 @@
 
 	async function handleConnect() {
 		// Browser redirect — Clerk middleware handles auth via cookies
-		window.location.href = '/api/integrations/google-photos/connect';
+		window.location.href = '/api/admin/integrations/google-photos/connect';
 	}
 
 	async function handleDisconnect() {
@@ -50,7 +50,7 @@
 		try {
 			const token = await getToken();
 			if (!token) return;
-			const response = await fetch('/api/integrations/google-photos/disconnect', {
+			const response = await fetch('/api/admin/integrations/google-photos/disconnect', {
 				method: 'POST',
 				headers: { Authorization: `Bearer ${token}` }
 			});

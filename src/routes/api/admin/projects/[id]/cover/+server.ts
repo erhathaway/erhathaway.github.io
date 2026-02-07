@@ -1,0 +1,91 @@
+import type { RequestHandler } from './$types';
+import { eq } from 'drizzle-orm';
+import { error, json } from '@sveltejs/kit';
+import { projects, projectCoverArtifact } from '$lib/server/db/schema';
+
+const corsHeaders = {
+	'Access-Control-Allow-Origin': '*',
+	'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+	'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+};
+
+const getDbOrThrow = (db: App.Locals['db']) => {
+	if (!db) {
+		throw error(500, 'Database not available');
+	}
+	return db;
+};
+
+const parseId = (raw: string) => {
+	const id = Number(raw);
+	if (!Number.isInteger(id) || id <= 0) {
+		throw error(400, 'Invalid project id');
+	}
+	return id;
+};
+
+export const OPTIONS: RequestHandler = async () => {
+	return new Response(null, { status: 200, headers: corsHeaders });
+};
+
+export const GET: RequestHandler = async ({ params, locals }) => {
+	const db = getDbOrThrow(locals.db);
+	const projectId = parseId(params.id);
+
+	const [row] = await db
+		.select()
+		.from(projectCoverArtifact)
+		.where(eq(projectCoverArtifact.projectId, projectId));
+
+	return json(
+		{
+			projectId,
+			artifactId: row?.artifactId ?? null,
+			positionX: row?.positionX ?? 50,
+			positionY: row?.positionY ?? 50,
+			zoom: row?.zoom ?? 1
+		},
+		{ headers: corsHeaders }
+	);
+};
+
+export const PUT: RequestHandler = async ({ params, request, locals }) => {
+	const db = getDbOrThrow(locals.db);
+	const projectId = parseId(params.id);
+
+	const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
+	if (!project) {
+		throw error(404, 'Project not found');
+	}
+
+	const body = await request.json();
+	const artifactId = Number(body.artifactId);
+	if (!Number.isInteger(artifactId) || artifactId <= 0) {
+		throw error(400, 'artifactId must be a positive integer');
+	}
+
+	const positionX = typeof body.positionX === 'number' ? body.positionX : 50;
+	const positionY = typeof body.positionY === 'number' ? body.positionY : 50;
+	const zoom = typeof body.zoom === 'number' ? body.zoom : 1;
+
+	await db
+		.delete(projectCoverArtifact)
+		.where(eq(projectCoverArtifact.projectId, projectId));
+
+	await db
+		.insert(projectCoverArtifact)
+		.values({ projectId, artifactId, positionX, positionY, zoom });
+
+	return json({ projectId, artifactId, positionX, positionY, zoom }, { headers: corsHeaders });
+};
+
+export const DELETE: RequestHandler = async ({ params, locals }) => {
+	const db = getDbOrThrow(locals.db);
+	const projectId = parseId(params.id);
+
+	await db
+		.delete(projectCoverArtifact)
+		.where(eq(projectCoverArtifact.projectId, projectId));
+
+	return json({ success: true }, { headers: corsHeaders });
+};

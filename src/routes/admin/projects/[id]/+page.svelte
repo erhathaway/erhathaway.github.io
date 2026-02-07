@@ -162,7 +162,7 @@
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch(`/api/projects/${id}`, { headers });
+		const response = await fetch(`/api/admin/projects/${id}`, { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load project');
 		}
@@ -175,7 +175,7 @@
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch('/api/categories', { headers });
+		const response = await fetch('/api/admin/categories', { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load categories');
 		}
@@ -189,7 +189,7 @@
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch(`/api/projects/${id}/categories`, { headers });
+		const response = await fetch(`/api/admin/projects/${id}/categories`, { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load project categories');
 		}
@@ -203,7 +203,7 @@
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch(`/api/projects/${id}/attributes`, { headers });
+		const response = await fetch(`/api/admin/projects/${id}/attributes`, { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load project attributes');
 		}
@@ -216,7 +216,7 @@
 		if (token) {
 			headers.Authorization = `Bearer ${token}`;
 		}
-		const response = await fetch(`/api/projects/${id}/artifacts`, { headers });
+		const response = await fetch(`/api/admin/projects/${id}/artifacts`, { headers });
 		if (!response.ok) {
 			throw new Error('Failed to load project artifacts');
 		}
@@ -227,7 +227,7 @@
 		try {
 			const token = await getToken();
 			if (!token) return;
-			const response = await fetch('/api/integrations/google-photos/status', {
+			const response = await fetch('/api/admin/integrations/google-photos/status', {
 				headers: { Authorization: `Bearer ${token}` }
 			});
 			if (response.ok) {
@@ -296,7 +296,7 @@
 		const toRemove = current.filter((id) => !desiredIds.includes(id));
 
 		if (toAdd.length > 0) {
-			const response = await fetch(`/api/projects/${projectId}/categories`, {
+			const response = await fetch(`/api/admin/projects/${projectId}/categories`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -311,7 +311,7 @@
 		}
 
 		if (toRemove.length > 0) {
-			const response = await fetch(`/api/projects/${projectId}/categories`, {
+			const response = await fetch(`/api/admin/projects/${projectId}/categories`, {
 				method: 'DELETE',
 				headers: {
 					'Content-Type': 'application/json',
@@ -340,7 +340,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/projects/${projectId}/attributes`, {
+		const response = await fetch(`/api/admin/projects/${projectId}/attributes`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',
@@ -364,7 +364,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/projects/${projectId}`, {
+		const response = await fetch(`/api/admin/projects/${projectId}`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',
@@ -417,7 +417,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/projects/${projectId}/artifacts`, {
+		const response = await fetch(`/api/admin/projects/${projectId}/artifacts`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -440,7 +440,7 @@
 
 		// Set as cover if toggled
 		if (artifactIsCover) {
-			const coverRes = await fetch(`/api/projects/${projectId}/cover`, {
+			const coverRes = await fetch(`/api/admin/projects/${projectId}/cover`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ artifactId: created.id })
@@ -478,7 +478,7 @@
 
 		const formData = new FormData();
 		formData.append('file', file);
-		const response = await fetch('/api/uploads/artifacts', {
+		const response = await fetch('/api/admin/uploads/artifacts', {
 			method: 'POST',
 			headers: {
 				Authorization: `Bearer ${token}`
@@ -565,7 +565,7 @@
 			pageError = 'Sign in to update artifacts.';
 			return;
 		}
-		const response = await fetch(`/api/projects/${projectId}/artifacts/${editingArtifactId}`, {
+		const response = await fetch(`/api/admin/projects/${projectId}/artifacts/${editingArtifactId}`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',
@@ -588,7 +588,7 @@
 		// Handle cover toggle and position
 		if (editArtifactIsCover) {
 			// Always PUT when cover is on — position may have changed even if already cover
-			const coverRes = await fetch(`/api/projects/${projectId}/cover`, {
+			const coverRes = await fetch(`/api/admin/projects/${projectId}/cover`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ artifactId: editingArtifactId, positionX: editCoverPositionX, positionY: editCoverPositionY, zoom: editCoverZoom })
@@ -606,7 +606,7 @@
 				coverZoom: a.id === editingArtifactId ? editCoverZoom : a.coverZoom
 			}));
 		} else if (!editArtifactIsCover && wasCover) {
-			const coverRes = await fetch(`/api/projects/${projectId}/cover`, {
+			const coverRes = await fetch(`/api/admin/projects/${projectId}/cover`, {
 				method: 'DELETE',
 				headers: { Authorization: `Bearer ${token}` }
 			});
@@ -629,7 +629,7 @@
 			pageError = 'Sign in to delete artifacts.';
 			return;
 		}
-		const response = await fetch(`/api/projects/${projectId}/artifacts/${artifactId}`, {
+		const response = await fetch(`/api/admin/projects/${projectId}/artifacts/${artifactId}`, {
 			method: 'DELETE',
 			headers: {
 				Authorization: `Bearer ${token}`
@@ -655,7 +655,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/projects/${projectId}/cover`, {
+		const response = await fetch(`/api/admin/projects/${projectId}/cover`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',
@@ -685,7 +685,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/projects/${projectId}/cover`, {
+		const response = await fetch(`/api/admin/projects/${projectId}/cover`, {
 			method: 'DELETE',
 			headers: {
 				Authorization: `Bearer ${token}`
@@ -717,7 +717,7 @@
 				return;
 			}
 
-			const response = await fetch(`/api/projects/${projectId}`, {
+			const response = await fetch(`/api/admin/projects/${projectId}`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
@@ -759,7 +759,7 @@
 				pageError = 'Sign in to delete projects.';
 				return;
 			}
-			const response = await fetch(`/api/projects/${projectId}`, {
+			const response = await fetch(`/api/admin/projects/${projectId}`, {
 				method: 'DELETE',
 				headers: { Authorization: `Bearer ${token}` }
 			});
@@ -894,7 +894,7 @@
 
 		try {
 			// Use server-side proxy to fetch the image (bypasses CORS)
-			const uploadResponse = await fetch('/api/uploads/artifacts/from-url', {
+			const uploadResponse = await fetch('/api/admin/uploads/artifacts/from-url', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -910,7 +910,7 @@
 
 			const { url } = await uploadResponse.json();
 
-			const artifactResponse = await fetch(`/api/projects/${projectId}/artifacts`, {
+			const artifactResponse = await fetch(`/api/admin/projects/${projectId}/artifacts`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -956,7 +956,7 @@
 		for (const file of files) {
 			try {
 				const url = await handleArtifactUpload(file);
-				const response = await fetch(`/api/projects/${projectId}/artifacts`, {
+				const response = await fetch(`/api/admin/projects/${projectId}/artifacts`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

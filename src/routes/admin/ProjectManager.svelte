@@ -34,7 +34,7 @@
 				headers.Authorization = `Bearer ${token}`;
 			}
 
-			const response = await fetch('/api/projects', { headers });
+			const response = await fetch('/api/admin/projects', { headers });
 			if (!response.ok) {
 				if (response.status === 500) {
 					throw new Error(

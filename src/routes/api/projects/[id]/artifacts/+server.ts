@@ -1,20 +1,12 @@
 import type { RequestHandler } from './$types';
 import { and, eq } from 'drizzle-orm';
 import { error, json } from '@sveltejs/kit';
-import { projectArtifacts, projects, projectCoverArtifact } from '$lib/server/db/schema';
-import { validateArtifactData } from '$lib/schemas/artifacts';
-import { verifyClerkAuth } from '$lib/server/auth';
+import { projectArtifacts, projects } from '$lib/server/db/schema';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
-	'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-	'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-};
-
-type ArtifactInput = {
-	schema: string;
-	dataBlob: unknown;
-	isPublished?: boolean;
+	'Access-Control-Allow-Methods': 'GET, OPTIONS',
+	'Access-Control-Allow-Headers': 'Content-Type'
 };
 
 const getDbOrThrow = (db: App.Locals['db']) => {
@@ -30,49 +22,6 @@ const parseId = (raw: string) => {
 		throw error(400, 'Invalid project id');
 	}
 	return id;
-};
-
-const fetchProjectOrThrow = async (
-	db: ReturnType<App.Locals['db']>,
-	projectId: number
-) => {
-	const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
-	if (!project) {
-		throw error(404, 'Project not found');
-	}
-	return project;
-};
-
-const parseArtifact = (payload: unknown) => {
-	if (!payload || typeof payload !== 'object') {
-		throw error(400, 'Invalid artifact payload');
-	}
-	const data = payload as ArtifactInput;
-	if (typeof data.schema !== 'string' || data.schema.trim().length === 0) {
-		throw error(400, 'schema must be a non-empty string');
-	}
-	if (data.dataBlob === undefined) {
-		throw error(400, 'dataBlob is required');
-	}
-	let parsedBlob = data.dataBlob;
-	if (typeof data.dataBlob === 'string') {
-		try {
-			parsedBlob = JSON.parse(data.dataBlob);
-		} catch {
-			throw error(400, 'dataBlob must be valid JSON');
-		}
-	}
-	const schema = data.schema.trim();
-	const validation = validateArtifactData(schema, parsedBlob);
-	if (!validation.ok) {
-		throw error(400, validation.errors.join('; '));
-	}
-
-	return {
-		schema,
-		dataBlob: validation.value,
-		isPublished: data.isPublished ?? false
-	};
 };
 
 const normalizeArtifactRow = <T extends { dataBlob: unknown }>(row: T) => {
@@ -91,20 +40,14 @@ export const OPTIONS: RequestHandler = async () => {
 	return new Response(null, { status: 200, headers: corsHeaders });
 };
 
-export const GET: RequestHandler = async ({ params, request, locals, platform }) => {
+export const GET: RequestHandler = async ({ params, locals }) => {
 	const db = getDbOrThrow(locals.db);
-	const userId = await verifyClerkAuth(request, platform?.env);
-	const authUserId = locals.auth?.()?.userId ?? null;
 	const projectId = parseId(params.id);
-	const project = await fetchProjectOrThrow(db, projectId);
 
-	if (!userId && !authUserId && !project.isPublished) {
+	const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
+	if (!project || !project.isPublished) {
 		throw error(404, 'Project not found');
 	}
-
-	const where = userId || authUserId
-		? eq(projectArtifacts.projectId, projectId)
-		: and(eq(projectArtifacts.projectId, projectId), eq(projectArtifacts.isPublished, true));
 
 	const rows = await db
 		.select({
@@ -112,54 +55,12 @@ export const GET: RequestHandler = async ({ params, request, locals, platform })
 			projectId: projectArtifacts.projectId,
 			schema: projectArtifacts.schema,
 			dataBlob: projectArtifacts.dataBlob,
-			isPublished: projectArtifacts.isPublished,
-			coverArtifactId: projectCoverArtifact.artifactId,
-			coverPositionX: projectCoverArtifact.positionX,
-			coverPositionY: projectCoverArtifact.positionY,
-			coverZoom: projectCoverArtifact.zoom
+			isPublished: projectArtifacts.isPublished
 		})
 		.from(projectArtifacts)
-		.leftJoin(
-			projectCoverArtifact,
-			and(
-				eq(projectCoverArtifact.projectId, projectArtifacts.projectId),
-				eq(projectCoverArtifact.artifactId, projectArtifacts.id)
-			)
-		)
-		.where(where);
+		.where(and(eq(projectArtifacts.projectId, projectId), eq(projectArtifacts.isPublished, true)));
 
-	const normalized = rows.map((row) => ({
-		...normalizeArtifactRow(row),
-		isCover: row.coverArtifactId !== null,
-		coverPositionX: row.coverPositionX ?? 50,
-		coverPositionY: row.coverPositionY ?? 50,
-		coverZoom: row.coverZoom ?? 1
-	}));
+	const normalized = rows.map((row) => normalizeArtifactRow(row));
 
 	return json(normalized, { headers: corsHeaders });
-};
-
-export const POST: RequestHandler = async ({ params, request, locals, platform }) => {
-	const db = getDbOrThrow(locals.db);
-	const userId = await verifyClerkAuth(request, platform?.env);
-	const authUserId = locals.auth?.()?.userId ?? null;
-	if (!userId && !authUserId) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const projectId = parseId(params.id);
-	await fetchProjectOrThrow(db, projectId);
-	const artifact = parseArtifact(await request.json());
-
-	const [created] = await db
-		.insert(projectArtifacts)
-		.values({
-			projectId,
-			schema: artifact.schema,
-			dataBlob: artifact.dataBlob,
-			isPublished: artifact.isPublished
-		})
-		.returning();
-
-	return json({ ...normalizeArtifactRow(created), isCover: false }, { status: 201, headers: corsHeaders });
 };

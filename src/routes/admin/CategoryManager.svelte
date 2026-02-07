@@ -49,7 +49,7 @@
 				headers.Authorization = `Bearer ${token}`;
 			}
 
-			const response = await fetch('/api/categories', { headers });
+			const response = await fetch('/api/admin/categories', { headers });
 			if (!response.ok) {
 				if (response.status === 500) {
 					throw new Error(
@@ -96,7 +96,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/categories/${editingId}`, {
+		const response = await fetch(`/api/admin/categories/${editingId}`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',
@@ -130,7 +130,7 @@
 			return;
 		}
 
-		const response = await fetch(`/api/categories/${categoryId}`, {
+		const response = await fetch(`/api/admin/categories/${categoryId}`, {
 			method: 'DELETE',
 			headers: {
 				Authorization: `Bearer ${token}`
