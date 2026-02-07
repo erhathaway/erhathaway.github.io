@@ -24,7 +24,7 @@
   } = $props();
 
   const isProjectPage = $derived($page.route.id?.includes('/project/'));
-  const activeNamecardImage = $derived(isProjectPage ? portfolio.projectNamecardImage : activeNamecardImage);
+  const activeNamecardImage = $derived(isProjectPage ? portfolio.projectNamecardImage : portfolio.namecardImage);
   let navEl = $state<HTMLElement | null>(null);
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animations after their first run.
@@ -71,7 +71,7 @@
     {#if activeNamecardImage}
       <!-- Namecard image replaces gradient + text -->
       <div
-        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] overflow-hidden z-0 {isProjectPage ? 'rounded-b-2xl' : ''} {onNameClick ? 'cursor-pointer' : ''}"
+        class="namecard-vt absolute top-0 left-0 w-[280px] h-[220px] overflow-hidden z-0 {isProjectPage ? 'rounded-b-xl' : ''} {onNameClick ? 'cursor-pointer' : ''}"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
         onclick={() => onNameClick?.()}
         onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') onNameClick?.(); }}
