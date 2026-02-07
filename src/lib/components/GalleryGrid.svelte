@@ -7,6 +7,9 @@
   import HoverInfo from './HoverInfo.svelte';
   import AuthButton from './AuthButton.svelte';
 
+  let innerWidth = $state(browser ? window.innerWidth : 1200);
+  const colCount = $derived(innerWidth < 900 ? 2 : 3);
+
   function handleGalleryLeave() {
     portfolio.setHoveredItem(null);
   }
@@ -57,30 +60,30 @@
 
   const displayTileCount = $derived.by(() => itemTilesCount);
   const fillerSpan = $derived.by(() => {
-    const remainder = displayTileCount % 3;
+    const remainder = displayTileCount % colCount;
     if (remainder === 0) return 0;
-    return 3 - remainder; // 1 or 2
+    return colCount - remainder;
   });
   const fillerStartDisplayIndex = $derived.by(() => displayTileCount);
   const fillerClass = $derived.by(() => {
-    if (fillerSpan === 2) {
-      return 'col-span-2 aspect-[2/1]';
-    }
-    if (fillerSpan === 1) {
-      return 'col-span-1 aspect-square';
-    }
-    return '';
+    if (fillerSpan === 0) return '';
+    if (fillerSpan === 1) return 'col-span-1 aspect-square';
+    return `aspect-[${fillerSpan}/1]`;
+  });
+  const fillerGridColumn = $derived.by(() => {
+    if (fillerSpan <= 1) return undefined;
+    return `span ${fillerSpan}`;
   });
 
   const dockTarget = $derived.by((): DockTarget => {
     if (!hoveredItem) return null;
     if (hoveredDisplayIndex < 0) return null;
 
-    const col = hoveredDisplayIndex % 3;
+    const col = hoveredDisplayIndex % colCount;
     const candidates: Array<{ displayIndex: number; dockSide: 'left' | 'right' }> = [];
 
     // Candidate on the right: dock trapezoid on the left edge (toward hovered tile)
-    if (col < 2) {
+    if (col < colCount - 1) {
       candidates.push({ displayIndex: hoveredDisplayIndex + 1, dockSide: 'left' });
     }
     // Candidate on the left: dock trapezoid on the right edge (toward hovered tile)
@@ -131,8 +134,10 @@
   const hasDockTarget = $derived.by(() => dockTarget !== null);
 </script>
 
+<svelte:window bind:innerWidth />
+
 <main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-thin" onmouseleave={handleGalleryLeave}>
-  <div class="grid grid-cols-3 gap-0.5 p-0.5 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid">
+  <div class="grid gap-0.5 p-0.5 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
     {#if homeNamecardInGallery}
       <div
         class="gallery-item group relative aspect-square overflow-hidden block"
@@ -193,7 +198,7 @@
       />
     {/each}
     {#if fillerSpan > 0}
-      <div class="gallery-item relative overflow-hidden border {fillerClass}" aria-hidden="true" style="border-color: rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));">
+      <div class="gallery-item relative overflow-hidden border {fillerClass}" aria-hidden="true" style="border-color: rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); {fillerGridColumn ? `grid-column: ${fillerGridColumn};` : ''}">
         {#if hoveredItem && dockTarget?.target === 'filler'}
           <div class="absolute inset-0 z-10 bg-black/25 pointer-events-none"></div>
           <div class="absolute inset-0 z-20 pointer-events-none">
@@ -203,7 +208,7 @@
       </div>
     {/if}
     {#if browser && $page.url.pathname === '/'}
-      <div class="col-span-3">
+      <div style="grid-column: span {colCount};">
         <div
           class="relative overflow-hidden border backdrop-blur-md"
           style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08)); background-color: #f3e9e1;"
