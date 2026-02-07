@@ -136,7 +136,7 @@
 
 <svelte:window bind:innerWidth />
 
-<main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-thin" onmouseleave={handleGalleryLeave}>
+<main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-hide" onmouseleave={handleGalleryLeave}>
   <div class="grid gap-0.5 p-0.5 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
     {#if homeNamecardInGallery}
       <div

@@ -452,7 +452,7 @@
 				<div class="hidden sm:block w-80 shrink-0"></div>
 			{/if}
 			<!-- Main Content - full width for home/gallery, adjusted for project pages -->
-			<div class="{isProjectPage ? 'flex-1' : 'w-full'} h-full overflow-auto vt-exclude-namecard" style="view-transition-name: main-content">
+			<div class="{isProjectPage ? 'flex-1' : 'w-full'} h-full {isHomePage ? 'overflow-hidden' : 'overflow-auto'} vt-exclude-namecard" style="view-transition-name: main-content">
 				{@render children()}
 			</div>
 		</div>
