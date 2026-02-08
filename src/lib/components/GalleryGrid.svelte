@@ -215,6 +215,7 @@
       <GalleryItem
         {item}
         index={homeNamecardInGallery ? index + 1 : index}
+        displayNumber={index + 1}
         hoverInfoInWall={homeNamecardInGallery}
         dockHoverItem={hoveredItem}
         dockHoverTargetId={dockTargetItemId}

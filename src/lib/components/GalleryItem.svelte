@@ -9,6 +9,7 @@
   let {
     item,
     index = 0,
+    displayNumber = 0,
     hoverInfoInWall = false,
     dockHoverItem = null,
     dockHoverTargetId = null,
@@ -20,6 +21,7 @@
   }: {
     item: PortfolioItem;
     index?: number;
+    displayNumber?: number;
     hoverInfoInWall?: boolean;
     dockHoverItem?: PortfolioItem | null;
     dockHoverTargetId?: number | null;
@@ -175,7 +177,7 @@
     <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {item.gradientColors}"></div>
   {/if}
   <span class="item-number absolute bottom-4 left-4 font-display text-sm {isActive ? 'text-copper' : 'text-white/60'} z-10">
-    {item.id.toString().padStart(2, '0')}
+    {displayNumber.toString().padStart(2, '0')}
   </span>
 
   {#if showDockedHover}
