@@ -121,6 +121,24 @@ Imports photos and videos from Google Photos into projects via the [Picker API](
 3. In any project editor, click **Add Artifact** > **Google Photos**
 4. Select photos/videos in the picker, then confirm the import
 
+## Image Optimization
+
+Images are optimized with a two-layer strategy:
+
+### Format optimization (build-time)
+
+On upload, images are converted to AVIF and WebP via Cloudflare Image Resizing and stored in R2. Artifacts track available formats in `imageFormats` (e.g. `['avif', 'webp']`), rendered as `<picture>` elements with a `<source>` per format.
+
+### Dimension optimization (runtime)
+
+When `PUBLIC_CF_IMAGE_RESIZING=true` is set (production only), images are served at 400w, 800w, and 1200w via Cloudflare Image Resizing (`/cdn-cgi/image/` URLs) in `srcset` attributes. The browser picks the best size based on `sizes`.
+
+**Important:** AVIF cannot be used as an Image Resizing source (HTTP 415, error 9520). All resizing requests use the WebP variant as input, with `format=auto` for output so Cloudflare auto-negotiates AVIF or WebP based on the browser's `Accept` header.
+
+In local dev, Image Resizing is disabled and images fall back to plain `src` URLs with no `srcset`.
+
+All responsive image logic lives in `src/lib/utils/image-formats.ts`.
+
 ## API Notes
 
 - Client API calls use same-origin `/api` endpoints (no cross-origin).
