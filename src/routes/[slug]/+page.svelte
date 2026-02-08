@@ -200,7 +200,7 @@
             {item.name}
           </h1>
           {#if item.description}
-            <p class="text-sm leading-loose mb-8 vt-exclude-namecard" style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; letter-spacing: 0.01em;">
+            <p class="text-sm leading-loose mb-8 pr-8 lg:pr-0 vt-exclude-namecard" style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; letter-spacing: 0.01em;">
               {item.description}
             </p>
           {/if}
