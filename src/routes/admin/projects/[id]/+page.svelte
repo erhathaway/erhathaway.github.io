@@ -10,6 +10,8 @@
 	import GooglePhotosPickerModal from '$lib/components/GooglePhotosPickerModal.svelte';
 	import CoverPositionEditor from '$lib/components/CoverPositionEditor.svelte';
 
+	const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1'];
+
 	type Category = {
 		id: number;
 		name: string;
@@ -534,6 +536,52 @@
 		artifactIsCover = false;
 		showCreateArtifactModal = false;
 		pageSuccess = 'Artifact created.';
+	}
+
+	async function createSimpleArtifact(schema: string) {
+		pageError = '';
+		pageSuccess = '';
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to create artifacts.';
+			return;
+		}
+
+		const schemaDef = getArtifactSchema(schema);
+		if (!schemaDef) {
+			pageError = `Unknown schema: ${schema}`;
+			return;
+		}
+
+		const draft = schemaDef.createDraft();
+		const validation = validateArtifactData(schema, draft);
+		if (!validation.ok) {
+			pageError = validation.errors.join('; ');
+			return;
+		}
+
+		const response = await fetch(`/api/admin/projects/${projectId}/artifacts`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify({
+				schema,
+				dataBlob: validation.value,
+				isPublished: defaultPublishNew
+			})
+		});
+
+		if (!response.ok) {
+			pageError = 'Unable to create artifact.';
+			return;
+		}
+
+		const created = await response.json();
+		artifacts = [created, ...artifacts];
+		addArtifactStep = 'idle';
+		pageSuccess = `${schemaDef.label} created.`;
 	}
 
 	function handleArtifactDraftChange(next: Record<string, unknown>) {
@@ -1351,6 +1399,36 @@
 									>Not connected</a>
 								{/if}
 							</button>
+							<button
+								type="button"
+								class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-slate-400 hover:shadow-sm transition-all duration-150"
+								onclick={() => void createSimpleArtifact('divider-v1')}
+							>
+								<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12h18" />
+								</svg>
+								<span class="text-xs font-medium text-slate-600">Divider</span>
+							</button>
+							<button
+								type="button"
+								class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-slate-400 hover:shadow-sm transition-all duration-150"
+								onclick={() => {
+									artifactSchema = 'section-title-v1';
+									const schemaDef = getArtifactSchema('section-title-v1');
+									if (schemaDef) {
+										artifactDraft = schemaDef.createDraft() as Record<string, unknown>;
+										const validation = validateArtifactData('section-title-v1', artifactDraft);
+										artifactDraftErrors = validation.ok ? [] : validation.errors;
+									}
+									addArtifactStep = 'idle';
+									showCreateArtifactModal = true;
+								}}
+							>
+								<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h8" />
+								</svg>
+								<span class="text-xs font-medium text-slate-600">Section Title</span>
+							</button>
 						</div>
 						<button
 							type="button"
@@ -1402,36 +1480,38 @@
 								<span class={`inline-block h-1.5 w-1.5 rounded-full ${artifact.isPublished ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
 								{artifact.isPublished ? 'Live' : 'Draft'}
 							</span>
-							{#if artifact.isCover}
-								<button
-									type="button"
-									class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors duration-150"
-									onclick={(event) => {
-										event.stopPropagation();
-										void clearCoverArtifact();
-									}}
-									title="Click to remove as cover"
-								>
-									<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-										<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-									</svg>
-									Cover
-								</button>
-							{:else}
-								<button
-									type="button"
-									class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium text-slate-400 border border-transparent hover:bg-slate-100 hover:text-slate-600 hover:border-slate-200 transition-all duration-150"
-									onclick={(event) => {
-										event.stopPropagation();
-										void setCoverArtifact(artifact.id);
-									}}
-									title="Set as cover"
-								>
-									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-									</svg>
-									Set cover
-								</button>
+							{#if !FULL_WIDTH_SCHEMAS.includes(artifact.schema)}
+								{#if artifact.isCover}
+									<button
+										type="button"
+										class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors duration-150"
+										onclick={(event) => {
+											event.stopPropagation();
+											void clearCoverArtifact();
+										}}
+										title="Click to remove as cover"
+									>
+										<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+											<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+										</svg>
+										Cover
+									</button>
+								{:else}
+									<button
+										type="button"
+										class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium text-slate-400 border border-transparent hover:bg-slate-100 hover:text-slate-600 hover:border-slate-200 transition-all duration-150"
+										onclick={(event) => {
+											event.stopPropagation();
+											void setCoverArtifact(artifact.id);
+										}}
+										title="Set as cover"
+									>
+										<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+										</svg>
+										Set cover
+									</button>
+								{/if}
 							{/if}
 							<div class="ml-auto">
 								<button
@@ -1516,19 +1596,21 @@
 								</button>
 								<span class="text-xs text-slate-500">{artifactIsPublished ? 'Published' : 'Draft'}</span>
 							</div>
-							<div class="flex items-center gap-2.5">
-								<button
-									type="button"
-									role="switch"
-									aria-checked={artifactIsCover}
-									aria-label="Toggle cover"
-									onclick={() => { artifactIsCover = !artifactIsCover; }}
-									class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${artifactIsCover ? 'bg-amber-500' : 'bg-slate-200'}`}
-								>
-									<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${artifactIsCover ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
-								</button>
-								<span class="text-xs text-slate-500">{artifactIsCover ? 'Cover' : 'Not cover'}</span>
-							</div>
+							{#if !FULL_WIDTH_SCHEMAS.includes(artifactSchema)}
+								<div class="flex items-center gap-2.5">
+									<button
+										type="button"
+										role="switch"
+										aria-checked={artifactIsCover}
+										aria-label="Toggle cover"
+										onclick={() => { artifactIsCover = !artifactIsCover; }}
+										class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${artifactIsCover ? 'bg-amber-500' : 'bg-slate-200'}`}
+									>
+										<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${artifactIsCover ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+									</button>
+									<span class="text-xs text-slate-500">{artifactIsCover ? 'Cover' : 'Not cover'}</span>
+								</div>
+							{/if}
 						</div>
 						<div class="flex items-center gap-2">
 							<button
@@ -1689,19 +1771,21 @@
 								</button>
 								<span class="text-xs text-slate-500">{editArtifactIsPublished ? 'Published' : 'Draft'}</span>
 							</div>
-							<div class="flex items-center gap-2.5">
-								<button
-									type="button"
-									role="switch"
-									aria-checked={editArtifactIsCover}
-									aria-label="Toggle cover"
-									onclick={() => { editArtifactIsCover = !editArtifactIsCover; }}
-									class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editArtifactIsCover ? 'bg-amber-500' : 'bg-slate-200'}`}
-								>
-									<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${editArtifactIsCover ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
-								</button>
-								<span class="text-xs text-slate-500">{editArtifactIsCover ? 'Cover' : 'Not cover'}</span>
-							</div>
+							{#if !FULL_WIDTH_SCHEMAS.includes(editArtifactSchema)}
+								<div class="flex items-center gap-2.5">
+									<button
+										type="button"
+										role="switch"
+										aria-checked={editArtifactIsCover}
+										aria-label="Toggle cover"
+										onclick={() => { editArtifactIsCover = !editArtifactIsCover; }}
+										class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editArtifactIsCover ? 'bg-amber-500' : 'bg-slate-200'}`}
+									>
+										<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${editArtifactIsCover ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+									</button>
+									<span class="text-xs text-slate-500">{editArtifactIsCover ? 'Cover' : 'Not cover'}</span>
+								</div>
+							{/if}
 						</div>
 						<div class="flex items-center gap-2">
 							<button

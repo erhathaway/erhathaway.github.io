@@ -24,12 +24,40 @@
     }
   }
 
+  const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1'];
+
   // Non-cover published artifacts (hide cover if it exists)
   const hasCover = $derived(!!item?.image);
   const additionalArtifacts = $derived(hasCover ? artifacts.filter(a => !a.isCover) : artifacts);
 
+  // Segment artifacts into groups: masonry segments separated by full-width break artifacts
+  type Segment = { type: 'masonry'; items: Artifact[] } | { type: 'break'; artifact: Artifact };
+
+  function buildSegments(items: Artifact[]): Segment[] {
+    const segments: Segment[] = [];
+    let current: Artifact[] = [];
+
+    for (const artifact of items) {
+      if (FULL_WIDTH_SCHEMAS.includes(artifact.schema)) {
+        if (current.length > 0) {
+          segments.push({ type: 'masonry', items: current });
+          current = [];
+        }
+        segments.push({ type: 'break', artifact });
+      } else {
+        current.push(artifact);
+      }
+    }
+    if (current.length > 0) {
+      segments.push({ type: 'masonry', items: current });
+    }
+    return segments;
+  }
+
+  const segments = $derived(buildSegments(additionalArtifacts));
+
   // Masonry: preload images to get aspect ratios, then distribute into shortest column
-  let columnItems = $state<[Artifact[], Artifact[]]>([[], []]);
+  let segmentColumns = $state<Map<number, [Artifact[], Artifact[]]>>(new Map());
 
   function getImageUrl(artifact: Artifact): string | null {
     if (artifact.schema !== 'image-v1') return null;
@@ -51,16 +79,21 @@
     return cols;
   }
 
-  async function computeMasonry(items: Artifact[]) {
-    if (items.length === 0) {
-      columnItems = [[], []];
+  async function computeAllMasonry(segs: Segment[]) {
+    const masonrySegments = segs
+      .map((seg, i) => ({ seg, i }))
+      .filter((s): s is { seg: Extract<Segment, { type: 'masonry' }>; i: number } => s.seg.type === 'masonry');
+
+    if (masonrySegments.length === 0) {
+      segmentColumns = new Map();
       return;
     }
 
+    // Collect all image artifacts across all masonry segments
+    const allItems = masonrySegments.flatMap(s => s.seg.items);
     const ratios = new Map<number, number>();
 
-    // Preload all images in parallel to get natural dimensions
-    await Promise.all(items.map((item) => {
+    await Promise.all(allItems.map((item) => {
       const url = getImageUrl(item);
       if (!url) {
         ratios.set(item.id, 1);
@@ -80,11 +113,15 @@
       });
     }));
 
-    columnItems = distributeByAspectRatios(items, ratios);
+    const next = new Map<number, [Artifact[], Artifact[]]>();
+    for (const { seg, i } of masonrySegments) {
+      next.set(i, distributeByAspectRatios(seg.items, ratios));
+    }
+    segmentColumns = next;
   }
 
   $effect(() => {
-    computeMasonry(additionalArtifacts);
+    computeAllMasonry(segments);
   });
 
   // Reload artifacts whenever the project changes
@@ -289,16 +326,23 @@
           </svg>
         </button>
       </div>
-      <div class="max-w-6xl mx-auto p-8">
-        <div class="grid grid-cols-2 gap-4 items-start mb-12">
-          {#each [0, 1] as col (col)}
-            <div class="flex flex-col gap-4">
-              {#each columnItems[col] as artifact (artifact.id)}
-                <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+      <div class="max-w-6xl mx-auto p-8 mb-12">
+        {#each segments as segment, segIdx (segIdx)}
+          {#if segment.type === 'break'}
+            <ArtifactView schema={segment.artifact.schema} data={segment.artifact.dataBlob} />
+          {:else}
+            {@const cols = segmentColumns.get(segIdx) ?? [[], []]}
+            <div class="grid grid-cols-2 gap-4 items-start">
+              {#each [0, 1] as col (col)}
+                <div class="flex flex-col gap-4">
+                  {#each cols[col] as artifact (artifact.id)}
+                    <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+                  {/each}
+                </div>
               {/each}
             </div>
-          {/each}
-        </div>
+          {/if}
+        {/each}
       </div>
     {/if}
 </main>
