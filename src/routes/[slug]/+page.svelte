@@ -202,7 +202,7 @@
             </p>
           {/if}
           {#if Object.keys(item.metadata).length > 0}
-            <div class="flex flex-col gap-4 vt-exclude-namecard">
+            <div class="flex flex-row flex-wrap gap-x-6 gap-y-4 lg:flex-col lg:gap-4 vt-exclude-namecard">
               {#each Object.entries(item.metadata) as [key, value] (key)}
                 <div class="flex flex-col gap-1.5">
                   <span class="text-[11px] tracking-[0.2em] uppercase" style="color: #a08e7a;">{key}</span>
