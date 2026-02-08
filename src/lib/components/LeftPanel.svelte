@@ -67,9 +67,6 @@
 
 <aside
   class="w-full h-full text-walnut flex flex-col relative {slideInActive ? 'animate-slide-in-left' : ''}"
-  style="background: {isMobile
-    ? 'linear-gradient(to right, #F5F1EB 0%, #F5F1EB 30%, rgba(245, 241, 235, 0.95) 50%, rgba(245, 241, 235, 0.8) 65%, rgba(245, 241, 235, 0.5) 80%, rgba(245, 241, 235, 0.2) 90%, transparent 100%)'
-    : 'linear-gradient(to right, rgba(245, 241, 235, 0.9) 0%, rgba(245, 241, 235, 0.7) 15%, rgba(245, 241, 235, 0.4) 35%, rgba(245, 241, 235, 0.1) 60%, transparent 80%)'}"
   onanimationend={handleSlideInDone}
   onanimationcancel={handleSlideInDone}
 >
@@ -129,7 +126,7 @@
   {/if}
 
   <!-- Main Content Area - glass white background fills from namecard to bottom -->
-  <div class="flex-1 flex flex-col relative z-0 min-h-0 bg-white/70 backdrop-blur-md border-l border-black/10">
+  <div class="flex-1 flex flex-col relative z-0 min-h-0 border-l border-black/10" style="background: rgba(245, 241, 235, 0.92); -webkit-backdrop-filter: saturate(180%) blur(100px); backdrop-filter: saturate(180%) blur(100px);">
 
     <!-- Scrollable Navigation Area -->
     <nav
