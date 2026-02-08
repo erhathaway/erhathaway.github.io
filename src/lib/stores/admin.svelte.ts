@@ -12,6 +12,7 @@ export type AdminProject = {
 	description: string | null;
 	isPublished: boolean;
 	coverImageUrl: string | null;
+	coverHoverImageUrl: string | null;
 	coverPositionX: number | null;
 	coverPositionY: number | null;
 	coverZoom: number | null;
