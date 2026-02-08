@@ -32,7 +32,7 @@ export const GET: RequestHandler = async ({ params, platform, locals }) => {
 			.innerJoin(projects, eq(projectArtifacts.projectId, projects.id))
 			.where(
 				and(
-					sql`json_extract(${projectArtifacts.dataBlob}, '$.imageUrl') = ${url}`,
+					sql`(json_extract(${projectArtifacts.dataBlob}, '$.imageUrl') = ${url} OR json_extract(${projectArtifacts.dataBlob}, '$.hoverImageUrl') = ${url})`,
 					eq(projectArtifacts.isPublished, true),
 					eq(projects.isPublished, true)
 				)
