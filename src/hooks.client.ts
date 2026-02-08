@@ -7,6 +7,8 @@ if (typeof document !== 'undefined') {
 
 	document.addEventListener('dragover', (e) => {
 		if (!window.location.pathname.startsWith('/admin')) return;
+		// Skip upload overlay when rearranging (internal drag-and-drop)
+		if ((window as unknown as Record<string, unknown>).__adminRearranging) return;
 
 		e.preventDefault();
 		if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
@@ -40,6 +42,8 @@ if (typeof document !== 'undefined') {
 
 	document.addEventListener('drop', (e) => {
 		if (!window.location.pathname.startsWith('/admin')) return;
+		// Skip upload handling when rearranging (internal drag-and-drop)
+		if ((window as unknown as Record<string, unknown>).__adminRearranging) return;
 
 		e.preventDefault();
 		clearTimeout(dragOverTimer);

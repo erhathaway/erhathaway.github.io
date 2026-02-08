@@ -21,6 +21,11 @@
 	let dropTargetId = $state<number | null>(null);
 	let reorderSaving = $state(false);
 
+	$effect(() => {
+		(window as unknown as Record<string, unknown>).__adminRearranging = rearranging;
+		return () => { (window as unknown as Record<string, unknown>).__adminRearranging = false; };
+	});
+
 	function handleDragStart(event: DragEvent, project: AdminProject) {
 		draggedId = project.id;
 		if (event.dataTransfer) {
