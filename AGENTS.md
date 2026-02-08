@@ -311,6 +311,52 @@ To morph one element into another across pages:
 
 View transitions only run for home→project and project→home navigation. Project→project and all other routes use standard SvelteKit client-side navigation with no view transition.
 
+## Image Optimization & Responsive Images
+
+Images use a two-layer optimization strategy:
+
+1. **Format optimization (build-time):** On upload, images are converted to AVIF and WebP via Cloudflare Image Resizing and stored in R2. The `imageFormats` field on artifacts (e.g. `['avif', 'webp']`) tracks available formats, rendered as `<picture>` elements with `<source>` per format.
+
+2. **Dimension optimization (runtime):** Cloudflare Image Resizing serves images at 400w, 800w, and 1200w via `/cdn-cgi/image/` URLs in `srcset` attributes. The browser picks the best size based on the `sizes` attribute.
+
+### Key constraint: AVIF cannot be an Image Resizing source
+
+Cloudflare Image Resizing returns HTTP 415 (error 9520) when AVIF is used as the input image. All resizing requests use the **WebP variant** as the source, with `format=auto` (or explicit `format=avif`/`format=webp` for `<source>` elements) to control the output format.
+
+### Environment gating
+
+Responsive srcset URLs only work where Cloudflare Image Resizing is available (production). The feature is gated behind `PUBLIC_CF_IMAGE_RESIZING=true`, set as a Cloudflare secret (not in `wrangler.toml` `[vars]`, which would enable it in local dev too).
+
+When disabled, `getResponsiveSrcset()` returns `undefined` and components fall back to plain `src` URLs. Svelte omits attributes set to `undefined`, so no broken `srcset` is emitted.
+
+### Utility file: `src/lib/utils/image-formats.ts`
+
+| Function | Purpose |
+|----------|---------|
+| `isResizingEnabled()` | Checks `PUBLIC_CF_IMAGE_RESIZING` env var |
+| `getResponsiveSrcset(url)` | Returns `/cdn-cgi/image/width=W,quality=80,format=auto/...` srcset string, or `undefined` when disabled |
+| `getImageSources(url, formats, sizes)` | Returns `<source>` data for `<picture>` elements; uses responsive srcsets when resizing is enabled |
+| `replaceExtension(url, ext)` | Swaps file extension on a URL path |
+| `GALLERY_SIZES` | `'(max-width: 899px) 50vw, 33vw'` — for gallery grid images |
+
+### `sizes` values by rendering context
+
+| Context | `sizes` value | Rationale |
+|---------|---------------|-----------|
+| Gallery grid (home page) | `(max-width: 899px) 50vw, 33vw` | 2 cols below 900px, 3 cols above |
+| Project page cover | `(max-width: 767px) 100vw, calc(100vw - 320px)` | Full width on mobile, minus left panel on desktop |
+| Artifact Viewer/Cover | `(max-width: 767px) 100vw, calc(100vw - 320px)` | Same as project cover |
+
+The 767px breakpoint matches the left panel overlay point (`md:` = 768px). The 899px breakpoint matches the gallery column switch (2 → 3 columns at 900px).
+
+### Components using responsive images
+
+- `GalleryItem.svelte` — primary + hover images with `GALLERY_SIZES`
+- `GalleryGrid.svelte` — namecard image with `GALLERY_SIZES`
+- `project/[id]/+page.svelte` — project cover image
+- `image-v1/Viewer.svelte` — artifact viewer on project detail page
+- `image-v1/Cover.svelte` — artifact cover component
+
 ## Artifact Schema System
 
 Projects contain **artifacts** — typed content blocks (images, videos, etc.) that are rendered differently depending on context. The system is built around a registry that maps schema names to Svelte components for each rendering context.
