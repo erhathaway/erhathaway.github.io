@@ -182,7 +182,7 @@
     <div class="flex flex-col lg:flex-row min-h-screen lg:items-center">
       <!-- Left: project info -->
       <div class="lg:w-64 shrink-0 self-stretch flex flex-col p-8 pt-10">
-        <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-10 text-sm" onclick={(event) => {
+        <a href="/" class="hidden lg:inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-10 text-sm" onclick={(event) => {
           event.preventDefault();
           goto('/', { state: { hoverId: item.id } });
         }}>
@@ -303,4 +303,14 @@
     {/if}
 </main>
 {/key}
+<!-- Floating back button on mobile -->
+<a href="/" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] lg:hidden inline-flex items-center gap-2 px-4 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg text-walnut text-sm" onclick={(event) => {
+  event.preventDefault();
+  goto('/', item ? { state: { hoverId: item.id } } : undefined);
+}}>
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+  </svg>
+  Back
+</a>
 {/if}
