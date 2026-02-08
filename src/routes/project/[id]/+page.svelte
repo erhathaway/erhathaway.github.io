@@ -261,32 +261,30 @@
       </div>
     </div>
 
-    <!-- Scroll up/down arrows -->
-    <div class="sticky bottom-4 left-4 z-10 ml-4 flex flex-col gap-1 w-fit">
-      <button
-        type="button"
-        class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
-        onclick={() => mainEl?.scrollBy({ top: -200, behavior: 'smooth' })}
-        aria-label="Scroll up"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
-        onclick={() => mainEl?.scrollBy({ top: 200, behavior: 'smooth' })}
-        aria-label="Scroll down"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Additional artifacts (masonry: shortest-column placement) -->
+    <!-- Scroll arrows + additional artifacts -->
     {#if additionalArtifacts.length > 0}
+      <div class="sticky bottom-4 left-4 z-10 ml-4 flex flex-col gap-1 w-fit">
+        <button
+          type="button"
+          class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
+          onclick={() => mainEl?.scrollBy({ top: -200, behavior: 'smooth' })}
+          aria-label="Scroll up"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
+          onclick={() => mainEl?.scrollBy({ top: 200, behavior: 'smooth' })}
+          aria-label="Scroll down"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
       <div class="max-w-6xl mx-auto p-8">
         <div class="grid grid-cols-2 gap-4 items-start mb-12">
           {#each [0, 1] as col (col)}
