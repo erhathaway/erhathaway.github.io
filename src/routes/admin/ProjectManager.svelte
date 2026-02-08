@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { adminStore } from '$lib/stores/admin.svelte';
+	import { adminStore, type AdminProject } from '$lib/stores/admin.svelte';
+	import GalleryItem from '$lib/components/GalleryItem.svelte';
+	import type { PortfolioItem } from '$lib/data/items';
 
 	type Props = {
 		getToken: () => Promise<string | null>;
@@ -9,7 +11,7 @@
 	let { getToken }: Props = $props();
 
 	const projects = $derived(adminStore.projects);
-	let projectsFilter = $state<'all' | 'published' | 'unpublished'>('all');
+	let projectsFilter: string = $state('all');
 	let projectsLoading = $state(false);
 	let projectsError = $state('');
 	let projectsSuccess = $state('');
@@ -23,6 +25,28 @@
 		}
 		return projects;
 	});
+
+	function toPortfolioItem(project: AdminProject): PortfolioItem {
+		const metadata: Record<string, string> = {};
+		for (const attr of project.navAttributes) {
+			metadata[attr.name] = attr.value;
+		}
+		return {
+			id: project.id,
+			name: project.displayName || project.name,
+			categories: project.categories,
+			description: project.description ?? '',
+			metadata,
+			image: project.coverImageUrl ?? undefined,
+			gridSize: 'regular',
+			gradientColors: 'from-[#C7D2D8] via-[#B8C5CE] to-[#D0DAE0]',
+			coverPosition: {
+				x: project.coverPositionX ?? 50,
+				y: project.coverPositionY ?? 50,
+				zoom: project.coverZoom ?? 1
+			}
+		};
+	}
 
 	async function fetchProjects() {
 		projectsError = '';
@@ -114,56 +138,41 @@
 	{:else}
 		<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
 			{#each filteredProjects as project (project.id)}
-				<a
-					href={`/admin/projects/${project.id}`}
-					class="group relative rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-slate-300 hover:shadow-md transition-all duration-200"
-				>
-					<!-- Cover Image or Placeholder -->
-					<div class="aspect-[3/4] w-full bg-slate-100 overflow-hidden">
-						{#if project.coverImageUrl}
-							<img
-								src={project.coverImageUrl}
-								alt={project.displayName}
-								class="h-full w-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
-								loading="lazy"
-							/>
-						{:else}
-							<div class="h-full w-full flex flex-col items-center justify-center gap-2 text-slate-300">
-								<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-								</svg>
-								<span class="text-[10px] font-medium">No cover</span>
-							</div>
-						{/if}
-					</div>
-
-					<!-- Top Overlay: Title + Categories -->
-					<div class="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/40 to-transparent p-3 pb-10">
+				{@const portfolioItem = toPortfolioItem(project)}
+				<div class="group rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-slate-300 hover:shadow-md transition-all duration-200">
+					<!-- Header: status + name + categories -->
+					<div class="p-3 pb-2">
 						<div class="flex items-center gap-1.5">
-							<span class={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${project.isPublished ? 'bg-emerald-400' : 'bg-slate-400'}`}></span>
-							<h3 class="text-base font-semibold text-white truncate">{project.displayName || project.name}</h3>
+							<span class="inline-block h-1.5 w-1.5 rounded-full shrink-0 {project.isPublished ? 'bg-emerald-400' : 'bg-slate-400'}"></span>
+							<h3 class="text-sm font-semibold text-slate-900 truncate">{project.displayName || project.name}</h3>
 						</div>
+						<p class="text-[11px] text-slate-400 mt-0.5 truncate">/project/{project.id}</p>
 						{#if project.categories.length > 0}
 							<div class="flex flex-wrap gap-1 mt-1.5">
-								{#each project.categories as cat}
-									<span class="inline-block rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-medium text-white/90 backdrop-blur-sm">{cat}</span>
+								{#each project.categories as cat (cat)}
+									<span class="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">{cat}</span>
 								{/each}
 							</div>
 						{/if}
 					</div>
 
-					<!-- Bottom Overlay: Attributes -->
-					{#if project.navAttributes.length > 0}
-						<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-3 pt-10">
-							<div class="flex flex-wrap gap-1">
-								{#each project.navAttributes as attr}
-									<span class="inline-block rounded-full bg-amber-400/25 px-2 py-0.5 text-[11px] font-medium text-amber-200 backdrop-blur-sm">{attr.name}: {attr.value}</span>
+					<!-- Gallery tile -->
+					<GalleryItem item={portfolioItem} static href="/admin/projects/{project.id}" />
+
+					<!-- Footer: attributes + description -->
+					<div class="p-3 pt-2">
+						{#if project.navAttributes.length > 0}
+							<div class="flex flex-wrap gap-1 mb-1.5">
+								{#each project.navAttributes as attr (attr.name)}
+									<span class="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">{attr.name}: {attr.value}</span>
 								{/each}
 							</div>
-						</div>
-					{/if}
-
-				</a>
+						{/if}
+						{#if project.description}
+							<p class="text-[11px] text-slate-400 line-clamp-2">{project.description}</p>
+						{/if}
+					</div>
+				</div>
 			{/each}
 		</div>
 	{/if}

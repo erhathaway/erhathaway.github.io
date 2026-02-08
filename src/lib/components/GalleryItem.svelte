@@ -13,7 +13,9 @@
     dockHoverTargetId = null,
     dockHoverSourceId = null,
     dockHasTarget = false,
-    dockSide = 'left'
+    dockSide = 'left',
+    static: isStatic = false,
+    href: hrefOverride = undefined
   }: {
     item: PortfolioItem;
     index?: number;
@@ -23,6 +25,8 @@
     dockHoverSourceId?: number | null;
     dockHasTarget?: boolean;
     dockSide?: 'left' | 'right';
+    static?: boolean;
+    href?: string;
   } = $props();
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animation after its first run.
@@ -35,6 +39,10 @@
   }
 
   onMount(() => {
+    if (isStatic) {
+      fadeInActive = false;
+      return;
+    }
     const timer = window.setTimeout(() => {
       fadeInActive = false;
     }, 1200 + index * 50);
@@ -43,6 +51,7 @@
 
   // Check if this item is the active project
   const isActive = $derived.by(() => {
+    if (isStatic) return false;
     const match = $page.url.pathname.match(/^\/project\/(\d+)/);
     return match && parseInt(match[1]) === item.id;
   });
@@ -61,6 +70,7 @@
   });
 
   function handleMouseEnter() {
+    if (isStatic) return;
     portfolio.setHoveredItem(item.id);
     try {
       window.dispatchEvent(new CustomEvent('portfolio:hover', { detail: { id: item.id } }));
@@ -69,13 +79,13 @@
     }
   }
 
-  const isHovered = $derived.by(() => portfolio.hoveredItemId === item.id);
-  const showDockedHover = $derived.by(() => hoverInfoInWall && dockHoverItem && dockHoverTargetId === item.id);
-  const isDockSource = $derived.by(() => dockHoverSourceId !== null && dockHoverSourceId === item.id);
+  const isHovered = $derived.by(() => isStatic ? false : portfolio.hoveredItemId === item.id);
+  const showDockedHover = $derived.by(() => isStatic ? false : hoverInfoInWall && dockHoverItem && dockHoverTargetId === item.id);
+  const isDockSource = $derived.by(() => isStatic ? false : dockHoverSourceId !== null && dockHoverSourceId === item.id);
   const shouldShowFallbackHover = $derived.by(() => {
+    if (isStatic) return false;
     if (!hoverInfoInWall) return false;
     if (!isHovered) return false;
-    // If a dock target exists, suppress the hovered-tile overlay so only the docked tile shows it.
     if (dockHasTarget) return false;
     if (isDockSource && dockHoverTargetId !== null) return false;
     return true;
@@ -84,14 +94,14 @@
 </script>
 
 <a
-  href="/project/{item.id}"
-  class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {gridSpan} block {fadeInActive ? 'animate-fade-in' : ''} {isActive ? 'ring-2 ring-copper' : ''}"
+  href={hrefOverride ?? `/project/${item.id}`}
+  class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {isStatic ? '' : gridSpan} block {fadeInActive ? 'animate-fade-in' : ''} {isActive ? 'ring-2 ring-copper' : ''}"
   onmouseenter={handleMouseEnter}
-  onanimationend={handleFadeInDone}
-  onanimationcancel={handleFadeInDone}
+  onanimationend={isStatic ? undefined : handleFadeInDone}
+  onanimationcancel={isStatic ? undefined : handleFadeInDone}
   aria-label="{item.name} - {item.categories.join(', ')}"
   aria-current={isActive ? 'page' : undefined}
-  style="view-transition-name: project-image-{item.id};"
+  style:view-transition-name={isStatic ? undefined : `project-image-${item.id}`}
   style:animation-delay={fadeInActive ? `${index * 0.05}s` : undefined}
 >
   {#if item.image}

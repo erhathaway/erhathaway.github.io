@@ -12,6 +12,9 @@ export type AdminProject = {
 	description: string | null;
 	isPublished: boolean;
 	coverImageUrl: string | null;
+	coverPositionX: number | null;
+	coverPositionY: number | null;
+	coverZoom: number | null;
 	categories: string[];
 	navAttributes: Array<{ name: string; value: string }>;
 };
