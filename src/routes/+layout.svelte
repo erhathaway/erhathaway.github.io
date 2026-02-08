@@ -22,8 +22,8 @@
 
 	let appliedHoverId: number | null = null;
 	let showLoginModal = $state(false);
-	// Start with menu open on screens 768px and up, closed below
-	let mobileMenuOpen = $state(true);
+	// Start closed; resize handler on mount will open it if screen is wide enough
+	let mobileMenuOpen = $state(false);
 	let isMobileScreen = $state(false);
 	let nameCardExpanded = $state(false);
 	// Separate flag controls when LeftPanel/social-links get their view-transition-names.
@@ -256,11 +256,9 @@
 
 		const handleResize = () => {
 			const width = window.innerWidth;
-			isMobileScreen = width < 768;
+			isMobileScreen = width < 1024;
 			// Auto-show/hide based on screen size when crossing the breakpoint
-			if (width >= 768) {
-				mobileMenuOpen = true;
-			}
+			mobileMenuOpen = width >= 1024;
 		};
 
 		window.addEventListener('resize', handleResize);
@@ -450,7 +448,7 @@
 		<div class="font-body bg-charcoal text-cream h-screen flex {isHomePage || isErrorPage ? '' : 'ml-[12px]'}">
 			<!-- Left spacer only on project pages on larger screens -->
 			{#if isProjectPage && !isErrorPage}
-				<div class="hidden sm:block w-80 shrink-0"></div>
+				<div class="hidden lg:block w-80 shrink-0"></div>
 			{/if}
 			<!-- Main Content - full width for home/gallery, adjusted for project pages -->
 			<div class="{isProjectPage && !isErrorPage ? 'flex-1' : 'w-full'} h-full {isHomePage ? 'overflow-hidden' : 'overflow-auto'} vt-exclude-namecard" style="view-transition-name: main-content">
@@ -463,7 +461,7 @@
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
 		{#if !isHomePage && !isErrorPage}
-			<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 vt-exclude-namecard" style="view-transition-name: left-panel">
+			<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 vt-exclude-namecard" style="view-transition-name: left-panel">
 				<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} hasTransitionNames={panelTransitionNames} showNameCard={showLeftPanelNameCard} onItemClick={() => {
 					// Only close menu on mobile when clicking an item
 					if (isMobileScreen) {
@@ -486,7 +484,7 @@
 			</div>
 		{/if}
 		{#if stickyBottomUiEnabled && !isErrorPage}
-			<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0 vt-exclude-namecard" style="view-transition-name: bottom-bar">
+			<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none lg:left-0 vt-exclude-namecard" style="view-transition-name: bottom-bar">
 				{#if isProjectPage}
 					<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
 						event.preventDefault();
