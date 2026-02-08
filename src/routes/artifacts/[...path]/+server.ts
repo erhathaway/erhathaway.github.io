@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { error } from '@sveltejs/kit';
 import { eq, sql, and } from 'drizzle-orm';
-import { projectArtifacts, projects } from '$lib/server/db/schema';
+import { projectArtifacts, projects, siteSettings } from '$lib/server/db/schema';
 import { getDb } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ request, params, platform, locals }) => {
@@ -33,7 +33,8 @@ export const GET: RequestHandler = async ({ request, params, platform, locals })
 		const uuidMatch = path.match(/^([0-9a-f-]+)\.\w+$/);
 		const uuidPattern = uuidMatch ? `/artifacts/${uuidMatch[1]}.%` : null;
 
-		const result = await db
+		// Check project artifacts first
+		const artifactResult = await db
 			.select({ id: projectArtifacts.id })
 			.from(projectArtifacts)
 			.innerJoin(projects, eq(projectArtifacts.projectId, projects.id))
@@ -49,8 +50,22 @@ export const GET: RequestHandler = async ({ request, params, platform, locals })
 			.limit(1)
 			.all();
 
-		if (result.length === 0) {
-			throw error(404, 'Not found');
+		if (artifactResult.length === 0) {
+			// Also check site_settings (namecard images are public but not in project_artifacts)
+			const settingResult = await db
+				.select({ key: siteSettings.key })
+				.from(siteSettings)
+				.where(
+					uuidPattern
+						? sql`(json_extract(${siteSettings.value}, '$.imageUrl') = ${url} OR json_extract(${siteSettings.value}, '$.imageUrl') LIKE ${uuidPattern})`
+						: sql`json_extract(${siteSettings.value}, '$.imageUrl') = ${url}`
+				)
+				.limit(1)
+				.all();
+
+			if (settingResult.length === 0) {
+				throw error(404, 'Not found');
+			}
 		}
 	}
 
