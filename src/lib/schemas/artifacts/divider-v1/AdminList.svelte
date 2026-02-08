@@ -1,14 +1,24 @@
 <script lang="ts">
+	import type { DividerV1Data } from './validator';
+
 	type Props = {
-		data: Record<string, never>;
+		data: DividerV1Data;
 		className?: string;
 	};
 
-	let { className = '' }: Props = $props();
+	let { data, className = '' }: Props = $props();
 </script>
 
 <div class={`flex items-center gap-3 py-3 ${className}`}>
-	<hr class="flex-1 border-t border-slate-300" />
+	{#if data.showLine}
+		<hr class="flex-1 border-t border-slate-300" />
+	{:else}
+		<hr class="flex-1 border-t border-dashed border-slate-200" />
+	{/if}
 	<span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Divider</span>
-	<hr class="flex-1 border-t border-slate-300" />
+	{#if data.showLine}
+		<hr class="flex-1 border-t border-slate-300" />
+	{:else}
+		<hr class="flex-1 border-t border-dashed border-slate-200" />
+	{/if}
 </div>

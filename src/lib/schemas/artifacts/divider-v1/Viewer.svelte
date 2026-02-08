@@ -1,12 +1,16 @@
 <script lang="ts">
+	import type { DividerV1Data } from './validator';
+
 	type Props = {
-		data: Record<string, never>;
+		data: DividerV1Data;
 		className?: string;
 	};
 
-	let { className = '' }: Props = $props();
+	let { data, className = '' }: Props = $props();
 </script>
 
 <div class={`py-4 ${className}`}>
-	<hr class="border-t border-ash/30" />
+	{#if data.showLine}
+		<hr class="border-t border-ash/30" />
+	{/if}
 </div>
