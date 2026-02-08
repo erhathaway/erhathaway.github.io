@@ -565,6 +565,37 @@
 					</ul>
 				</div>
 
+				<!-- Namecards -->
+				<div>
+					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Namecards</p>
+					<ul class="space-y-0.5">
+						<li>
+							<a
+								href="/admin/namecards/landing"
+								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
+									$page.url.pathname === '/admin/namecards/landing'
+										? 'bg-slate-900 text-white'
+										: 'text-slate-600 hover:bg-slate-50'
+								}`}
+							>
+								<span class="font-medium">Landing Page</span>
+							</a>
+						</li>
+						<li>
+							<a
+								href="/admin/namecards/project"
+								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
+									$page.url.pathname === '/admin/namecards/project'
+										? 'bg-slate-900 text-white'
+										: 'text-slate-600 hover:bg-slate-50'
+								}`}
+							>
+								<span class="font-medium">Project Page</span>
+							</a>
+						</li>
+					</ul>
+				</div>
+
 				<!-- Schemas -->
 				<div>
 					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Schemas</p>

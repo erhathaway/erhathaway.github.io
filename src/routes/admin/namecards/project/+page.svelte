@@ -1,20 +1,8 @@
 <script lang="ts">
 	import { SignedIn, SignedOut, useClerkContext } from 'svelte-clerk';
-	import CategoryManager from './CategoryManager.svelte';
-	import ProjectManager from './ProjectManager.svelte';
-	import { adminStore } from '$lib/stores/admin.svelte';
-
-	type Category = {
-		id: number;
-		name: string;
-		displayName: string;
-		isPublished: boolean;
-	};
+	import NamecardImageSettings from '../../NamecardImageSettings.svelte';
 
 	const ctx = useClerkContext();
-
-	const categories = $derived(adminStore.categories);
-	const categoriesLoaded = $derived(adminStore.categoriesLoaded);
 
 	async function getToken() {
 		const clerk = ctx.clerk;
@@ -22,29 +10,14 @@
 		if (!session) return null;
 		return session.getToken();
 	}
-
-	function setCategories(next: Category[]) {
-		adminStore.categories = next;
-	}
-
-	function setCategoriesLoaded(next: boolean) {
-		adminStore.categoriesLoaded = next;
-	}
 </script>
 
 <header class="mb-8 pb-5 border-b border-slate-200">
-	<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Dashboard</p>
+	<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Project Page Namecard</p>
 </header>
 
 <SignedIn>
-	<CategoryManager
-		{categories}
-		{categoriesLoaded}
-		{getToken}
-		{setCategories}
-		{setCategoriesLoaded}
-	/>
-	<ProjectManager {getToken} />
+	<NamecardImageSettings {getToken} apiPath="project-namecard-image" title="Project Page Namecard" subtitle="Optional image for the left panel on project pages" />
 </SignedIn>
 
 <SignedOut>
