@@ -94,7 +94,7 @@
 
     function drawSun(f: number) {
       const cx = Math.floor(cols * 0.78);
-      const cy = Math.floor(rows * 0.1);
+      const cy = Math.max(6, Math.floor(rows * 0.06));
       const pulse = Math.sin(f * 0.008) * 0.5 + 0.5;
 
       const glowR = 5.5 + pulse * 1;
@@ -154,9 +154,9 @@
 
     function drawClouds(f: number) {
       const clouds = [
-        { x: cols * 0.12, y: rows * 0.04, size: 'large' },
-        { x: cols * 0.42, y: rows * 0.12, size: 'large' },
-        { x: cols * 0.02, y: rows * 0.20, size: 'small' },
+        { x: cols * 0.12, y: Math.max(1, rows * 0.02), size: 'large' },
+        { x: cols * 0.42, y: Math.max(2, rows * 0.06), size: 'large' },
+        { x: cols * 0.02, y: Math.max(3, rows * 0.13), size: 'small' },
       ];
 
       clouds.forEach((c, i) => {
@@ -188,7 +188,7 @@
       for (let i = 0; i < numBirds; i++) {
         const speed = 0.08 + i * 0.02;
         const bx = ((f * speed + i * 40) % (cols + 20)) - 10;
-        const by = Math.floor(rows * 0.08 + Math.sin(f * 0.015 + i * 2) * 3 + i * 2.5);
+        const by = Math.max(1, Math.floor(rows * 0.04 + Math.sin(f * 0.015 + i * 2) * 3 + i * 2.5));
         const wingPhase = Math.sin(f * 0.04 + i * 3);
         if (wingPhase > 0.3) {
           puts(bx, by, "v   v", C.bird);
@@ -212,13 +212,13 @@
       const mtnBase = '#6a7a6a';
 
       const peaks = [
-        { cx: cols * 0.08, height: 12, width: 0.12 },
-        { cx: cols * 0.22, height: 16, width: 0.15 },
-        { cx: cols * 0.38, height: 10, width: 0.10 },
-        { cx: cols * 0.55, height: 14, width: 0.13 },
-        { cx: cols * 0.70, height: 9,  width: 0.09 },
-        { cx: cols * 0.85, height: 13, width: 0.12 },
-        { cx: cols * 0.97, height: 11, width: 0.11 },
+        { cx: cols * 0.08, height: 8,  width: 0.12 },
+        { cx: cols * 0.22, height: 11, width: 0.15 },
+        { cx: cols * 0.38, height: 7,  width: 0.10 },
+        { cx: cols * 0.55, height: 10, width: 0.13 },
+        { cx: cols * 0.70, height: 6,  width: 0.09 },
+        { cx: cols * 0.85, height: 9,  width: 0.12 },
+        { cx: cols * 0.97, height: 7,  width: 0.11 },
       ];
 
       for (const peak of peaks) {
@@ -551,6 +551,93 @@
       });
     }
 
+    function drawBear(f: number) {
+      const bearCol = '#553322';
+      const bearHi = '#775533';
+
+      const range = cols * 0.35;
+      const cx = cols * 0.5;
+      const sway = Math.sin(f * 0.004) * range;
+      const bx = Math.floor(cx + sway);
+      const by = rows - 5;
+      const goingRight = Math.cos(f * 0.004) > 0;
+      const step = Math.floor(f / 25) % 4;
+
+      if (goingRight) {
+        puts(bx, by - 2, ' /"\\_.', bearHi);
+        puts(bx, by - 1, '(o  _>', bearCol);
+        if (step === 0 || step === 2) {
+          puts(bx, by,     '|~~~~|', bearCol);
+          puts(bx, by + 1, '|| ||', bearCol);
+        } else if (step === 1) {
+          puts(bx, by,     '|~~~~|', bearCol);
+          puts(bx, by + 1, '/|  |\\', bearCol);
+        } else {
+          puts(bx, by,     '|~~~~|', bearCol);
+          puts(bx, by + 1, '\\| |/', bearCol);
+        }
+      } else {
+        puts(bx, by - 2, '._/"\\', bearHi);
+        puts(bx, by - 1, '<_  o)', bearCol);
+        if (step === 0 || step === 2) {
+          puts(bx, by,     '|~~~~|', bearCol);
+          puts(bx, by + 1, ' || ||', bearCol);
+        } else if (step === 1) {
+          puts(bx, by,     '|~~~~|', bearCol);
+          puts(bx, by + 1, '/|  |\\', bearCol);
+        } else {
+          puts(bx, by,     '|~~~~|', bearCol);
+          puts(bx, by + 1, '\\| |/', bearCol);
+        }
+      }
+    }
+
+    function drawDeer(f: number) {
+      const deerCol = '#bb8844';
+      const antler = '#997744';
+      const fawnCol = '#cc9966';
+
+      const d1x = Math.floor(cols * 0.04 + Math.sin(f * 0.002) * cols * 0.04);
+      const d1y = rows - 6;
+      const headUp = Math.sin(f * 0.008) > 0.5;
+
+      if (headUp) {
+        puts(d1x, d1y - 3, ' |/ |/', antler);
+        puts(d1x, d1y - 2, '  (O)', deerCol);
+        puts(d1x, d1y - 1, '  |~~\\', deerCol);
+        puts(d1x, d1y,     '  |   |', deerCol);
+        puts(d1x, d1y + 1, '  |l |l', deerCol);
+      } else {
+        puts(d1x, d1y - 2, ' |/ |/', antler);
+        puts(d1x, d1y - 1, ' |~~(O)', deerCol);
+        puts(d1x, d1y,     ' |   | ,', deerCol);
+        puts(d1x, d1y + 1, ' |l |l', deerCol);
+      }
+
+      const d2x = Math.floor(cols * 0.14 + Math.sin(f * 0.003 + 1) * cols * 0.03);
+      const d2y = rows - 5;
+      const d2head = Math.sin(f * 0.01 + 2) > 0.2;
+
+      if (d2head) {
+        puts(d2x, d2y - 2, ' \\/ \\/', antler);
+        puts(d2x, d2y - 1, '  (o) ', deerCol);
+        puts(d2x, d2y,     '  |~~|', deerCol);
+        puts(d2x, d2y + 1, '  || ||', deerCol);
+      } else {
+        puts(d2x, d2y - 1, '  |~~(o)', deerCol);
+        puts(d2x, d2y,     '  |   |', deerCol);
+        puts(d2x, d2y + 1, '  || ||', deerCol);
+      }
+
+      const d3x = d1x + 9;
+      const d3y = rows - 4;
+      const fawnBounce = Math.sin(f * 0.015) > 0.6 ? -1 : 0;
+
+      puts(d3x, d3y - 1 + fawnBounce, '(o)', fawnCol);
+      puts(d3x, d3y + fawnBounce,     '|~|', fawnCol);
+      puts(d3x, d3y + 1 + fawnBounce, '|| ', fawnCol);
+    }
+
     function drawRocks() {
       const h = horizonY();
       const rocks = [
@@ -588,6 +675,21 @@
       puts(x3, y + 3, line3, C.errorSub);
     }
 
+    function drawPath() {
+      const h = horizonY();
+      const pathStart = h + 5;
+      for (let y = pathStart; y < Math.min(pathStart + 6, rows - 4); y++) {
+        const t = (y - pathStart) / 6;
+        const cx = cols * 0.5 + Math.sin(t * 2) * 3;
+        const w = 1 + t * 2;
+        for (let x = Math.floor(cx - w); x <= Math.floor(cx + w); x++) {
+          if (x >= 0 && x < cols) {
+            put(x, y, '\u00b7', C.path);
+          }
+        }
+      }
+    }
+
     function escapeHtml(s: string) {
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
@@ -606,6 +708,8 @@
       drawTrees();
       drawButterflies(frame);
       drawKids(frame);
+      drawDeer(frame);
+      drawBear(frame);
       drawBirds(frame);
       drawErrorMessage(frame);
 
