@@ -6,7 +6,7 @@
   import { page } from '$app/stores';
   import HoverInfo from './HoverInfo.svelte';
   import AuthButton from './AuthButton.svelte';
-  import { getImageSources } from '$lib/utils/image-formats';
+  import { getImageSources, getResponsiveSrcset, GALLERY_SIZES } from '$lib/utils/image-formats';
 
   let innerWidth = $state(browser ? window.innerWidth : 1200);
   const colCount = $derived(innerWidth < 900 ? 2 : 3);
@@ -147,10 +147,11 @@
         aria-label="About Ethan Hathaway"
       >
         {#if portfolio.namecardImage}
+          {@const ncSrcset = getResponsiveSrcset(portfolio.namecardImage.imageUrl)}
           {#if portfolio.namecardImage.imageFormats?.length}
             <picture>
-              {#each getImageSources(portfolio.namecardImage.imageUrl, portfolio.namecardImage.imageFormats) as source (source.type)}
-                <source srcset={source.srcset} type={source.type} />
+              {#each getImageSources(portfolio.namecardImage.imageUrl, portfolio.namecardImage.imageFormats, GALLERY_SIZES) as source (source.type)}
+                <source srcset={source.srcset} type={source.type} sizes={source.sizes} />
               {/each}
               <img
                 src={portfolio.namecardImage.imageUrl}
@@ -160,6 +161,8 @@
                 style:transform="scale({portfolio.namecardImage.zoom})"
                 style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
                 style="view-transition-name: name-card-bg"
+                srcset={ncSrcset}
+                sizes={ncSrcset ? GALLERY_SIZES : undefined}
                 fetchpriority="high"
                 draggable="false"
               />
@@ -173,6 +176,8 @@
               style:transform="scale({portfolio.namecardImage.zoom})"
               style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
               style="view-transition-name: name-card-bg"
+              srcset={ncSrcset}
+              sizes={ncSrcset ? GALLERY_SIZES : undefined}
               fetchpriority="high"
               draggable="false"
             />

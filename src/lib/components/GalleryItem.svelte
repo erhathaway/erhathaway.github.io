@@ -4,7 +4,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import HoverInfo from './HoverInfo.svelte';
-  import { getImageSources } from '$lib/utils/image-formats';
+  import { getImageSources, getResponsiveSrcset, GALLERY_SIZES } from '$lib/utils/image-formats';
 
   let {
     item,
@@ -106,10 +106,11 @@
   style:animation-delay={fadeInActive ? `${index * 0.05}s` : undefined}
 >
   {#if item.image}
+    {@const imgSrcset = getResponsiveSrcset(item.image)}
     {#if item.imageFormats?.length}
       <picture>
-        {#each getImageSources(item.image, item.imageFormats) as source (source.type)}
-          <source srcset={source.srcset} type={source.type} />
+        {#each getImageSources(item.image, item.imageFormats, GALLERY_SIZES) as source (source.type)}
+          <source srcset={source.srcset} type={source.type} sizes={source.sizes} />
         {/each}
         <img
           src={item.image}
@@ -118,6 +119,8 @@
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+          srcset={imgSrcset}
+          sizes={imgSrcset ? GALLERY_SIZES : undefined}
           loading={index < 6 ? 'eager' : 'lazy'}
           fetchpriority={index < 6 ? 'high' : undefined}
         />
@@ -130,15 +133,18 @@
         style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
         style:transform="scale({item.coverPosition?.zoom ?? 1})"
         style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+        srcset={imgSrcset}
+        sizes={imgSrcset ? GALLERY_SIZES : undefined}
         loading={index < 6 ? 'eager' : 'lazy'}
         fetchpriority={index < 6 ? 'high' : undefined}
       />
     {/if}
     {#if item.hoverImage}
+      {@const hoverSrcset = getResponsiveSrcset(item.hoverImage)}
       {#if item.hoverImageFormats?.length}
         <picture class="absolute inset-0">
-          {#each getImageSources(item.hoverImage, item.hoverImageFormats) as source (source.type)}
-            <source srcset={source.srcset} type={source.type} />
+          {#each getImageSources(item.hoverImage, item.hoverImageFormats, GALLERY_SIZES) as source (source.type)}
+            <source srcset={source.srcset} type={source.type} sizes={source.sizes} />
           {/each}
           <img
             src={item.hoverImage}
@@ -147,7 +153,9 @@
             style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
             style:transform="scale({item.coverPosition?.zoom ?? 1})"
             style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-            loading={index < 6 ? 'eager' : 'lazy'}
+            srcset={hoverSrcset}
+            sizes={hoverSrcset ? GALLERY_SIZES : undefined}
+            loading="lazy"
           />
         </picture>
       {:else}
@@ -158,7 +166,9 @@
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-          loading={index < 6 ? 'eager' : 'lazy'}
+          srcset={hoverSrcset}
+          sizes={hoverSrcset ? GALLERY_SIZES : undefined}
+          loading="lazy"
         />
       {/if}
     {/if}

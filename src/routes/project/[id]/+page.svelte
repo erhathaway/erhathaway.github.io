@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
-  import { getImageSources, replaceExtension } from '$lib/utils/image-formats';
+  import { getImageSources, getResponsiveSrcset, replaceExtension } from '$lib/utils/image-formats';
   let { data }: { data: PageData } = $props();
 
   const item = $derived(portfolio.allItems.find(i => i.id === data.projectId));
@@ -214,10 +214,11 @@
           {#if item.hoverImage || item.image}
             {@const coverSrc = item.hoverImage || item.image}
             {@const coverFormats = item.hoverImage ? item.hoverImageFormats : item.imageFormats}
+            {@const coverSrcset = getResponsiveSrcset(coverSrc)}
             {#if coverFormats?.length}
               <picture>
-                {#each getImageSources(coverSrc, coverFormats) as source (source.type)}
-                  <source srcset={source.srcset} type={source.type} />
+                {#each getImageSources(coverSrc, coverFormats, '50vw') as source (source.type)}
+                  <source srcset={source.srcset} type={source.type} sizes={source.sizes} />
                 {/each}
                 <img
                   src={coverSrc}
@@ -226,6 +227,8 @@
                   style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
                   style:transform="scale({item.coverPosition?.zoom ?? 1})"
                   style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+                  srcset={coverSrcset}
+                  sizes={coverSrcset ? '50vw' : undefined}
                   loading="lazy"
                 />
               </picture>
@@ -237,6 +240,8 @@
                 style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
                 style:transform="scale({item.coverPosition?.zoom ?? 1})"
                 style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+                srcset={coverSrcset}
+                sizes={coverSrcset ? '50vw' : undefined}
                 loading="lazy"
               />
             {/if}
