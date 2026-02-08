@@ -765,7 +765,7 @@
 
 <div class="error-page">
   <pre bind:this={el} class="scene"></pre>
-  <a href="/" class="home-link" onclick={(e) => { e.preventDefault(); goto('/'); }}>
+  <a href="/" class="home-link" onclick={(e) => { e.preventDefault(); goto('/').then(() => window.scrollTo(0, 0)); }}>
     <svg class="home-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
     </svg>
