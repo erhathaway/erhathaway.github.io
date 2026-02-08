@@ -181,7 +181,7 @@
     <!-- Hero: text + cover side by side -->
     <div class="flex flex-col lg:flex-row min-h-screen lg:items-center">
       <!-- Left: project info -->
-      <div class="lg:w-64 shrink-0 self-stretch flex flex-col p-8 pt-10">
+      <div class="lg:w-64 shrink-0 self-stretch flex flex-col p-8 pt-10 pb-4 lg:pb-8">
         <a href="/" class="hidden lg:inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-10 text-sm" onclick={(event) => {
           event.preventDefault();
           goto('/', { state: { hoverId: item.id } });
@@ -193,10 +193,10 @@
         </a>
 
         <div class="flex-1 flex flex-col justify-center">
-          <p class="text-[10px] font-medium tracking-widest uppercase mb-3 vt-exclude-namecard" style="color: #a08e7a;">
+          <p class="hidden lg:block text-[10px] font-medium tracking-widest uppercase mb-3 vt-exclude-namecard" style="color: #a08e7a;">
             {item.categories.join(' · ') || 'Uncategorized'}
           </p>
-          <h1 class="text-3xl leading-tight mb-5 vt-exclude-namecard" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e;">
+          <h1 class="text-3xl leading-tight mb-2 lg:mb-5 vt-exclude-namecard" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e;">
             {item.name}
           </h1>
           {#if item.description}
