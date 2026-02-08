@@ -6,6 +6,7 @@
 	import { SignedIn, SignedOut, useClerkContext } from 'svelte-clerk';
 	import ProjectEditor, { type AttributeDraft, type ProjectEditorPayload } from '../../ProjectEditor.svelte';
 	import { artifactSchemas, validateArtifactData, getArtifactSchema, getArtifactComponent } from '$lib/schemas/artifacts';
+	import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
 	import GooglePhotosPickerModal from '$lib/components/GooglePhotosPickerModal.svelte';
 	import CoverPositionEditor from '$lib/components/CoverPositionEditor.svelte';
 
@@ -1251,9 +1252,8 @@
 
 				<!-- Existing Artifacts -->
 				{#each artifacts as artifact (artifact.id)}
-					{@const AdminListComp = getArtifactComponent(artifact.schema, 'adminList')}
 					<div
-						class="rounded-2xl border border-slate-200 bg-white p-5 flex flex-col gap-3 cursor-pointer hover:border-slate-300 hover:shadow-md transition-all duration-200"
+						class="rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col cursor-pointer hover:border-slate-300 hover:shadow-md transition-all duration-200"
 						onclick={() => startArtifactEdit(artifact)}
 						role="button"
 						tabindex="0"
@@ -1264,8 +1264,7 @@
 							}
 						}}
 					>
-						<div class="flex flex-wrap items-center gap-2.5 text-xs">
-							<span class="font-mono text-slate-400">{artifact.schema}</span>
+						<div class="flex flex-wrap items-center gap-2.5 text-xs p-3 pb-0">
 							<span
 								class={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium ${
 									artifact.isPublished
@@ -1320,14 +1319,9 @@
 								</button>
 							</div>
 						</div>
-						<div>
-							{#if AdminListComp}
-								<AdminListComp data={artifact.dataBlob} />
-							{:else}
-								<p class="text-xs text-slate-400">Unsupported schema.</p>
-							{/if}
+						<div class="p-3">
+							<ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
 						</div>
-						<p class="text-[11px] text-slate-400">Click to edit</p>
 					</div>
 				{/each}
 			</div>
@@ -1448,7 +1442,6 @@
 				{@const scale = absOffset === 1 ? 0.75 : 0.5}
 				{@const opacity = absOffset === 1 ? 0.8 : 0.5}
 				{@const translateX = sign * (absOffset === 1 ? 380 : 600)}
-				{@const NeighborAdminListComp = getArtifactComponent(artifact.schema, 'adminList')}
 				<button
 					type="button"
 					class="absolute top-1/2 left-1/2 z-40 cursor-pointer rounded-2xl bg-white shadow-lg ring-1 ring-white/10 hover:ring-white/40 transition-all duration-300 overflow-hidden w-64 text-left"
@@ -1458,7 +1451,6 @@
 				>
 					<div class="p-4 flex flex-col gap-2.5">
 						<div class="flex flex-wrap items-center gap-2 text-xs">
-							<span class="font-mono text-slate-400">{artifact.schema}</span>
 							<span
 								class={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium ${
 									artifact.isPublished
@@ -1478,9 +1470,7 @@
 								</span>
 							{/if}
 						</div>
-						{#if NeighborAdminListComp}
-							<NeighborAdminListComp data={artifact.dataBlob} />
-						{/if}
+						<ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
 					</div>
 				</button>
 			{/each}
