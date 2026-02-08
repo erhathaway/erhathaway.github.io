@@ -18,6 +18,7 @@
 	const isProjectPage = $derived($page.route.id === '/[slug]');
 	const isAdminPage = $derived($page.route.id?.includes('/admin'));
 	const isHomePage = $derived($page.url.pathname === '/');
+	const isErrorPage = $derived(!!$page.error);
 
 	let appliedHoverId: number | null = null;
 	let showLoginModal = $state(false);
@@ -442,26 +443,26 @@
 		<AuthButton onOpenModal={() => showLoginModal = true} />
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 	{:else}
-		{#if !isHomePage}
+		{#if !isHomePage && !isErrorPage}
 			<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[200] vt-exclude-namecard" style="view-transition-name: left-bar"></div>
 		{/if}
 
-		<div class="font-body bg-charcoal text-cream h-screen flex {isHomePage ? '' : 'ml-[12px]'}">
+		<div class="font-body bg-charcoal text-cream h-screen flex {isHomePage || isErrorPage ? '' : 'ml-[12px]'}">
 			<!-- Left spacer only on project pages on larger screens -->
-			{#if isProjectPage}
+			{#if isProjectPage && !isErrorPage}
 				<div class="hidden sm:block w-80 shrink-0"></div>
 			{/if}
 			<!-- Main Content - full width for home/gallery, adjusted for project pages -->
-			<div class="{isProjectPage ? 'flex-1' : 'w-full'} h-full {isHomePage ? 'overflow-hidden' : 'overflow-auto'} vt-exclude-namecard" style="view-transition-name: main-content">
+			<div class="{isProjectPage && !isErrorPage ? 'flex-1' : 'w-full'} h-full {isHomePage ? 'overflow-hidden' : 'overflow-auto'} vt-exclude-namecard" style="view-transition-name: main-content">
 				{@render children()}
 			</div>
 		</div>
 		<!-- Backdrop for mobile - non-blocking -->
-		{#if isMobileScreen && mobileMenuOpen}
+		{#if isMobileScreen && mobileMenuOpen && !isErrorPage}
 			<div class="fixed inset-0 z-[99] pointer-events-none bg-black/10"></div>
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
-		{#if !isHomePage}
+		{#if !isHomePage && !isErrorPage}
 			<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 vt-exclude-namecard" style="view-transition-name: left-panel">
 				<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} hasTransitionNames={panelTransitionNames} showNameCard={showLeftPanelNameCard} onItemClick={() => {
 					// Only close menu on mobile when clicking an item
@@ -473,7 +474,7 @@
 		{/if}
 		<div class="vt-exclude-namecard" style="view-transition-name: auth-button">
 		</div>
-		{#if stickyBottomUiEnabled && panelTransitionNames}
+		{#if stickyBottomUiEnabled && panelTransitionNames && !isErrorPage}
 			<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none vt-exclude-namecard" style="view-transition-name: social-links">
 				<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
 					<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
@@ -484,7 +485,7 @@
 				</div>
 			</div>
 		{/if}
-		{#if stickyBottomUiEnabled}
+		{#if stickyBottomUiEnabled && !isErrorPage}
 			<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none md:left-0 vt-exclude-namecard" style="view-transition-name: bottom-bar">
 				{#if isProjectPage}
 					<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
@@ -562,7 +563,7 @@
 		{/if}
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 		<!-- Hamburger menu button - show below md (768px) - placed last to ensure it's on top -->
-		{#if isMobileScreen}
+		{#if isMobileScreen && !isErrorPage}
 			<button
 				onclick={() => mobileMenuOpen = !mobileMenuOpen}
 				class="fixed bottom-6 left-6 z-[9999] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg"
