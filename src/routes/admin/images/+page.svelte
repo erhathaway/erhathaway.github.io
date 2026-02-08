@@ -41,6 +41,11 @@
 	let transformProgress = $state({ done: 0, total: 0, errors: 0 });
 	let transformResult = $state<{ total: number; errors: number; message?: string } | null>(null);
 
+	// Delete state
+	let deleteConfirmKeys = $state<string[]>([]);
+	let deleting = $state(false);
+	let deleteResult = $state<{ deleted: number; blocked: number } | null>(null);
+
 	// --- localStorage persistence ---
 
 	function loadSavedFilters() {
@@ -293,6 +298,57 @@
 		}
 	}
 
+	// Deletable: selected orphan items (no artifact, no setting)
+	const deletableItems = $derived.by(() => {
+		return filteredItems.filter(
+			(item) => selectedKeys.has(item.key) && !item.artifactId && !item.settingKey
+		);
+	});
+
+	function confirmDeleteSelected() {
+		if (deletableItems.length === 0) return;
+		deleteConfirmKeys = deletableItems.map((i) => i.key);
+	}
+
+	function confirmDeleteSingle(key: string) {
+		deleteConfirmKeys = [key];
+	}
+
+	function cancelDelete() {
+		deleteConfirmKeys = [];
+	}
+
+	async function executeDelete() {
+		if (deleteConfirmKeys.length === 0) return;
+		deleting = true;
+		deleteResult = null;
+		try {
+			const token = await getToken();
+			const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+			if (token) headers.Authorization = `Bearer ${token}`;
+			const res = await fetch('/api/admin/images', {
+				method: 'DELETE',
+				headers,
+				body: JSON.stringify({ keys: deleteConfirmKeys })
+			});
+			if (!res.ok) {
+				const body = await res.json().catch(() => null);
+				deleteResult = { deleted: 0, blocked: 0 };
+				transformResult = { total: 0, errors: 1, message: body?.message ?? `Delete failed: HTTP ${res.status}` };
+			} else {
+				deleteResult = await res.json();
+			}
+		} catch (err) {
+			deleteResult = { deleted: 0, blocked: 0 };
+			transformResult = { total: 0, errors: 1, message: err instanceof Error ? err.message : 'Delete failed' };
+		} finally {
+			deleting = false;
+			deleteConfirmKeys = [];
+			selectedKeys = new Set();
+			await loadImages();
+		}
+	}
+
 	onMount(() => {
 		loadSavedFilters();
 		void loadImages();
@@ -341,7 +397,7 @@
 				class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
 			>
 				<option value="all">All</option>
-				{#each projects as [id, name]}
+				{#each projects as [id, name] (id)}
 					<option value={id}>{name}</option>
 				{/each}
 			</select>
@@ -357,16 +413,28 @@
 			</button>
 		{/if}
 
-		{#if transformableItems.length > 0}
-			<button
-				type="button"
-				disabled={transforming}
-				onclick={transformSelected}
-				class="ml-auto px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
-			>
-				{transforming ? 'Transforming...' : `Transform Selected (${transformableItems.length})`}
-			</button>
-		{/if}
+		<div class="flex items-center gap-2 ml-auto">
+			{#if deletableItems.length > 0}
+				<button
+					type="button"
+					disabled={transforming || deleting}
+					onclick={confirmDeleteSelected}
+					class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+				>
+					Delete Orphans ({deletableItems.length})
+				</button>
+			{/if}
+			{#if transformableItems.length > 0}
+				<button
+					type="button"
+					disabled={transforming || deleting}
+					onclick={transformSelected}
+					class="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+				>
+					{transforming ? 'Transforming...' : `Transform Selected (${transformableItems.length})`}
+				</button>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Transform progress -->
@@ -476,6 +544,7 @@
 								{/if}
 							</button>
 						</th>
+						<th class="w-10 px-2 py-2.5"></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -542,10 +611,86 @@
 							<td class="px-3 py-2 text-slate-400 tabular-nums">
 								{formatDate(item.uploaded)}
 							</td>
+							<td class="px-2 py-2">
+								{#if !item.artifactId && !item.settingKey}
+									<button
+										type="button"
+										title="Delete orphan"
+										onclick={() => confirmDeleteSingle(item.key)}
+										class="text-slate-300 hover:text-red-500 transition-colors duration-150"
+									>
+										<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+									</button>
+								{/if}
+							</td>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
 		</div>
 	{/if}
+
+	<!-- Delete result -->
+	{#if deleteResult && deleteResult.deleted > 0}
+		<div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-center justify-between">
+			<p class="text-xs text-emerald-700">
+				{deleteResult.deleted} image{deleteResult.deleted !== 1 ? 's' : ''} deleted.{deleteResult.blocked > 0 ? ` ${deleteResult.blocked} skipped (no longer orphaned).` : ''}
+			</p>
+			<button
+				type="button"
+				class="text-[11px] text-slate-400 hover:text-slate-600 transition-colors duration-150"
+				onclick={() => { deleteResult = null; }}
+			>
+				Dismiss
+			</button>
+		</div>
+	{/if}
 </div>
+
+<!-- Delete confirmation modal -->
+{#if deleteConfirmKeys.length > 0}
+	<div class="fixed inset-0 z-50 flex items-center justify-center">
+		<!-- Backdrop -->
+		<button
+			type="button"
+			class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+			onclick={cancelDelete}
+			aria-label="Cancel"
+		></button>
+		<!-- Modal -->
+		<div class="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+			<h3 class="text-sm font-semibold text-slate-900 mb-2">Delete {deleteConfirmKeys.length === 1 ? 'image' : `${deleteConfirmKeys.length} images`}?</h3>
+			<p class="text-xs text-slate-500 mb-1">
+				{#if deleteConfirmKeys.length === 1}
+					This will permanently remove the following file from R2:
+				{:else}
+					This will permanently remove these {deleteConfirmKeys.length} files from R2:
+				{/if}
+			</p>
+			<div class="max-h-32 overflow-y-auto mb-4 rounded-lg bg-slate-50 border border-slate-100 px-3 py-2">
+				{#each deleteConfirmKeys as key (key)}
+					<p class="text-[11px] font-mono text-slate-500 truncate">{key.replace('artifacts/', '')}</p>
+				{/each}
+			</div>
+			<p class="text-xs text-red-600 mb-4">This action cannot be undone.</p>
+			<div class="flex items-center justify-end gap-2">
+				<button
+					type="button"
+					onclick={cancelDelete}
+					disabled={deleting}
+					class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors duration-150"
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					onclick={executeDelete}
+					disabled={deleting}
+					class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+				>
+					{deleting ? 'Deleting...' : 'Delete'}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

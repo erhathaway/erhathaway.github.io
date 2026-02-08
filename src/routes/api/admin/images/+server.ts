@@ -185,3 +185,97 @@ export const GET: RequestHandler = async ({ platform }) => {
 
 	return json({ items });
 };
+
+export const DELETE: RequestHandler = async ({ request, platform }) => {
+	const bucket = platform?.env?.ARTIFACTS;
+	if (!bucket) {
+		throw error(500, 'Artifacts bucket not configured');
+	}
+
+	const db = platform?.env?.DB
+		? getDb(platform.env.DB as unknown as import('@cloudflare/workers-types').D1Database)
+		: null;
+	if (!db) {
+		throw error(500, 'Database not available');
+	}
+
+	const body = await request.json();
+	const { keys } = body as { keys?: string[] };
+
+	if (!Array.isArray(keys) || keys.length === 0) {
+		throw error(400, 'keys array is required');
+	}
+	if (keys.some((k) => typeof k !== 'string' || !k.startsWith('artifacts/'))) {
+		throw error(400, 'All keys must be valid artifact paths');
+	}
+
+	// Verify none of these keys are referenced by artifacts or site settings
+	const artifactRows = await db
+		.select({ dataBlob: projectArtifacts.dataBlob })
+		.from(projectArtifacts)
+		.where(eq(projectArtifacts.schema, 'image-v1'))
+		.all();
+
+	const referencedKeys = new Set<string>();
+	for (const row of artifactRows) {
+		const blob = typeof row.dataBlob === 'string' ? JSON.parse(row.dataBlob) : row.dataBlob;
+		if (!blob) continue;
+		for (const field of ['imageUrl', 'hoverImageUrl'] as const) {
+			const url = blob[field];
+			if (typeof url === 'string') {
+				const key = url.startsWith('/') ? url.slice(1) : url;
+				if (key.startsWith('artifacts/')) {
+					referencedKeys.add(key);
+					// Also add format variants
+					const formats = field === 'imageUrl' ? blob.imageFormats : blob.hoverImageFormats;
+					if (Array.isArray(formats)) {
+						const dotIndex = key.lastIndexOf('.');
+						if (dotIndex > -1) {
+							const base = key.slice(0, dotIndex + 1);
+							for (const fmt of formats) {
+								if (typeof fmt === 'string') referencedKeys.add(`${base}${fmt}`);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Also check site settings
+	const NAMECARD_KEYS = ['namecard_image', 'project_namecard_image'];
+	for (const settingKey of NAMECARD_KEYS) {
+		const [row] = await db
+			.select({ value: siteSettings.value })
+			.from(siteSettings)
+			.where(eq(siteSettings.key, settingKey))
+			.limit(1)
+			.all();
+		if (!row) continue;
+		const val = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+		if (!val || typeof val.imageUrl !== 'string') continue;
+		const key = val.imageUrl.startsWith('/') ? val.imageUrl.slice(1) : val.imageUrl;
+		if (key.startsWith('artifacts/')) {
+			referencedKeys.add(key);
+			if (Array.isArray(val.imageFormats)) {
+				const dotIndex = key.lastIndexOf('.');
+				if (dotIndex > -1) {
+					const base = key.slice(0, dotIndex + 1);
+					for (const fmt of val.imageFormats) {
+						if (typeof fmt === 'string') referencedKeys.add(`${base}${fmt}`);
+					}
+				}
+			}
+		}
+	}
+
+	// Filter out any keys that are actually referenced (safety check)
+	const safeToDelete = keys.filter((k) => !referencedKeys.has(k));
+	const blocked = keys.filter((k) => referencedKeys.has(k));
+
+	if (safeToDelete.length > 0) {
+		await bucket.delete(safeToDelete);
+	}
+
+	return json({ deleted: safeToDelete.length, blocked: blocked.length });
+};
