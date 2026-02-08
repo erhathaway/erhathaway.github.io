@@ -217,7 +217,7 @@
             {@const coverSrcset = getResponsiveSrcset(coverSrc)}
             {#if coverFormats?.length}
               <picture>
-                {#each getImageSources(coverSrc, coverFormats, '50vw') as source (source.type)}
+                {#each getImageSources(coverSrc, coverFormats, '(max-width: 767px) 100vw, calc(100vw - 320px)') as source (source.type)}
                   <source srcset={source.srcset} type={source.type} sizes={source.sizes} />
                 {/each}
                 <img
@@ -228,7 +228,7 @@
                   style:transform="scale({item.coverPosition?.zoom ?? 1})"
                   style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
                   srcset={coverSrcset}
-                  sizes={coverSrcset ? '50vw' : undefined}
+                  sizes={coverSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
                   loading="lazy"
                 />
               </picture>
@@ -241,7 +241,7 @@
                 style:transform="scale({item.coverPosition?.zoom ?? 1})"
                 style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
                 srcset={coverSrcset}
-                sizes={coverSrcset ? '50vw' : undefined}
+                sizes={coverSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
                 loading="lazy"
               />
             {/if}
