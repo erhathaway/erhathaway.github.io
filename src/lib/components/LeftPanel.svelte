@@ -102,7 +102,7 @@
       <!-- Background rectangle behind name and tagline -->
       <div
         class="namecard-vt absolute top-0 left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] border z-0"
-        style="border-color: rgba(138,128,120,0.15); background-color: rgba(253, 245, 230, 0.95);"
+        style="border-color: rgba(138,128,120,0.15); background-color: #fae6d0;"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
       ></div>
 
