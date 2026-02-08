@@ -3,4 +3,5 @@ export interface NamecardImageSetting {
 	positionX: number;
 	positionY: number;
 	zoom: number;
+	imageFormats?: string[];
 }

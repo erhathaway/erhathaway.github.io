@@ -617,6 +617,25 @@
 						{/each}
 					</ul>
 				</div>
+
+				<!-- Images -->
+				<div>
+					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Images</p>
+					<ul class="space-y-0.5">
+						<li>
+							<a
+								href="/admin/images"
+								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
+									$page.url.pathname === '/admin/images'
+										? 'bg-slate-900 text-white'
+										: 'text-slate-600 hover:bg-slate-50'
+								}`}
+							>
+								<span class="font-medium">R2 Browser</span>
+							</a>
+						</li>
+					</ul>
+				</div>
 			</div>
 
 			<!-- Back to site -->

@@ -1,5 +1,6 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
+import { transformToModernFormats } from '$lib/server/image-transform';
 
 const MAX_SIZE = 20 * 1024 * 1024; // 20 MB
 
@@ -70,6 +71,13 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	await bucket.put(key, imageBytes, {
 		httpMetadata: { contentType }
 	});
+
+	// Attempt to transform to AVIF + WebP (no-op in local dev)
+	const origin = new URL(request.url).origin;
+	const result = await transformToModernFormats(bucket, key, origin);
+	if (result) {
+		return json({ key: result.avifKey, url: `/${result.avifKey}`, formats: result.formats });
+	}
 
 	return json({ key, url: `/${key}` });
 };

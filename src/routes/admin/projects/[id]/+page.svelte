@@ -566,11 +566,14 @@
 			throw new Error('Upload failed.');
 		}
 
-		const payload = (await response.json()) as { url?: string };
+		const payload = (await response.json()) as { url?: string; formats?: string[] };
 		if (!payload.url) {
 			throw new Error('Upload response missing url.');
 		}
 
+		if (payload.formats?.length) {
+			return { url: payload.url, formats: payload.formats };
+		}
 		return payload.url;
 	}
 
@@ -1035,8 +1038,11 @@
 
 		for (const file of files) {
 			try {
-				const url = await handleArtifactUpload(file);
-				const dataBlob: Record<string, unknown> = { imageUrl: url };
+				const result = await handleArtifactUpload(file);
+				const uploadedUrl = typeof result === 'string' ? result : result.url;
+				const formats = typeof result === 'object' ? (result as { formats?: string[] }).formats : undefined;
+				const dataBlob: Record<string, unknown> = { imageUrl: uploadedUrl };
+				if (formats?.length) dataBlob.imageFormats = formats;
 				if (!defaultSkipDescription) {
 					dataBlob.description = file.name;
 				}

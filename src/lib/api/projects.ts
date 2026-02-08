@@ -6,6 +6,8 @@ interface Project {
 	isPublished: boolean;
 	coverImageUrl: string | null;
 	coverHoverImageUrl: string | null;
+	coverImageFormats?: string[];
+	coverHoverImageFormats?: string[];
 	coverPositionX: number;
 	coverPositionY: number;
 	coverZoom: number;

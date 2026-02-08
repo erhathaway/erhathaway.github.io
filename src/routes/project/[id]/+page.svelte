@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
+  import { getImageSources } from '$lib/utils/image-formats';
   let { data }: { data: PageData } = $props();
 
   const item = $derived(portfolio.allItems.find(i => i.id === data.projectId));
@@ -195,15 +196,34 @@
           style="view-transition-name: project-image-{item.id}"
         >
           {#if item.hoverImage || item.image}
-            <img
-              src={item.hoverImage || item.image}
-              alt={item.name}
-              class="w-full h-full object-cover"
-              style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-              style:transform="scale({item.coverPosition?.zoom ?? 1})"
-              style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-              loading="lazy"
-            />
+            {@const coverSrc = item.hoverImage || item.image}
+            {@const coverFormats = item.hoverImage ? item.hoverImageFormats : item.imageFormats}
+            {#if coverFormats?.length}
+              <picture>
+                {#each getImageSources(coverSrc, coverFormats) as source (source.type)}
+                  <source srcset={source.srcset} type={source.type} />
+                {/each}
+                <img
+                  src={coverSrc}
+                  alt={item.name}
+                  class="w-full h-full object-cover"
+                  style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+                  style:transform="scale({item.coverPosition?.zoom ?? 1})"
+                  style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+                  loading="lazy"
+                />
+              </picture>
+            {:else}
+              <img
+                src={coverSrc}
+                alt={item.name}
+                class="w-full h-full object-cover"
+                style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+                style:transform="scale({item.coverPosition?.zoom ?? 1})"
+                style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+                loading="lazy"
+              />
+            {/if}
           {:else}
             <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {item.gradientColors}"></div>
           {/if}

@@ -93,6 +93,8 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 	const projectList = rows.map((row) => {
 		let coverImageUrl: string | null = null;
 		let coverHoverImageUrl: string | null = null;
+		let coverImageFormats: string[] | undefined;
+		let coverHoverImageFormats: string[] | undefined;
 		if (row.coverArtifactDataBlob) {
 			const blob =
 				typeof row.coverArtifactDataBlob === 'string'
@@ -100,6 +102,12 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 					: row.coverArtifactDataBlob;
 			coverImageUrl = blob?.imageUrl ?? null;
 			coverHoverImageUrl = blob?.hoverImageUrl ?? null;
+			if (Array.isArray(blob?.imageFormats) && blob.imageFormats.length > 0) {
+				coverImageFormats = blob.imageFormats;
+			}
+			if (Array.isArray(blob?.hoverImageFormats) && blob.hoverImageFormats.length > 0) {
+				coverHoverImageFormats = blob.hoverImageFormats;
+			}
 		}
 		return {
 			id: row.id,
@@ -109,6 +117,8 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 			isPublished: row.isPublished,
 			coverImageUrl,
 			coverHoverImageUrl,
+			...(coverImageFormats ? { coverImageFormats } : {}),
+			...(coverHoverImageFormats ? { coverHoverImageFormats } : {}),
 			coverPositionX: row.coverPositionX ?? 50,
 			coverPositionY: row.coverPositionY ?? 50,
 			coverZoom: row.coverZoom ?? 1,

@@ -11,6 +11,8 @@ export type ImageV1Data = {
 	positionY?: number;
 	zoom?: number;
 	hoverImageUrl?: string;
+	imageFormats?: string[];
+	hoverImageFormats?: string[];
 };
 
 export const createImageV1Draft = (): ImageV1Data => ({
@@ -59,6 +61,16 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 		errors.push('hoverImageUrl must be a string');
 	}
 
+	const imageFormats = data.imageFormats;
+	if (imageFormats !== undefined && (!Array.isArray(imageFormats) || !imageFormats.every((f: unknown) => typeof f === 'string'))) {
+		errors.push('imageFormats must be an array of strings');
+	}
+
+	const hoverImageFormats = data.hoverImageFormats;
+	if (hoverImageFormats !== undefined && (!Array.isArray(hoverImageFormats) || !hoverImageFormats.every((f: unknown) => typeof f === 'string'))) {
+		errors.push('hoverImageFormats must be an array of strings');
+	}
+
 	if (errors.length > 0) {
 		return { ok: false, errors };
 	}
@@ -71,7 +83,9 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 			...(typeof positionX === 'number' ? { positionX } : {}),
 			...(typeof positionY === 'number' ? { positionY } : {}),
 			...(typeof zoom === 'number' ? { zoom } : {}),
-			...(typeof hoverImageUrl === 'string' && hoverImageUrl.trim() ? { hoverImageUrl: hoverImageUrl.trim() } : {})
+			...(typeof hoverImageUrl === 'string' && hoverImageUrl.trim() ? { hoverImageUrl: hoverImageUrl.trim() } : {}),
+			...(Array.isArray(imageFormats) && imageFormats.length > 0 ? { imageFormats } : {}),
+			...(Array.isArray(hoverImageFormats) && hoverImageFormats.length > 0 ? { hoverImageFormats } : {})
 		}
 	};
 };

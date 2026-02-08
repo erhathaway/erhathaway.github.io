@@ -3,6 +3,7 @@ import type { R2Bucket } from '@cloudflare/workers-types';
 /**
  * Extract R2 keys from a dataBlob by finding string values that look like artifact URLs.
  * Handles `/artifacts/...` paths and full URLs with `/artifacts/` in the pathname.
+ * Also generates keys for format variants (e.g. if imageFormats: ['avif', 'webp'] exists).
  */
 export function extractR2Keys(dataBlob: unknown): string[] {
 	const keys: string[] = [];
@@ -19,7 +20,30 @@ export function extractR2Keys(dataBlob: unknown): string[] {
 	}
 
 	walk(dataBlob);
-	return keys;
+
+	// Generate format-variant keys from URL fields + their associated formats arrays
+	if (dataBlob && typeof dataBlob === 'object') {
+		const blob = dataBlob as Record<string, unknown>;
+		addFormatVariantKeys(keys, blob.imageUrl, blob.imageFormats);
+		addFormatVariantKeys(keys, blob.hoverImageUrl, blob.hoverImageFormats);
+	}
+
+	// Deduplicate
+	return [...new Set(keys)];
+}
+
+function addFormatVariantKeys(keys: string[], url: unknown, formats: unknown): void {
+	if (typeof url !== 'string' || !Array.isArray(formats)) return;
+	const key = extractR2Key(url);
+	if (!key) return;
+	const dotIndex = key.lastIndexOf('.');
+	if (dotIndex === -1) return;
+	const base = key.slice(0, dotIndex + 1);
+	for (const fmt of formats) {
+		if (typeof fmt === 'string') {
+			keys.push(`${base}${fmt}`);
+		}
+	}
 }
 
 function extractR2Key(url: string): string | null {

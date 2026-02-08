@@ -6,6 +6,7 @@
   import { page } from '$app/stores';
   import HoverInfo from './HoverInfo.svelte';
   import AuthButton from './AuthButton.svelte';
+  import { getImageSources } from '$lib/utils/image-formats';
 
   let innerWidth = $state(browser ? window.innerWidth : 1200);
   const colCount = $derived(innerWidth < 900 ? 2 : 3);
@@ -146,16 +147,34 @@
         aria-label="About Ethan Hathaway"
       >
         {#if portfolio.namecardImage}
-          <img
-            src={portfolio.namecardImage.imageUrl}
-            alt="Ethan Hathaway"
-            class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-            style:object-position="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
-            style:transform="scale({portfolio.namecardImage.zoom})"
-            style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
-            style="view-transition-name: name-card-bg"
-            draggable="false"
-          />
+          {#if portfolio.namecardImage.imageFormats?.length}
+            <picture>
+              {#each getImageSources(portfolio.namecardImage.imageUrl, portfolio.namecardImage.imageFormats) as source (source.type)}
+                <source srcset={source.srcset} type={source.type} />
+              {/each}
+              <img
+                src={portfolio.namecardImage.imageUrl}
+                alt="Ethan Hathaway"
+                class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                style:object-position="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+                style:transform="scale({portfolio.namecardImage.zoom})"
+                style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+                style="view-transition-name: name-card-bg"
+                draggable="false"
+              />
+            </picture>
+          {:else}
+            <img
+              src={portfolio.namecardImage.imageUrl}
+              alt="Ethan Hathaway"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+              style:object-position="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+              style:transform="scale({portfolio.namecardImage.zoom})"
+              style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
+              style="view-transition-name: name-card-bg"
+              draggable="false"
+            />
+          {/if}
         {:else}
           <div
             class="namecard-vt absolute inset-0 border backdrop-blur-md transition-transform duration-500 ease-out group-hover:scale-[1.02]"

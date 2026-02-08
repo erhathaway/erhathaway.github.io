@@ -1,5 +1,6 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
+import { transformToModernFormats } from '$lib/server/image-transform';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
@@ -51,13 +52,18 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		}
 	});
 
-	const url = `/${key}`;
+	// Attempt to transform to AVIF + WebP (no-op in local dev)
+	const origin = new URL(request.url).origin;
+	const result = await transformToModernFormats(bucket, key, origin);
+	if (result) {
+		return json(
+			{ key: result.avifKey, url: `/${result.avifKey}`, formats: result.formats },
+			{ headers: corsHeaders }
+		);
+	}
 
 	return json(
-		{
-			key,
-			url
-		},
+		{ key, url: `/${key}` },
 		{ headers: corsHeaders }
 	);
 };

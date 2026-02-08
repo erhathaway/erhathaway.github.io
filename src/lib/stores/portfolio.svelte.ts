@@ -32,6 +32,8 @@ class PortfolioStore {
         metadata,
         image: project.coverImageUrl ?? undefined,
         hoverImage: project.coverHoverImageUrl ?? undefined,
+        imageFormats: project.coverImageFormats,
+        hoverImageFormats: project.coverHoverImageFormats,
         gridSize: 'regular',
         gradientColors: 'from-[#C7D2D8] via-[#B8C5CE] to-[#D0DAE0]',
         coverPosition: { x: project.coverPositionX ?? 50, y: project.coverPositionY ?? 50, zoom: project.coverZoom ?? 1 }

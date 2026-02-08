@@ -4,6 +4,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import HoverInfo from './HoverInfo.svelte';
+  import { getImageSources } from '$lib/utils/image-formats';
 
   let {
     item,
@@ -105,26 +106,61 @@
   style:animation-delay={fadeInActive ? `${index * 0.05}s` : undefined}
 >
   {#if item.image}
-    <img
-      src={item.image}
-      alt={item.name}
-      class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''}"
-      style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-      style:transform="scale({item.coverPosition?.zoom ?? 1})"
-      style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-      loading={index < 6 ? 'eager' : 'lazy'}
-      fetchpriority={index < 6 ? 'high' : undefined}
-    />
-    {#if item.hoverImage}
+    {#if item.imageFormats?.length}
+      <picture>
+        {#each getImageSources(item.image, item.imageFormats) as source (source.type)}
+          <source srcset={source.srcset} type={source.type} />
+        {/each}
+        <img
+          src={item.image}
+          alt={item.name}
+          class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''}"
+          style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+          style:transform="scale({item.coverPosition?.zoom ?? 1})"
+          style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+          loading={index < 6 ? 'eager' : 'lazy'}
+          fetchpriority={index < 6 ? 'high' : undefined}
+        />
+      </picture>
+    {:else}
       <img
-        src={item.hoverImage}
+        src={item.image}
         alt={item.name}
-        class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''}"
         style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
         style:transform="scale({item.coverPosition?.zoom ?? 1})"
         style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
         loading={index < 6 ? 'eager' : 'lazy'}
+        fetchpriority={index < 6 ? 'high' : undefined}
       />
+    {/if}
+    {#if item.hoverImage}
+      {#if item.hoverImageFormats?.length}
+        <picture class="absolute inset-0">
+          {#each getImageSources(item.hoverImage, item.hoverImageFormats) as source (source.type)}
+            <source srcset={source.srcset} type={source.type} />
+          {/each}
+          <img
+            src={item.hoverImage}
+            alt={item.name}
+            class="w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+            style:transform="scale({item.coverPosition?.zoom ?? 1})"
+            style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+            loading={index < 6 ? 'eager' : 'lazy'}
+          />
+        </picture>
+      {:else}
+        <img
+          src={item.hoverImage}
+          alt={item.name}
+          class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+          style:transform="scale({item.coverPosition?.zoom ?? 1})"
+          style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+          loading={index < 6 ? 'eager' : 'lazy'}
+        />
+      {/if}
     {/if}
   {:else}
     <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {item.gradientColors}"></div>

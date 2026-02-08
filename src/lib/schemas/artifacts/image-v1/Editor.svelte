@@ -4,10 +4,12 @@
 	import type { ImageV1Data } from './validator';
 	import CoverPositionEditor from '$lib/components/CoverPositionEditor.svelte';
 
+	type UploadResult = string | { url: string; formats?: string[] };
+
 	type Props = {
 		value?: ImageV1Data;
 		onChange?: (value: ImageV1Data) => void;
-		onUpload?: (file: File) => Promise<string>;
+		onUpload?: (file: File) => Promise<UploadResult>;
 		onUploadStateChange?: (state: { uploading: boolean; error: string | null }) => void;
 		googlePhotosConnected?: boolean;
 		onGooglePhotosPick?: () => void;
@@ -70,12 +72,15 @@
 		if (hoverPreviewUrl) URL.revokeObjectURL(hoverPreviewUrl);
 		hoverPreviewUrl = URL.createObjectURL(file);
 		try {
-			const uploadedUrl = await onUpload(file);
+			const result = await onUpload(file);
+			const uploadedUrl = typeof result === 'string' ? result : result.url;
+			const formats = typeof result === 'object' ? result.formats : undefined;
 			onChange?.({
 				...current,
 				imageUrl: current.imageUrl?.trim() || '',
 				description: current.description?.trim() || undefined,
-				hoverImageUrl: uploadedUrl
+				hoverImageUrl: uploadedUrl,
+				...(formats?.length ? { hoverImageFormats: formats } : {})
 			});
 			await tick();
 			hoverUploading = false;
@@ -137,14 +142,17 @@
 		previewUrl = nextPreview;
 
 		try {
-			const uploadedUrl = await onUpload(file);
+			const result = await onUpload(file);
+			const uploadedUrl = typeof result === 'string' ? result : result.url;
+			const formats = typeof result === 'object' ? result.formats : undefined;
 			onChange?.({
 				imageUrl: uploadedUrl,
 				description: current.description?.trim() || undefined,
 				positionX: current.positionX,
 				positionY: current.positionY,
 				zoom: current.zoom,
-				hoverImageUrl: current.hoverImageUrl
+				hoverImageUrl: current.hoverImageUrl,
+				...(formats?.length ? { imageFormats: formats } : {})
 			});
 			await tick();
 			setUploadState({ uploading: false, error: null });
