@@ -8,6 +8,9 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
+		csrf: {
+			checkOrigin: false
+		},
 		paths: {
 			relative: false
 		},
