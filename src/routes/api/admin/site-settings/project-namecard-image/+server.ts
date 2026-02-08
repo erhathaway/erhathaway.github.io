@@ -46,7 +46,8 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 		imageUrl,
 		positionX: typeof body.positionX === 'number' ? body.positionX : 50,
 		positionY: typeof body.positionY === 'number' ? body.positionY : 50,
-		zoom: typeof body.zoom === 'number' ? body.zoom : 1
+		zoom: typeof body.zoom === 'number' ? body.zoom : 1,
+		...(Array.isArray(body.imageFormats) && body.imageFormats.length ? { imageFormats: body.imageFormats } : {})
 	};
 
 	// Upsert: delete then insert

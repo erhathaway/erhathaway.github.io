@@ -25,7 +25,7 @@
 	let statusType = $state<'success' | 'error'>('success');
 	let googlePhotosConnected = $state(false);
 
-	let editorValue = $state<{ imageUrl: string; description?: string }>({ imageUrl: '', description: '' });
+	let editorValue = $state<{ imageUrl: string; description?: string; imageFormats?: string[] }>({ imageUrl: '', description: '' });
 	let positionX = $state(50);
 	let positionY = $state(50);
 	let zoom = $state(1);
@@ -54,7 +54,7 @@
 				const data = await response.json();
 				if (data) {
 					setting = data as NamecardImageSetting;
-					editorValue = { imageUrl: data.imageUrl, description: '' };
+					editorValue = { imageUrl: data.imageUrl, description: '', ...(data.imageFormats?.length ? { imageFormats: data.imageFormats } : {}) };
 					positionX = data.positionX;
 					positionY = data.positionY;
 					zoom = data.zoom;
@@ -83,7 +83,7 @@
 		}
 	}
 
-	async function handleUpload(file: File): Promise<string> {
+	async function handleUpload(file: File): Promise<string | { url: string; formats?: string[] }> {
 		const token = await getToken();
 		if (!token) throw new Error('Sign in to upload images.');
 
@@ -97,12 +97,15 @@
 
 		if (!response.ok) throw new Error('Upload failed.');
 
-		const payload = (await response.json()) as { url?: string };
+		const payload = (await response.json()) as { url?: string; formats?: string[] };
 		if (!payload.url) throw new Error('No URL returned from upload.');
+		if (payload.formats?.length) {
+			return { url: payload.url, formats: payload.formats };
+		}
 		return payload.url;
 	}
 
-	function handleEditorChange(next: { imageUrl: string; description?: string }) {
+	function handleEditorChange(next: { imageUrl: string; description?: string; imageFormats?: string[] }) {
 		editorValue = next;
 	}
 
@@ -130,7 +133,8 @@
 					imageUrl: editorValue.imageUrl,
 					positionX,
 					positionY,
-					zoom
+					zoom,
+					...(editorValue.imageFormats?.length ? { imageFormats: editorValue.imageFormats } : {})
 				})
 			});
 

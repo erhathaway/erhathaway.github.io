@@ -66,7 +66,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 		await db
 			.update(siteSettings)
-			.set({ value: JSON.stringify(val) })
+			.set({ value: val })
 			.where(eq(siteSettings.key, settingKey))
 			.run();
 	} else {
@@ -94,7 +94,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 		await db
 			.update(projectArtifacts)
-			.set({ dataBlob: JSON.stringify(blob) })
+			.set({ dataBlob: blob })
 			.where(eq(projectArtifacts.id, artifactId!))
 			.run();
 	}
