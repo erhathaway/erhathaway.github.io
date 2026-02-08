@@ -155,12 +155,21 @@
 </svelte:head>
 
 {#if !item}
-  <main class="h-screen flex items-center justify-center bg-charcoal">
+  <main class="h-screen flex flex-col items-center justify-center bg-charcoal gap-4">
     {#if portfolio.loading}
       <p class="text-cream/50 text-sm">Loading...</p>
     {:else}
       <p class="text-cream/50 text-sm">Project not found</p>
     {/if}
+    <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors text-sm" onclick={(event) => {
+      event.preventDefault();
+      goto('/', { state: { hoverId: data.projectId } });
+    }}>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Back
+    </a>
   </main>
 {:else}
 {#key item.id}
