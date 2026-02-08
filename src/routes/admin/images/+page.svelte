@@ -32,6 +32,7 @@
 	// Transform progress
 	let transforming = $state(false);
 	let transformProgress = $state({ done: 0, total: 0, errors: 0 });
+	let transformResult = $state<{ total: number; errors: number; message?: string } | null>(null);
 
 	async function getToken() {
 		const clerk = ctx.clerk;
@@ -151,14 +152,17 @@
 	async function transformSelected() {
 		if (transformableItems.length === 0) return;
 		transforming = true;
+		transformResult = null;
 		transformProgress = { done: 0, total: transformableItems.length, errors: 0 };
 
 		const token = await getToken();
 		if (!token) {
 			transforming = false;
+			transformResult = { total: 0, errors: 0, message: 'Sign in to transform images.' };
 			return;
 		}
 
+		let lastErrorMessage = '';
 		for (const item of transformableItems) {
 			try {
 				const res = await fetch('/api/admin/images/transform', {
@@ -174,17 +178,44 @@
 					})
 				});
 				if (!res.ok) {
+					const body = await res.json().catch(() => null);
+					lastErrorMessage = body?.message ?? `HTTP ${res.status}`;
 					transformProgress = { ...transformProgress, errors: transformProgress.errors + 1 };
 				}
-			} catch {
+			} catch (err) {
+				lastErrorMessage = err instanceof Error ? err.message : 'Network error';
 				transformProgress = { ...transformProgress, errors: transformProgress.errors + 1 };
 			}
 			transformProgress = { ...transformProgress, done: transformProgress.done + 1 };
 		}
 
+		const { errors } = transformProgress;
+		const succeeded = transformProgress.total - errors;
 		transforming = false;
-		selectedKeys = new Set();
-		await loadImages();
+
+		if (errors === transformProgress.total) {
+			transformResult = {
+				total: transformProgress.total,
+				errors,
+				message: `All ${errors} transforms failed. ${lastErrorMessage}`
+			};
+		} else if (errors > 0) {
+			transformResult = {
+				total: transformProgress.total,
+				errors,
+				message: `${succeeded} transformed, ${errors} failed. ${lastErrorMessage}`
+			};
+			selectedKeys = new Set();
+			await loadImages();
+		} else {
+			transformResult = {
+				total: transformProgress.total,
+				errors: 0,
+				message: `${succeeded} image${succeeded !== 1 ? 's' : ''} transformed successfully.`
+			};
+			selectedKeys = new Set();
+			await loadImages();
+		}
 	}
 
 	onMount(() => {
@@ -279,6 +310,22 @@
 					style="width: {transformProgress.total > 0 ? (transformProgress.done / transformProgress.total) * 100 : 0}%"
 				></div>
 			</div>
+		</div>
+	{/if}
+
+	<!-- Transform result -->
+	{#if !transforming && transformResult}
+		<div class="mb-4 rounded-lg border px-4 py-3 flex items-center justify-between {transformResult.errors === transformResult.total ? 'border-red-200 bg-red-50' : transformResult.errors > 0 ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}">
+			<p class="text-xs {transformResult.errors === transformResult.total ? 'text-red-700' : transformResult.errors > 0 ? 'text-amber-700' : 'text-emerald-700'}">
+				{transformResult.message}
+			</p>
+			<button
+				type="button"
+				class="text-[11px] text-slate-400 hover:text-slate-600 transition-colors duration-150"
+				onclick={() => { transformResult = null; }}
+			>
+				Dismiss
+			</button>
 		</div>
 	{/if}
 
