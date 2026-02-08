@@ -516,6 +516,12 @@
 		const created = await response.json();
 		artifacts = [created, ...artifacts];
 
+		// Layout artifacts (dividers, section titles) should appear first by default
+		if (FULL_WIDTH_SCHEMAS.includes(schema)) {
+			const token2 = token; // already have token
+			await persistCurrentOrder(token2);
+		}
+
 		// Set as cover if toggled
 		if (artifactIsCover) {
 			const coverRes = await fetch(`/api/admin/projects/${projectId}/cover`, {
@@ -536,6 +542,14 @@
 		artifactIsCover = false;
 		showCreateArtifactModal = false;
 		pageSuccess = 'Artifact created.';
+	}
+
+	async function persistCurrentOrder(token: string) {
+		await fetch(`/api/admin/projects/${projectId}/artifacts/reorder`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+			body: JSON.stringify({ ids: artifacts.map((a) => a.id) })
+		});
 	}
 
 	async function createSimpleArtifact(schema: string) {
@@ -580,6 +594,7 @@
 
 		const created = await response.json();
 		artifacts = [created, ...artifacts];
+		await persistCurrentOrder(token);
 		addArtifactStep = 'idle';
 		pageSuccess = `${schemaDef.label} created.`;
 	}
