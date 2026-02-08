@@ -1470,6 +1470,7 @@
 									<circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
 								</svg>
 							{/if}
+							<span class="text-[11px] font-medium text-slate-400">{getArtifactSchema(artifact.schema)?.label ?? artifact.schema}</span>
 							<span
 								class={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium ${
 									artifact.isPublished

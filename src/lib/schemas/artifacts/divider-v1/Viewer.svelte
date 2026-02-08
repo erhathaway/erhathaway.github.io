@@ -11,6 +11,6 @@
 
 <div class={`py-4 ${className}`}>
 	{#if data.showLine}
-		<hr class="border-t border-ash/30" />
+		<div class="h-px w-full bg-black/10"></div>
 	{/if}
 </div>
