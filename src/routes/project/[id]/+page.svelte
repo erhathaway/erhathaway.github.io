@@ -26,6 +26,16 @@
   const hasCover = $derived(!!item?.image);
   const additionalArtifacts = $derived(hasCover ? artifacts.filter(a => !a.isCover) : artifacts);
 
+  // Distribute artifacts across 2 columns in row-first order (left, right, left, right...)
+  // so sort order reads horizontally instead of top-to-bottom per column
+  const columns = $derived.by(() => {
+    const cols: [Artifact[], Artifact[]] = [[], []];
+    for (let i = 0; i < additionalArtifacts.length; i++) {
+      cols[i % 2].push(additionalArtifacts[i]);
+    }
+    return cols;
+  });
+
   // Reload artifacts whenever the project changes
   $effect(() => {
     loadArtifacts(data.projectId);
@@ -182,10 +192,12 @@
     <!-- Additional artifacts -->
     {#if additionalArtifacts.length > 0}
       <div class="max-w-6xl mx-auto p-8">
-        <div class="columns-2 gap-4 mb-12">
-          {#each additionalArtifacts as artifact (artifact.id)}
-            <div class="mb-4 break-inside-avoid">
-              <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+        <div class="grid grid-cols-2 gap-4 items-start mb-12">
+          {#each [0, 1] as col (col)}
+            <div class="flex flex-col gap-4">
+              {#each columns[col] as artifact (artifact.id)}
+                <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+              {/each}
             </div>
           {/each}
         </div>
