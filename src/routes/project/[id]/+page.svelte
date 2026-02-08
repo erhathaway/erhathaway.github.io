@@ -229,7 +229,7 @@
                   style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
                   srcset={coverSrcset}
                   sizes={coverSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
-                  loading="lazy"
+                  fetchpriority="high"
                 />
               </picture>
             {:else}
@@ -242,7 +242,7 @@
                 style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
                 srcset={coverSrcset}
                 sizes={coverSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
-                loading="lazy"
+                fetchpriority="high"
               />
             {/if}
           {:else}
