@@ -457,7 +457,9 @@
 		</div>
 		<!-- Backdrop for mobile - non-blocking -->
 		{#if isMobileScreen && mobileMenuOpen && !isErrorPage}
-			<div class="fixed inset-0 z-[99] pointer-events-none bg-black/10"></div>
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<div class="fixed inset-0 z-[99] bg-black/10" onclick={() => mobileMenuOpen = false}></div>
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
 		{#if !isHomePage && !isErrorPage}
