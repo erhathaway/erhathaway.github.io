@@ -105,6 +105,7 @@
 	let defaultSkipDescription = $state(true);
 
 	let rearranging = $state(false);
+	let shrinkImages = $state(false);
 	let draggedId = $state<number | null>(null);
 	let dropTargetId = $state<number | null>(null);
 	let reorderSaving = $state(false);
@@ -1216,7 +1217,7 @@
 					</div>
 					<button
 						type="button"
-						onclick={() => { rearranging = !rearranging; }}
+						onclick={() => { rearranging = !rearranging; if (!rearranging) shrinkImages = false; }}
 						class={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150 ${
 							rearranging
 								? 'border-blue-300 bg-blue-50 text-blue-700'
@@ -1231,6 +1232,19 @@
 							Rearrange
 						{/if}
 					</button>
+					{#if rearranging}
+						<button
+							type="button"
+							onclick={() => { shrinkImages = !shrinkImages; }}
+							class={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150 ${
+								shrinkImages
+									? 'border-blue-300 bg-blue-50 text-blue-700'
+									: 'border-slate-200 text-slate-600 hover:bg-slate-50'
+							}`}
+						>
+							{shrinkImages ? 'Full size' : 'Shrink'}
+						</button>
+					{/if}
 				</div>
 				<div class="flex items-center gap-4">
 					<div class="flex items-center gap-2">
@@ -1426,7 +1440,7 @@
 								</button>
 							</div>
 						</div>
-						<div class="p-3">
+						<div class="p-3 {shrinkImages ? 'max-h-[200px] overflow-hidden' : ''}">
 							<ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
 						</div>
 					</div>
