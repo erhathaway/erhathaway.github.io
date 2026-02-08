@@ -118,32 +118,28 @@
           Ethan<br>Hathaway
         </span>
       </button>
-    {/if}
-  {/if}
-
-  <!-- Main Content Area -->
-  <div class="flex-1 flex flex-col p-8 relative z-0 min-h-0 bg-white/70 backdrop-blur-md {showNameCard ? 'pt-4' : ''}">
-    {#if showNameCard && !activeNamecardImage}
       <p
-        class="namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 {slideUpActive ? 'animate-slide-up' : ''}"
-        style="animation-delay: 0.2s;"
+        class="namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 px-8 pt-4 pb-11 z-30 relative border-b border-black/5 {slideUpActive ? 'animate-slide-up' : ''}"
+        style="animation-delay: 0.2s; background-color: #fae6d0;"
         style:view-transition-name={hasTransitionNames ? 'subtitle-text' : undefined}
       >
         Things I Make
       </p>
     {/if}
+  {/if}
+
+  <!-- Main Content Area - glass white background fills from namecard to bottom -->
+  <div class="flex-1 flex flex-col relative z-0 min-h-0 bg-white/70 backdrop-blur-md border-l border-black/10">
 
     <!-- Scrollable Navigation Area -->
     <nav
-      class="flex-1 overflow-y-auto {slideUpActive ? 'animate-slide-up' : ''} min-h-0 max-h-full scrollbar-hide -mx-8 {bottomAlignNav ? 'flex flex-col justify-end pb-10 pt-0 mt-0' : showNameCard ? 'pt-12 mt-16 pb-[50%]' : 'pt-8 mt-8 pb-[50%]'}"
+      class="flex-1 overflow-y-auto {slideUpActive ? 'animate-slide-up' : ''} min-h-0 max-h-full scrollbar-hide {bottomAlignNav ? 'flex flex-col justify-end pb-10 pt-0 mt-0' : showNameCard ? 'pt-12 mt-16 pb-[50%]' : 'pt-8 mt-8 pb-[50%]'}"
       style="animation-delay: 0.4s"
       onanimationend={handleSlideUpDone}
       onanimationcancel={handleSlideUpDone}
       {@attach storeNav}
     >
       <ItemList scrollContainer={navEl} onItemClick={onItemClick} hoverInfoInWall={hoverInfoInWall} />
-
-      <!-- Admin Link (scrolls with content) -->
     </nav>
 
     {#if isProjectPage && currentIndex >= 0}
