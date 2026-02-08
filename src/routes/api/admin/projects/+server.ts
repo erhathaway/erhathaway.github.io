@@ -16,6 +16,18 @@ type ProjectInput = {
 	isPublished?: boolean;
 };
 
+const RESERVED_SLUGS = new Set(['admin', 'api', 'artifacts', 'robots.txt', 'sitemap.xml', 'favicon.ico']);
+
+function validateSlug(slug: string): string | null {
+	if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug)) {
+		return 'Slug must be lowercase alphanumeric with hyphens, e.g. "my-project"';
+	}
+	if (RESERVED_SLUGS.has(slug)) {
+		return `"${slug}" is a reserved name`;
+	}
+	return null;
+}
+
 const getDbOrThrow = (db: App.Locals['db']) => {
 	if (!db) {
 		throw error(500, 'Database not available');
@@ -125,6 +137,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	if (!name) {
 		throw error(400, 'name is required');
+	}
+
+	const slugError = validateSlug(name);
+	if (slugError) {
+		throw error(400, slugError);
 	}
 
 	const isPublished = payload.isPublished ?? false;

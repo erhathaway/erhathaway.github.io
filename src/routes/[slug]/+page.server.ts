@@ -4,21 +4,23 @@ import { projects, categories, projectCategories, projectAttributes, projectArti
 
 export const load: PageServerLoad = async ({ params, locals, url }) => {
 	const db = locals.db;
-	if (!db) return { meta: null };
+	if (!db) return { meta: null, projectId: 0 };
 
-	const projectId = parseInt(params.id);
-	if (isNaN(projectId)) return { meta: null };
+	const slug = params.slug;
 
 	const [row] = await db
 		.select({
+			id: projects.id,
 			name: projects.displayName,
 			description: projects.description
 		})
 		.from(projects)
-		.where(eq(projects.id, projectId))
+		.where(eq(projects.name, slug))
 		.limit(1);
 
-	if (!row) return { meta: null };
+	if (!row) return { meta: null, projectId: 0 };
+
+	const projectId = row.id;
 
 	const [catRows, yearRows, coverRows] = await Promise.all([
 		db
@@ -53,6 +55,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 
 	return {
 		origin: url.origin,
+		projectId,
 		meta: {
 			name: row.name,
 			description: row.description,

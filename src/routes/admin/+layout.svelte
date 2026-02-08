@@ -383,7 +383,8 @@
 		});
 
 		if (!response.ok) {
-			navError = 'Unable to create project.';
+			const body = await response.json().catch(() => null);
+			navError = body?.message || 'Unable to create project.';
 			return;
 		}
 

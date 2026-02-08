@@ -26,6 +26,7 @@ class PortfolioStore {
       }
       return {
         id: project.id,
+        slug: project.name,
         name: project.displayName,
         categories: project.categories,
         description: project.description ?? '',

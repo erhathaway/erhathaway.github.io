@@ -7,12 +7,13 @@
   import { getImageSources, getResponsiveSrcset, replaceExtension } from '$lib/utils/image-formats';
   let { data }: { data: PageData } = $props();
 
-  const item = $derived(portfolio.allItems.find(i => i.id === data.projectId));
+  const item = $derived(portfolio.allItems.find(i => i.slug === data.slug));
 
   type Artifact = { id: number; schema: string; dataBlob: unknown; isCover: boolean };
   let artifacts: Artifact[] = $state([]);
 
   async function loadArtifacts(projectId: number) {
+    if (!projectId) return;
     try {
       const res = await fetch(`/api/projects/${projectId}/artifacts`);
       if (res.ok) {
@@ -90,7 +91,7 @@
 
   let mainEl = $state<HTMLElement | null>(null);
 
-  const currentIndex = $derived(portfolio.filteredItems.findIndex(i => i.id === data.projectId));
+  const currentIndex = $derived(portfolio.filteredItems.findIndex(i => i.slug === data.slug));
   const hasPrev = $derived(currentIndex > 0);
   const hasNext = $derived(currentIndex >= 0 && currentIndex < portfolio.filteredItems.length - 1);
 
@@ -103,7 +104,7 @@
       const offset = e.key === 'ArrowLeft' ? -1 : 1;
       const nextIndex = currentIndex + offset;
       if (nextIndex >= 0 && nextIndex < portfolio.filteredItems.length) {
-        goto(`/project/${portfolio.filteredItems[nextIndex].id}`);
+        goto(`/${portfolio.filteredItems[nextIndex].slug}`);
       }
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       if (!mainEl) return;
@@ -141,7 +142,7 @@
     <meta property="og:title" content={data.meta.name} />
     <meta property="og:description" content={desc} />
     <meta property="og:type" content="article" />
-    <meta property="og:url" content="{data.origin}/project/{data.projectId}" />
+    <meta property="og:url" content="{data.origin}/{data.slug}" />
     {#if ogImage}
       <meta property="og:image" content={ogImage} />
       <meta name="twitter:card" content="summary_large_image" />
@@ -163,7 +164,7 @@
     {/if}
     <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors text-sm" onclick={(event) => {
       event.preventDefault();
-      goto('/', { state: { hoverId: data.projectId } });
+      goto('/');
     }}>
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />

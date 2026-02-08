@@ -10,11 +10,8 @@
   let itemEls = $state<Record<number, HTMLElement | null>>({});
   let itemScales = $state<Record<number, number>>({});
 
-  // Get the active project ID from the URL
-  const activeProjectId = $derived.by(() => {
-    const match = $page.url.pathname.match(/^\/project\/(\d+)/);
-    return match ? parseInt(match[1]) : null;
-  });
+  // Get the active project slug from the URL
+  const activeSlug = $derived($page.params.slug ?? null);
 
   function storeEl(id: number) {
     return (node: HTMLElement) => {
@@ -152,12 +149,12 @@
 
 <ul class="space-y-2.5 w-full">
   {#each portfolio.filteredItems as item (item.id)}
-    {@const isActive = activeProjectId === item.id}
+    {@const isActive = activeSlug === item.slug}
     {@const isHovered = hoveredItem?.id === item.id}
     {@const scale = itemScales[item.id] || 1}
     <li class="w-full" {@attach storeEl(item.id)}>
       <a
-        href="/project/{item.id}"
+        href="/{item.slug}"
         class="item-link hover:text-copper transition-colors duration-200 view-transition-item w-full block {isActive ? 'text-copper font-medium' : 'text-walnut'} {isHovered ? '' : 'pb-0.5'}"
         class:active={isActive || isHovered}
         class:active-project={isActive}

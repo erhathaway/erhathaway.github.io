@@ -2,6 +2,7 @@ export type GridSize = 'regular' | 'wide' | 'tall' | 'featured';
 
 export interface PortfolioItem {
   id: number;
+  slug: string;
   name: string;
   categories: string[];
   description: string;

@@ -15,7 +15,7 @@
 	import { initPostHog } from '$lib/posthog';
 
 	let { children } = $props();
-	const isProjectPage = $derived($page.route.id?.includes('/project/'));
+	const isProjectPage = $derived($page.route.id === '/[slug]');
 	const isAdminPage = $derived($page.route.id?.includes('/admin'));
 	const isHomePage = $derived($page.url.pathname === '/');
 
@@ -291,11 +291,11 @@
 
 	// Enable View Transitions API for home↔project navigation
 	onNavigate((navigation) => {
-		const fromPath = navigation.from?.url?.pathname;
-		const toPath = navigation.to?.url?.pathname;
-		const isHomeToProject = fromPath === '/' && toPath?.startsWith('/project');
-		const isProjectToHome = fromPath?.startsWith('/project') && toPath === '/';
-		const isProjectToProject = fromPath?.startsWith('/project') && toPath?.startsWith('/project');
+		const fromRoute = navigation.from?.route?.id;
+		const toRoute = navigation.to?.route?.id;
+		const isHomeToProject = fromRoute === '/(home)' && toRoute === '/[slug]';
+		const isProjectToHome = fromRoute === '/[slug]' && toRoute === '/(home)';
+		const isProjectToProject = fromRoute === '/[slug]' && toRoute === '/[slug]';
 		const HOME_RIGHT_PANEL_SCROLL_TOP_KEY = 'portfolio:homeRightPanelScrollTop';
 
 		const getHomeRightPanel = (): HTMLElement | null => {
@@ -489,8 +489,9 @@
 				{#if isProjectPage}
 					<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
 						event.preventDefault();
-						const projectId = $page.params?.id ? parseInt($page.params.id) : null;
-						goto('/', projectId ? { state: { hoverId: projectId } } : undefined);
+						const slug = $page.params?.slug;
+						const projectItem = slug ? portfolio.allItems.find(i => i.slug === slug) : null;
+						goto('/', projectItem ? { state: { hoverId: projectItem.id } } : undefined);
 					}}>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />

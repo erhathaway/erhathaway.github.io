@@ -24,14 +24,11 @@
     bottomAlignNav?: boolean;
   } = $props();
 
-  const isProjectPage = $derived($page.route.id?.includes('/project/'));
+  const isProjectPage = $derived($page.route.id === '/[slug]');
   const activeNamecardImage = $derived(isProjectPage ? portfolio.projectNamecardImage : portfolio.namecardImage);
 
-  const activeProjectId = $derived.by(() => {
-    const match = $page.url.pathname.match(/^\/project\/(\d+)/);
-    return match ? parseInt(match[1]) : null;
-  });
-  const currentIndex = $derived(activeProjectId !== null ? portfolio.filteredItems.findIndex(i => i.id === activeProjectId) : -1);
+  const activeSlug = $derived($page.params.slug ?? null);
+  const currentIndex = $derived(activeSlug !== null ? portfolio.filteredItems.findIndex(i => i.slug === activeSlug) : -1);
   const hasPrev = $derived(currentIndex > 0);
   const hasNext = $derived(currentIndex >= 0 && currentIndex < portfolio.filteredItems.length - 1);
   let navEl = $state<HTMLElement | null>(null);
@@ -155,7 +152,7 @@
           type="button"
           class="p-1.5 rounded-lg transition-colors duration-150 {hasPrev ? 'text-ash hover:text-copper cursor-pointer' : 'text-ash/20 cursor-default'}"
           disabled={!hasPrev}
-          onclick={() => hasPrev && goto(`/project/${portfolio.filteredItems[currentIndex - 1].id}`)}
+          onclick={() => hasPrev && goto(`/${portfolio.filteredItems[currentIndex - 1].slug}`)}
           aria-label="Previous project"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +164,7 @@
           type="button"
           class="p-1.5 rounded-lg transition-colors duration-150 {hasNext ? 'text-ash hover:text-copper cursor-pointer' : 'text-ash/20 cursor-default'}"
           disabled={!hasNext}
-          onclick={() => hasNext && goto(`/project/${portfolio.filteredItems[currentIndex + 1].id}`)}
+          onclick={() => hasNext && goto(`/${portfolio.filteredItems[currentIndex + 1].slug}`)}
           aria-label="Next project"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

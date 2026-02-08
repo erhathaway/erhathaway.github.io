@@ -53,8 +53,7 @@
   // Check if this item is the active project
   const isActive = $derived.by(() => {
     if (isStatic) return false;
-    const match = $page.url.pathname.match(/^\/project\/(\d+)/);
-    return match && parseInt(match[1]) === item.id;
+    return $page.params.slug === item.slug;
   });
 
   const gridSpan = $derived.by(() => {
@@ -95,7 +94,7 @@
 </script>
 
 <a
-  href={hrefOverride ?? `/project/${item.id}`}
+  href={hrefOverride ?? `/${item.slug}`}
   class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {isStatic ? '' : gridSpan} block {fadeInActive ? 'animate-fade-in' : ''} {isActive ? 'ring-2 ring-copper' : ''}"
   onmouseenter={handleMouseEnter}
   onanimationend={isStatic ? undefined : handleFadeInDone}

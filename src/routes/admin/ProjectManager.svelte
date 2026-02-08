@@ -252,7 +252,7 @@
 							<span class="inline-block h-1.5 w-1.5 rounded-full shrink-0 {project.isPublished ? 'bg-emerald-400' : 'bg-slate-400'}"></span>
 							<h3 class="text-sm font-semibold text-slate-900 truncate">{project.displayName || project.name}</h3>
 						</div>
-						<p class="text-[11px] text-slate-400 mt-0.5 truncate">/project/{project.id}</p>
+						<p class="text-[11px] text-slate-400 mt-0.5 truncate">/{project.name}</p>
 						{#if project.categories.length > 0}
 							<div class="flex flex-wrap gap-1 mt-1.5">
 								{#each project.categories as cat (cat)}

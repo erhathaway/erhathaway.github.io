@@ -18,6 +18,18 @@ type ProjectInput = {
 	isPublished?: boolean;
 };
 
+const RESERVED_SLUGS = new Set(['admin', 'api', 'artifacts', 'robots.txt', 'sitemap.xml', 'favicon.ico']);
+
+function validateSlug(slug: string): string | null {
+	if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug)) {
+		return 'Slug must be lowercase alphanumeric with hyphens, e.g. "my-project"';
+	}
+	if (RESERVED_SLUGS.has(slug)) {
+		return `"${slug}" is a reserved name`;
+	}
+	return null;
+}
+
 const getDbOrThrow = (db: App.Locals['db']) => {
 	if (!db) {
 		throw error(500, 'Database not available');
@@ -118,16 +130,30 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 		throw error(400, 'name is required');
 	}
 
-	const [updated] = await db
-		.update(projects)
-		.set({
-			name,
-			displayName,
-			description,
-			isPublished: isPublished ?? false
-		})
-		.where(eq(projects.id, id))
-		.returning();
+	const slugError = validateSlug(name);
+	if (slugError) {
+		throw error(400, slugError);
+	}
+
+	let updated;
+	try {
+		[updated] = await db
+			.update(projects)
+			.set({
+				name,
+				displayName,
+				description,
+				isPublished: isPublished ?? false
+			})
+			.where(eq(projects.id, id))
+			.returning();
+	} catch (e) {
+		const cause = e instanceof Error ? (e.cause as Error)?.message ?? e.message : String(e);
+		if (cause.includes('UNIQUE constraint failed')) {
+			throw error(409, `A project with the name "${name}" already exists`);
+		}
+		throw error(500, cause);
+	}
 
 	if (!updated) {
 		throw error(404, 'Project not found');
