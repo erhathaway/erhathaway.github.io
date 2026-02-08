@@ -5,6 +5,13 @@
 
   let { data } = $props();
 
+  // Set initial data synchronously so SSR renders the full grid (prevents CLS)
+  portfolio.projects = data.projects;
+  portfolio.categories = data.categories;
+  portfolio.namecardImage = data.namecardImage;
+  portfolio.projectNamecardImage = data.projectNamecardImage;
+
+  // Re-sync on client-side navigations when data changes
   $effect(() => {
     portfolio.projects = data.projects;
     portfolio.categories = data.categories;
