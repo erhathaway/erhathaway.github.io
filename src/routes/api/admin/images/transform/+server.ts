@@ -38,8 +38,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const origin = new URL(request.url).origin;
 	const result = await transformToModernFormats(bucket, r2Key, origin);
 
-	if (!result) {
-		throw error(500, 'Image transformation failed (may not be available in this environment)');
+	if (!result.ok) {
+		throw error(500, result.reason);
 	}
 
 	// Update the artifact's dataBlob in D1

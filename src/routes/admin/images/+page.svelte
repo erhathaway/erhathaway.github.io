@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import { useClerkContext } from 'svelte-clerk';
 
 	const ctx = useClerkContext();
+
+	const STORAGE_KEY = 'admin-images-filters';
+	const DEFAULTS = { formatFilter: 'all', statusFilter: 'all', projectFilter: 'all', sortField: 'size', sortDir: 'desc' } as const;
 
 	interface R2ImageItem {
 		key: string;
@@ -20,11 +24,12 @@
 	let loading = $state(true);
 	let loadError = $state('');
 
-	// Filters
-	let formatFilter: string = $state('all');
-	let statusFilter: string = $state('all');
-	let projectFilter: string = $state('all');
-	let sortBy: string = $state('size-desc');
+	// Filters + sort (restored from localStorage on mount)
+	let formatFilter: string = $state(DEFAULTS.formatFilter);
+	let statusFilter: string = $state(DEFAULTS.statusFilter);
+	let projectFilter: string = $state(DEFAULTS.projectFilter);
+	let sortField: string = $state(DEFAULTS.sortField);
+	let sortDir: string = $state(DEFAULTS.sortDir);
 
 	// Selection
 	let selectedKeys = $state<Set<string>>(new Set());
@@ -33,6 +38,75 @@
 	let transforming = $state(false);
 	let transformProgress = $state({ done: 0, total: 0, errors: 0 });
 	let transformResult = $state<{ total: number; errors: number; message?: string } | null>(null);
+
+	// --- localStorage persistence ---
+
+	function loadSavedFilters() {
+		if (!browser) return;
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY);
+			if (!raw) return;
+			const saved = JSON.parse(raw);
+			if (saved.formatFilter) formatFilter = saved.formatFilter;
+			if (saved.statusFilter) statusFilter = saved.statusFilter;
+			if (saved.projectFilter) projectFilter = saved.projectFilter;
+			if (saved.sortField) sortField = saved.sortField;
+			if (saved.sortDir) sortDir = saved.sortDir;
+		} catch {
+			// ignore corrupt data
+		}
+	}
+
+	function saveFilters() {
+		if (!browser) return;
+		try {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify({ formatFilter, statusFilter, projectFilter, sortField, sortDir }));
+		} catch {
+			// ignore
+		}
+	}
+
+	$effect(() => {
+		// Track all filter values so any change triggers a save
+		void formatFilter;
+		void statusFilter;
+		void projectFilter;
+		void sortField;
+		void sortDir;
+		saveFilters();
+	});
+
+	const hasNonDefaultFilters = $derived(
+		formatFilter !== DEFAULTS.formatFilter ||
+		statusFilter !== DEFAULTS.statusFilter ||
+		projectFilter !== DEFAULTS.projectFilter ||
+		sortField !== DEFAULTS.sortField ||
+		sortDir !== DEFAULTS.sortDir
+	);
+
+	function resetFilters() {
+		formatFilter = DEFAULTS.formatFilter;
+		statusFilter = DEFAULTS.statusFilter;
+		projectFilter = DEFAULTS.projectFilter;
+		sortField = DEFAULTS.sortField;
+		sortDir = DEFAULTS.sortDir;
+	}
+
+	// --- Column sort ---
+
+	type SortableColumn = 'format' | 'size' | 'project' | 'date';
+
+	function toggleSort(column: SortableColumn) {
+		if (sortField === column) {
+			sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+		} else {
+			sortField = column;
+			// sensible default direction per column
+			sortDir = column === 'size' || column === 'date' ? 'desc' : 'asc';
+		}
+	}
+
+	// --- Data ---
 
 	async function getToken() {
 		const clerk = ctx.clerk;
@@ -94,14 +168,13 @@
 		}
 
 		// Sort
-		const [field, dir] = sortBy.split('-') as [string, string];
 		result = [...result].sort((a, b) => {
 			let cmp = 0;
-			if (field === 'size') cmp = a.size - b.size;
-			else if (field === 'date') cmp = new Date(a.uploaded).getTime() - new Date(b.uploaded).getTime();
-			else if (field === 'format') cmp = (a.key.split('.').pop() ?? '').localeCompare(b.key.split('.').pop() ?? '');
-			else if (field === 'project') cmp = (a.projectName ?? '').localeCompare(b.projectName ?? '');
-			return dir === 'desc' ? -cmp : cmp;
+			if (sortField === 'size') cmp = a.size - b.size;
+			else if (sortField === 'date') cmp = new Date(a.uploaded).getTime() - new Date(b.uploaded).getTime();
+			else if (sortField === 'format') cmp = (a.key.split('.').pop() ?? '').localeCompare(b.key.split('.').pop() ?? '');
+			else if (sortField === 'project') cmp = (a.projectName ?? '').localeCompare(b.projectName ?? '');
+			return sortDir === 'desc' ? -cmp : cmp;
 		});
 
 		return result;
@@ -219,6 +292,7 @@
 	}
 
 	onMount(() => {
+		loadSavedFilters();
 		void loadImages();
 	});
 </script>
@@ -270,20 +344,16 @@
 				{/each}
 			</select>
 		</label>
-		<label class="flex items-center gap-1.5">
-			<span class="text-[11px] font-medium text-slate-500">Sort</span>
-			<select
-				bind:value={sortBy}
-				class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+
+		{#if hasNonDefaultFilters}
+			<button
+				type="button"
+				onclick={resetFilters}
+				class="text-[11px] text-slate-400 hover:text-slate-600 transition-colors duration-150"
 			>
-				<option value="size-desc">Size (largest)</option>
-				<option value="size-asc">Size (smallest)</option>
-				<option value="date-desc">Newest</option>
-				<option value="date-asc">Oldest</option>
-				<option value="format-asc">Format A-Z</option>
-				<option value="project-asc">Project A-Z</option>
-			</select>
-		</label>
+				Reset filters
+			</button>
+		{/if}
 
 		{#if transformableItems.length > 0}
 			<button
@@ -362,12 +432,48 @@
 						</th>
 						<th class="w-12 px-2 py-2.5"></th>
 						<th class="px-3 py-2.5 text-left font-medium text-slate-500">Key</th>
-						<th class="px-3 py-2.5 text-left font-medium text-slate-500 w-16">Format</th>
-						<th class="px-3 py-2.5 text-right font-medium text-slate-500 w-20">Size</th>
-						<th class="px-3 py-2.5 text-left font-medium text-slate-500 w-28">Project</th>
+						<th class="px-3 py-2.5 text-left w-16">
+							<button type="button" class="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-slate-700 transition-colors" onclick={() => toggleSort('format')}>
+								Format
+								{#if sortField === 'format'}
+									<svg class="w-3 h-3 {sortDir === 'desc' ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+								{:else}
+									<svg class="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+								{/if}
+							</button>
+						</th>
+						<th class="px-3 py-2.5 text-right w-20">
+							<button type="button" class="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-slate-700 transition-colors ml-auto" onclick={() => toggleSort('size')}>
+								Size
+								{#if sortField === 'size'}
+									<svg class="w-3 h-3 {sortDir === 'desc' ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+								{:else}
+									<svg class="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+								{/if}
+							</button>
+						</th>
+						<th class="px-3 py-2.5 text-left w-28">
+							<button type="button" class="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-slate-700 transition-colors" onclick={() => toggleSort('project')}>
+								Project
+								{#if sortField === 'project'}
+									<svg class="w-3 h-3 {sortDir === 'desc' ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+								{:else}
+									<svg class="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+								{/if}
+							</button>
+						</th>
 						<th class="px-3 py-2.5 text-left font-medium text-slate-500 w-20">Field</th>
 						<th class="px-3 py-2.5 text-center font-medium text-slate-500 w-20">Status</th>
-						<th class="px-3 py-2.5 text-left font-medium text-slate-500 w-24">Uploaded</th>
+						<th class="px-3 py-2.5 text-left w-24">
+							<button type="button" class="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-slate-700 transition-colors" onclick={() => toggleSort('date')}>
+								Uploaded
+								{#if sortField === 'date'}
+									<svg class="w-3 h-3 {sortDir === 'desc' ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+								{:else}
+									<svg class="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+								{/if}
+							</button>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
