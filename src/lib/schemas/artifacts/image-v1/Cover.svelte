@@ -19,7 +19,7 @@
 <div class={`relative overflow-hidden rounded-2xl ${className}`}>
 	{#if data.imageFormats?.length}
 		<picture>
-			{#each getImageSources(data.imageUrl, data.imageFormats, '100vw') as source (source.type)}
+			{#each getImageSources(data.imageUrl, data.imageFormats, '(max-width: 899px) 100vw, calc(100vw - 320px)') as source (source.type)}
 				<source srcset={source.srcset} type={source.type} sizes={source.sizes} />
 			{/each}
 			<img
@@ -28,7 +28,7 @@
 				loading="lazy"
 				class="h-full w-full object-cover"
 				srcset={imgSrcset}
-				sizes={imgSrcset ? '100vw' : undefined}
+				sizes={imgSrcset ? '(max-width: 899px) 100vw, calc(100vw - 320px)' : undefined}
 				style:object-position={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
 				style:transform={hasPosition && data.zoom && data.zoom !== 1 ? `scale(${data.zoom})` : undefined}
 				style:transform-origin={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
@@ -41,7 +41,7 @@
 			loading="lazy"
 			class="h-full w-full object-cover"
 			srcset={imgSrcset}
-			sizes={imgSrcset ? '100vw' : undefined}
+			sizes={imgSrcset ? '(max-width: 899px) 100vw, calc(100vw - 320px)' : undefined}
 			style:object-position={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
 			style:transform={hasPosition && data.zoom && data.zoom !== 1 ? `scale(${data.zoom})` : undefined}
 			style:transform-origin={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
