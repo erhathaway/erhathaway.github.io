@@ -313,7 +313,8 @@ async function createProject(
 			name: proj.name,
 			displayName: proj.displayName,
 			description: proj.description,
-			isPublished: proj.isPublished
+			isPublished: proj.isPublished,
+			sortOrder: proj.sortOrder ?? 0
 		})
 		.returning();
 
@@ -372,7 +373,8 @@ async function createProject(
 			projectId,
 			schema: artifact.schema,
 			dataBlob,
-			isPublished: artifact.isPublished
+			isPublished: artifact.isPublished,
+			sortOrder: artifact.sortOrder ?? 0
 		}).returning();
 		summary.artifactsCreated++;
 
@@ -410,7 +412,8 @@ async function mergeProject(
 		.set({
 			displayName: proj.displayName,
 			description: proj.description,
-			isPublished: proj.isPublished
+			isPublished: proj.isPublished,
+			sortOrder: proj.sortOrder ?? 0
 		})
 		.where(eq(projects.id, existingProjectId));
 
@@ -590,7 +593,8 @@ async function mergeProject(
 				projectId: existingProjectId,
 				schema: artifact.schema,
 				dataBlob,
-				isPublished: artifact.isPublished
+				isPublished: artifact.isPublished,
+				sortOrder: artifact.sortOrder ?? 0
 			})
 			.returning();
 		summary.artifactsCreated++;

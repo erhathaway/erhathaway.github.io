@@ -114,7 +114,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 				id: projectArtifacts.id,
 				schema: projectArtifacts.schema,
 				dataBlob: projectArtifacts.dataBlob,
-				isPublished: projectArtifacts.isPublished
+				isPublished: projectArtifacts.isPublished,
+				sortOrder: projectArtifacts.sortOrder
 			})
 			.from(projectArtifacts)
 			.where(eq(projectArtifacts.projectId, project.id));
@@ -146,6 +147,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 				schema: artifact.schema,
 				dataBlob,
 				isPublished: artifact.isPublished,
+				sortOrder: artifact.sortOrder,
 				isCover,
 				...(isCover && coverRow ? { coverPositionX: coverRow.positionX, coverPositionY: coverRow.positionY, coverZoom: coverRow.zoom } : {})
 			};
@@ -216,6 +218,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			displayName: project.displayName,
 			description: project.description,
 			isPublished: project.isPublished,
+			sortOrder: project.sortOrder,
 			categories: projCatRows.map((c) => c.name),
 			attributes: exportAttrs,
 			artifacts: exportArtifacts

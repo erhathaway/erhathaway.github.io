@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, asc } from 'drizzle-orm';
 import { error, json } from '@sveltejs/kit';
 import { projectArtifacts, projectCoverArtifact, projects } from '$lib/server/db/schema';
 
@@ -64,7 +64,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 			isPublished: projectArtifacts.isPublished
 		})
 		.from(projectArtifacts)
-		.where(and(eq(projectArtifacts.projectId, projectId), eq(projectArtifacts.isPublished, true)));
+		.where(and(eq(projectArtifacts.projectId, projectId), eq(projectArtifacts.isPublished, true)))
+		.orderBy(asc(projectArtifacts.sortOrder), asc(projectArtifacts.id));
 
 	const normalized = rows.map((row) => ({
 		...normalizeArtifactRow(row),

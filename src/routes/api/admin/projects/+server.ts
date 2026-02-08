@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { eq, max, asc } from 'drizzle-orm';
 import { projects, projectArtifacts, projectCoverArtifact, categories, projectCategories, projectAttributes } from '$lib/server/db/schema';
 
 const corsHeaders = {
@@ -44,7 +44,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 		})
 		.from(projects)
 		.leftJoin(projectCoverArtifact, eq(projects.id, projectCoverArtifact.projectId))
-		.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id));
+		.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id))
+		.orderBy(asc(projects.sortOrder), asc(projects.id));
 
 	// Fetch categories and nav attributes for all projects
 	const projectIds = rows.map((r) => r.id);
@@ -128,11 +129,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const isPublished = payload.isPublished ?? false;
 
+	// Set sortOrder to max + 1 so new projects appear at the end
+	const [maxRow] = await db.select({ maxOrder: max(projects.sortOrder) }).from(projects);
+	const sortOrder = (maxRow?.maxOrder ?? -1) + 1;
+
 	let created;
 	try {
 		[created] = await db
 			.insert(projects)
-			.values({ name, displayName, description, isPublished })
+			.values({ name, displayName, description, isPublished, sortOrder })
 			.returning();
 	} catch (e) {
 		const cause = e instanceof Error ? (e.cause as Error)?.message ?? e.message : String(e);

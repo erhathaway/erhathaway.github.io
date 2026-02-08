@@ -16,6 +16,72 @@
 	let projectsError = $state('');
 	let projectsSuccess = $state('');
 
+	let rearranging = $state(false);
+	let draggedId = $state<number | null>(null);
+	let dropTargetId = $state<number | null>(null);
+	let reorderSaving = $state(false);
+
+	function handleDragStart(event: DragEvent, project: AdminProject) {
+		draggedId = project.id;
+		if (event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move';
+			event.dataTransfer.setData('text/plain', String(project.id));
+		}
+	}
+
+	function handleDragOver(event: DragEvent, project: AdminProject) {
+		event.preventDefault();
+		if (event.dataTransfer) {
+			event.dataTransfer.dropEffect = 'move';
+		}
+		dropTargetId = project.id;
+	}
+
+	function handleDragLeave() {
+		dropTargetId = null;
+	}
+
+	async function handleDrop(event: DragEvent, targetProject: AdminProject) {
+		event.preventDefault();
+		dropTargetId = null;
+
+		if (draggedId === null || draggedId === targetProject.id) {
+			draggedId = null;
+			return;
+		}
+
+		const fromIndex = adminStore.projects.findIndex((p) => p.id === draggedId);
+		const toIndex = adminStore.projects.findIndex((p) => p.id === targetProject.id);
+		if (fromIndex === -1 || toIndex === -1) {
+			draggedId = null;
+			return;
+		}
+
+		const reordered = [...adminStore.projects];
+		const [moved] = reordered.splice(fromIndex, 1);
+		reordered.splice(toIndex, 0, moved);
+		adminStore.projects = reordered;
+		draggedId = null;
+
+		reorderSaving = true;
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await fetch('/api/admin/projects/reorder', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ ids: adminStore.projects.map((p) => p.id) })
+			});
+		} finally {
+			reorderSaving = false;
+		}
+	}
+
+	function handleDragEnd() {
+		draggedId = null;
+		dropTargetId = null;
+	}
+
 	const filteredProjects = $derived.by(() => {
 		if (projectsFilter === 'published') {
 			return projects.filter((project) => project.isPublished);
@@ -90,6 +156,23 @@
 		<div class="flex items-center gap-2">
 			<button
 				type="button"
+				onclick={() => { rearranging = !rearranging; }}
+				class={`px-3.5 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150 ${
+					rearranging
+						? 'border-blue-300 bg-blue-50 text-blue-700'
+						: 'border-slate-200 text-slate-600 hover:bg-slate-50'
+				}`}
+			>
+				{#if reorderSaving}
+					Saving...
+				{:else if rearranging}
+					Done
+				{:else}
+					Rearrange
+				{/if}
+			</button>
+			<button
+				type="button"
 				onclick={fetchProjects}
 				disabled={projectsLoading}
 				class="px-3.5 py-1.5 text-xs font-medium border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
@@ -140,10 +223,27 @@
 		<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
 			{#each filteredProjects as project (project.id)}
 				{@const portfolioItem = toPortfolioItem(project)}
-				<div class="group rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-slate-300 hover:shadow-md transition-all duration-200">
+				<div
+					class="group rounded-2xl overflow-hidden border bg-white transition-all duration-200 {rearranging
+						? (draggedId === project.id ? 'opacity-50 border-slate-300' : dropTargetId === project.id ? 'border-blue-400 border-2 shadow-lg' : 'border-slate-200 cursor-grab hover:border-slate-300')
+						: 'border-slate-200 hover:border-slate-300 hover:shadow-md'}"
+					draggable={rearranging}
+					ondragstart={(e) => rearranging && handleDragStart(e, project)}
+					ondragover={(e) => rearranging && handleDragOver(e, project)}
+					ondragleave={() => rearranging && handleDragLeave()}
+					ondrop={(e) => rearranging && handleDrop(e, project)}
+					ondragend={() => rearranging && handleDragEnd()}
+				>
 					<!-- Header: status + name + categories -->
 					<div class="p-3 pb-2">
 						<div class="flex items-center gap-1.5">
+							{#if rearranging}
+								<svg class="w-4 h-4 text-slate-300 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+									<circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
+									<circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+									<circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
+								</svg>
+							{/if}
 							<span class="inline-block h-1.5 w-1.5 rounded-full shrink-0 {project.isPublished ? 'bg-emerald-400' : 'bg-slate-400'}"></span>
 							<h3 class="text-sm font-semibold text-slate-900 truncate">{project.displayName || project.name}</h3>
 						</div>
@@ -158,7 +258,7 @@
 					</div>
 
 					<!-- Gallery tile -->
-					<GalleryItem item={portfolioItem} static href="/admin/projects/{project.id}" />
+					<GalleryItem item={portfolioItem} static href={rearranging ? undefined : `/admin/projects/${project.id}`} />
 
 					<!-- Footer: attributes + description -->
 					<div class="p-3 pt-2">

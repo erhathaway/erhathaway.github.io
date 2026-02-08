@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, max, asc } from 'drizzle-orm';
 import { error, json } from '@sveltejs/kit';
 import { projectArtifacts, projects, projectCoverArtifact } from '$lib/server/db/schema';
 import { validateArtifactData } from '$lib/schemas/artifacts';
@@ -115,7 +115,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 				eq(projectCoverArtifact.artifactId, projectArtifacts.id)
 			)
 		)
-		.where(eq(projectArtifacts.projectId, projectId));
+		.where(eq(projectArtifacts.projectId, projectId))
+		.orderBy(asc(projectArtifacts.sortOrder), asc(projectArtifacts.id));
 
 	const normalized = rows.map((row) => ({
 		...normalizeArtifactRow(row),
@@ -134,13 +135,21 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	await fetchProjectOrThrow(db, projectId);
 	const artifact = parseArtifact(await request.json());
 
+	// Set sortOrder to max + 1 so new artifacts appear at the end
+	const [maxRow] = await db
+		.select({ maxOrder: max(projectArtifacts.sortOrder) })
+		.from(projectArtifacts)
+		.where(eq(projectArtifacts.projectId, projectId));
+	const sortOrder = (maxRow?.maxOrder ?? -1) + 1;
+
 	const [created] = await db
 		.insert(projectArtifacts)
 		.values({
 			projectId,
 			schema: artifact.schema,
 			dataBlob: artifact.dataBlob,
-			isPublished: artifact.isPublished
+			isPublished: artifact.isPublished,
+			sortOrder
 		})
 		.returning();
 

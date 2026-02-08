@@ -36,6 +36,7 @@ export interface ExportProject {
 	displayName: string;
 	description: string | null;
 	isPublished: boolean;
+	sortOrder?: number;
 	categories: string[];
 	attributes: ExportAttribute[];
 	artifacts: ExportArtifact[];
@@ -54,6 +55,7 @@ export interface ExportArtifact {
 	schema: string;
 	dataBlob: Record<string, unknown>;
 	isPublished: boolean;
+	sortOrder?: number;
 	isCover?: boolean;
 	coverPositionX?: number;
 	coverPositionY?: number;

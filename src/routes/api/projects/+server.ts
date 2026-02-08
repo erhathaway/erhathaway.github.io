@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, asc } from 'drizzle-orm';
 import { projects, projectArtifacts, projectCoverArtifact, categories, projectCategories, projectAttributes } from '$lib/server/db/schema';
 
 const corsHeaders = {
@@ -38,7 +38,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.from(projects)
 		.leftJoin(projectCoverArtifact, eq(projects.id, projectCoverArtifact.projectId))
 		.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id))
-		.where(eq(projects.isPublished, true));
+		.where(eq(projects.isPublished, true))
+		.orderBy(asc(projects.sortOrder), asc(projects.id));
 
 	// Fetch categories and nav attributes for all projects
 	const projectIds = rows.map((r) => r.id);

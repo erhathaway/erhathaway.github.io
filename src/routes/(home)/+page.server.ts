@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, asc } from 'drizzle-orm';
 import {
 	projects,
 	projectArtifacts,
@@ -33,7 +33,8 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 			.from(projects)
 			.leftJoin(projectCoverArtifact, eq(projects.id, projectCoverArtifact.projectId))
 			.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id))
-			.where(eq(projects.isPublished, true)),
+			.where(eq(projects.isPublished, true))
+			.orderBy(asc(projects.sortOrder), asc(projects.id)),
 		db.select().from(categories).where(eq(categories.isPublished, true)),
 		db
 			.select()

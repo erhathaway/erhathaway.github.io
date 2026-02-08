@@ -6,7 +6,8 @@ export const projects = sqliteTable('projects', {
 	name: text('name').notNull().unique(),
 	displayName: text('display_name').notNull(),
 	description: text('description'),
-	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
+	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false),
+	sortOrder: integer('sort_order').notNull().default(0)
 });
 
 export const categories = sqliteTable('categories', {
@@ -34,7 +35,8 @@ export const projectArtifacts = sqliteTable('project_artifacts', {
 		.references(() => projects.id, { onDelete: 'cascade' }),
 	schema: text('schema').notNull(),
 	dataBlob: text('data_blob', { mode: 'json' }).notNull(),
-	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false)
+	isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false),
+	sortOrder: integer('sort_order').notNull().default(0)
 });
 
 export const projectAttributes = sqliteTable('project_attributes', {

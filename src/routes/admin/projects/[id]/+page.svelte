@@ -104,6 +104,72 @@
 	let defaultPublishNew = $state(true);
 	let defaultSkipDescription = $state(true);
 
+	let rearranging = $state(false);
+	let draggedId = $state<number | null>(null);
+	let dropTargetId = $state<number | null>(null);
+	let reorderSaving = $state(false);
+
+	function handleArtifactDragStart(event: DragEvent, artifact: ProjectArtifact) {
+		draggedId = artifact.id;
+		if (event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move';
+			event.dataTransfer.setData('text/plain', String(artifact.id));
+		}
+	}
+
+	function handleArtifactDragOver(event: DragEvent, artifact: ProjectArtifact) {
+		event.preventDefault();
+		if (event.dataTransfer) {
+			event.dataTransfer.dropEffect = 'move';
+		}
+		dropTargetId = artifact.id;
+	}
+
+	function handleArtifactDragLeave() {
+		dropTargetId = null;
+	}
+
+	async function handleArtifactDrop(event: DragEvent, targetArtifact: ProjectArtifact) {
+		event.preventDefault();
+		dropTargetId = null;
+
+		if (draggedId === null || draggedId === targetArtifact.id) {
+			draggedId = null;
+			return;
+		}
+
+		const fromIndex = artifacts.findIndex((a) => a.id === draggedId);
+		const toIndex = artifacts.findIndex((a) => a.id === targetArtifact.id);
+		if (fromIndex === -1 || toIndex === -1) {
+			draggedId = null;
+			return;
+		}
+
+		const reordered = [...artifacts];
+		const [moved] = reordered.splice(fromIndex, 1);
+		reordered.splice(toIndex, 0, moved);
+		artifacts = reordered;
+		draggedId = null;
+
+		reorderSaving = true;
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await fetch(`/api/admin/projects/${projectId}/artifacts/reorder`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ ids: artifacts.map((a) => a.id) })
+			});
+		} finally {
+			reorderSaving = false;
+		}
+	}
+
+	function handleArtifactDragEnd() {
+		draggedId = null;
+		dropTargetId = null;
+	}
+
 	let editingArtifactIndex = $derived(
 		editingArtifactId !== null ? artifacts.findIndex((a) => a.id === editingArtifactId) : -1
 	);
@@ -1138,9 +1204,28 @@
 
 		<section class="mt-6">
 			<div class="flex items-center justify-between gap-4 mb-6">
-				<div>
-					<h2 class="text-lg font-semibold text-slate-900">Artifacts</h2>
-					<p class="text-sm text-slate-500 mt-0.5">Versioned data snapshots for the project.</p>
+				<div class="flex items-center gap-3">
+					<div>
+						<h2 class="text-lg font-semibold text-slate-900">Artifacts</h2>
+						<p class="text-sm text-slate-500 mt-0.5">Versioned data snapshots for the project.</p>
+					</div>
+					<button
+						type="button"
+						onclick={() => { rearranging = !rearranging; }}
+						class={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150 ${
+							rearranging
+								? 'border-blue-300 bg-blue-50 text-blue-700'
+								: 'border-slate-200 text-slate-600 hover:bg-slate-50'
+						}`}
+					>
+						{#if reorderSaving}
+							Saving...
+						{:else if rearranging}
+							Done
+						{:else}
+							Rearrange
+						{/if}
+					</button>
 				</div>
 				<div class="flex items-center gap-4">
 					<div class="flex items-center gap-2">
@@ -1174,7 +1259,9 @@
 
 			<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 				<!-- New Artifact Card -->
-				{#if dropUploading}
+				{#if rearranging}
+					<!-- Hide add card during rearrange mode -->
+				{:else if dropUploading}
 					<div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-3 min-h-[160px] transition-all duration-150">
 						<div class="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-600"></div>
 						<span class="text-xs font-medium text-slate-500">{dropProgress.done} of {dropProgress.total} uploaded</span>
@@ -1253,18 +1340,33 @@
 				<!-- Existing Artifacts -->
 				{#each artifacts as artifact (artifact.id)}
 					<div
-						class="rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col cursor-pointer hover:border-slate-300 hover:shadow-md transition-all duration-200"
-						onclick={() => startArtifactEdit(artifact)}
+						class="rounded-2xl border bg-white overflow-hidden flex flex-col transition-all duration-200 {rearranging
+							? (draggedId === artifact.id ? 'opacity-50 border-slate-300' : dropTargetId === artifact.id ? 'border-blue-400 border-2 shadow-lg' : 'border-slate-200 cursor-grab hover:border-slate-300')
+							: 'border-slate-200 cursor-pointer hover:border-slate-300 hover:shadow-md'}"
+						draggable={rearranging}
+						ondragstart={(e) => rearranging && handleArtifactDragStart(e, artifact)}
+						ondragover={(e) => rearranging && handleArtifactDragOver(e, artifact)}
+						ondragleave={() => rearranging && handleArtifactDragLeave()}
+						ondrop={(e) => rearranging && handleArtifactDrop(e, artifact)}
+						ondragend={() => rearranging && handleArtifactDragEnd()}
+						onclick={() => !rearranging && startArtifactEdit(artifact)}
 						role="button"
 						tabindex="0"
 						onkeydown={(event) => {
-							if (event.key === 'Enter' || event.key === ' ') {
+							if (!rearranging && (event.key === 'Enter' || event.key === ' ')) {
 								event.preventDefault();
 								startArtifactEdit(artifact);
 							}
 						}}
 					>
 						<div class="flex flex-wrap items-center gap-2.5 text-xs p-3 pb-0">
+							{#if rearranging}
+								<svg class="w-4 h-4 text-slate-300 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+									<circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
+									<circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+									<circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
+								</svg>
+							{/if}
 							<span
 								class={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium ${
 									artifact.isPublished
