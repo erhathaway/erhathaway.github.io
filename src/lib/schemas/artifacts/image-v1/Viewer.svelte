@@ -27,7 +27,7 @@
 					src={data.imageUrl}
 					alt={data.description ?? ''}
 					loading="lazy"
-					class="w-full object-cover"
+					class="w-full max-h-[70vh] object-cover"
 					srcset={imgSrcset}
 					sizes={imgSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
 					style:object-position={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
@@ -40,7 +40,7 @@
 				src={data.imageUrl}
 				alt={data.description ?? ''}
 				loading="lazy"
-				class="w-full object-cover"
+				class="w-full max-h-[70vh] object-cover"
 				srcset={imgSrcset}
 				sizes={imgSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
 				style:object-position={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
