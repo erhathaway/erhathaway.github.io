@@ -637,6 +637,25 @@
 						</li>
 					</ul>
 				</div>
+
+				<!-- Bots -->
+				<div>
+					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Bots</p>
+					<ul class="space-y-0.5">
+						<li>
+							<a
+								href="/admin/bots"
+								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
+									$page.url.pathname.startsWith('/admin/bots')
+										? 'bg-slate-900 text-white'
+										: 'text-slate-600 hover:bg-slate-50'
+								}`}
+							>
+								<span class="font-medium">Check-ins</span>
+							</a>
+						</li>
+					</ul>
+				</div>
 			</div>
 
 			<!-- Back to site -->

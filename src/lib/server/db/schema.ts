@@ -78,6 +78,23 @@ export const siteSettings = sqliteTable('site_settings', {
 	updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`)
 });
 
+export const botCheckins = sqliteTable('bot_checkins', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	identifier: text('identifier').notNull(),
+	userAgent: text('user_agent').notNull(),
+	payload: text('payload').notNull(),
+	ipAddress: text('ip_address'),
+	createdAt: text('created_at').notNull().default(sql`(datetime('now'))`)
+});
+
+export const botMessages = sqliteTable('bot_messages', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	botIdentifier: text('bot_identifier').notNull(),
+	message: text('message').notNull(),
+	isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+	createdAt: text('created_at').notNull().default(sql`(datetime('now'))`)
+});
+
 export const artifactMetadata = sqliteTable('artifact_metadata', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	artifactId: integer('artifact_id')

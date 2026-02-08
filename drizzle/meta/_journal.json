@@ -36,6 +36,13 @@
       "when": 1770513368773,
       "tag": "0004_gifted_hellcat",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1770549536154,
+      "tag": "0005_melted_grandmaster",
+      "breakpoints": true
     }
   ]
 }
