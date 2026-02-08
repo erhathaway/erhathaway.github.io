@@ -3,8 +3,12 @@
   import { page } from '$app/stores';
   import HoverInfo from './HoverInfo.svelte';
   import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
 
   let { scrollContainer, onItemClick, hoverInfoInWall = false }: { scrollContainer: HTMLElement | null, onItemClick?: () => void, hoverInfoInWall?: boolean } = $props();
+
+  let innerWidth = $state(browser ? window.innerWidth : 1200);
+  const isMobile = $derived(innerWidth < 1024);
 
   const hoveredItem = $derived(portfolio.hoveredItem);
   let itemEls = $state<Record<number, HTMLElement | null>>({});
@@ -147,6 +151,8 @@
   });
 </script>
 
+<svelte:window bind:innerWidth={innerWidth} />
+
 <ul class="space-y-2.5 w-full">
   {#each portfolio.filteredItems as item (item.id)}
     {@const isActive = activeSlug === item.slug}
@@ -168,7 +174,7 @@
             <span
               class="item-label block px-8"
               class:active-project={isActive}
-              style="font-family: 'Playfair Display', Georgia, serif; font-size: {isActive ? 1.35 * scale : 1.1 * scale}rem; opacity: {isActive ? Math.pow(scale, 3) : Math.pow(scale, 3) * 0.7};"
+              style="font-family: 'Playfair Display', Georgia, serif; font-size: {isActive ? (isMobile ? 1.35 : 1.05) * scale : (isMobile ? 1.1 : 0.85) * scale}rem; opacity: {isActive ? Math.pow(scale, 3) : Math.pow(scale, 3) * 0.7};"
             >
               {item.name}
             </span>
