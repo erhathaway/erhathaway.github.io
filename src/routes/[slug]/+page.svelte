@@ -176,9 +176,9 @@
 {#key item.id}
 <main bind:this={mainEl} class="h-screen overflow-y-auto bg-charcoal" style="border-left: 1px solid #00000024;">
     <!-- Hero: text + cover side by side -->
-    <div class="flex min-h-screen items-center">
+    <div class="flex flex-col lg:flex-row min-h-screen lg:items-center">
       <!-- Left: project info -->
-      <div class="w-80 shrink-0 self-stretch flex flex-col p-8 pt-10">
+      <div class="lg:w-64 shrink-0 self-stretch flex flex-col p-8 pt-10">
         <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-10 text-sm" onclick={(event) => {
           event.preventDefault();
           goto('/', { state: { hoverId: item.id } });
@@ -216,7 +216,7 @@
       </div>
 
       <!-- Right: cover image -->
-      <div class="flex-1 min-w-0 flex items-center justify-center p-8">
+      <div class="flex-1 flex items-center justify-center p-8">
         <div
           class="group relative h-[67vh] aspect-square max-w-full overflow-hidden rounded-lg vt-exclude-namecard"
           style="view-transition-name: project-image-{item.id}"
