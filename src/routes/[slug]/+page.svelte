@@ -38,12 +38,15 @@
   }
 
   function distributeByAspectRatios(items: Artifact[], ratios: Map<number, number>): [Artifact[], Artifact[]] {
+    // Cap ratio so the masonry algorithm reflects the max-h-[70vh] visual constraint.
+    // A column is ~50% container width; 70vh / 50vw ≈ 1.4 is a reasonable max ratio.
+    const MAX_RATIO = 1.4;
     const cols: [Artifact[], Artifact[]] = [[], []];
     const heights = [0, 0];
     for (const item of items) {
       const shorter = heights[0] <= heights[1] ? 0 : 1;
       cols[shorter].push(item);
-      heights[shorter] += ratios.get(item.id) ?? 1;
+      heights[shorter] += Math.min(ratios.get(item.id) ?? 1, MAX_RATIO);
     }
     return cols;
   }
