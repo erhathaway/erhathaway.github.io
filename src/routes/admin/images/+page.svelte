@@ -17,6 +17,8 @@
 		projectId?: number;
 		projectName?: string;
 		urlField?: 'imageUrl' | 'hoverImageUrl';
+		settingKey?: string;
+		settingLabel?: string;
 		isOptimized: boolean;
 	}
 
@@ -160,7 +162,7 @@
 		} else if (statusFilter === 'unoptimized') {
 			result = result.filter((item) => !item.isOptimized);
 		} else if (statusFilter === 'orphan') {
-			result = result.filter((item) => !item.artifactId);
+			result = result.filter((item) => !item.artifactId && !item.settingKey);
 		}
 
 		if (projectFilter !== 'all') {
@@ -173,7 +175,7 @@
 			if (sortField === 'size') cmp = a.size - b.size;
 			else if (sortField === 'date') cmp = new Date(a.uploaded).getTime() - new Date(b.uploaded).getTime();
 			else if (sortField === 'format') cmp = (a.key.split('.').pop() ?? '').localeCompare(b.key.split('.').pop() ?? '');
-			else if (sortField === 'project') cmp = (a.projectName ?? '').localeCompare(b.projectName ?? '');
+			else if (sortField === 'project') cmp = (a.projectName ?? a.settingLabel ?? '').localeCompare(b.projectName ?? b.settingLabel ?? '');
 			return sortDir === 'desc' ? -cmp : cmp;
 		});
 
@@ -215,10 +217,10 @@
 
 	const allSelected = $derived(filteredItems.length > 0 && selectedKeys.size === filteredItems.length);
 
-	// Transformable: selected items that are unoptimized AND have an artifact
+	// Transformable: selected items that are unoptimized AND have an artifact or site setting
 	const transformableItems = $derived.by(() => {
 		return filteredItems.filter(
-			(item) => selectedKeys.has(item.key) && !item.isOptimized && item.artifactId && item.urlField
+			(item) => selectedKeys.has(item.key) && !item.isOptimized && ((item.artifactId && item.urlField) || item.settingKey)
 		);
 	});
 
@@ -244,11 +246,11 @@
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${token}`
 					},
-					body: JSON.stringify({
-						r2Key: item.key,
-						artifactId: item.artifactId,
-						field: item.urlField
-					})
+					body: JSON.stringify(
+						item.settingKey
+							? { r2Key: item.key, settingKey: item.settingKey }
+							: { r2Key: item.key, artifactId: item.artifactId, field: item.urlField }
+					)
 				});
 				if (!res.ok) {
 					const body = await res.json().catch(() => null);
@@ -508,11 +510,19 @@
 							<td class="px-3 py-2 text-right text-slate-500 tabular-nums">
 								{formatSize(item.size)}
 							</td>
-							<td class="px-3 py-2 text-slate-600 truncate max-w-[120px]" title={item.projectName ?? ''}>
-								{item.projectName ?? '—'}
+							<td class="px-3 py-2 text-slate-600 truncate max-w-[120px]" title={item.projectName ?? item.settingLabel ?? ''}>
+								{#if item.projectName}
+									{item.projectName}
+								{:else if item.settingLabel}
+									<span class="text-violet-600">{item.settingLabel}</span>
+								{:else}
+									—
+								{/if}
 							</td>
 							<td class="px-3 py-2 text-slate-400">
-								{#if item.urlField === 'imageUrl'}
+								{#if item.settingKey}
+									namecard
+								{:else if item.urlField === 'imageUrl'}
 									primary
 								{:else if item.urlField === 'hoverImageUrl'}
 									hover
@@ -523,7 +533,7 @@
 							<td class="px-3 py-2 text-center">
 								{#if item.isOptimized}
 									<span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" title="Optimized"></span>
-								{:else if item.artifactId}
+								{:else if item.artifactId || item.settingKey}
 									<span class="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" title="Unoptimized"></span>
 								{:else}
 									<span class="inline-block h-1.5 w-1.5 rounded-full bg-slate-300" title="Orphan"></span>

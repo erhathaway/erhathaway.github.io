@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { projectArtifacts, projects } from '$lib/server/db/schema';
+import { projectArtifacts, projects, siteSettings } from '$lib/server/db/schema';
 import { getDb } from '$lib/server/db';
 
 interface R2ImageItem {
@@ -13,6 +13,8 @@ interface R2ImageItem {
 	projectId?: number;
 	projectName?: string;
 	urlField?: 'imageUrl' | 'hoverImageUrl';
+	settingKey?: string;
+	settingLabel?: string;
 	isOptimized: boolean;
 }
 
@@ -113,21 +115,68 @@ export const GET: RequestHandler = async ({ platform }) => {
 		}
 	}
 
+	// Query site_settings for namecard images
+	const NAMECARD_SETTINGS: Array<{ key: string; label: string }> = [
+		{ key: 'namecard_image', label: 'Namecard (Landing)' },
+		{ key: 'project_namecard_image', label: 'Namecard (Project)' }
+	];
+
+	const keyToSetting = new Map<string, { settingKey: string; settingLabel: string }>();
+
+	for (const setting of NAMECARD_SETTINGS) {
+		const [row] = await db
+			.select({ value: siteSettings.value })
+			.from(siteSettings)
+			.where(eq(siteSettings.key, setting.key))
+			.limit(1)
+			.all();
+
+		if (!row) continue;
+		const val = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+		if (!val || typeof val.imageUrl !== 'string') continue;
+
+		const r2Key = val.imageUrl.startsWith('/') ? val.imageUrl.slice(1) : val.imageUrl;
+		if (r2Key.startsWith('artifacts/')) {
+			const info = { settingKey: setting.key, settingLabel: setting.label };
+			keyToSetting.set(r2Key, info);
+
+			// Also map format variants
+			if (Array.isArray(val.imageFormats)) {
+				const dotIndex = r2Key.lastIndexOf('.');
+				if (dotIndex > -1) {
+					const base = r2Key.slice(0, dotIndex + 1);
+					for (const fmt of val.imageFormats) {
+						if (typeof fmt === 'string') {
+							keyToSetting.set(`${base}${fmt}`, info);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Cross-reference
 	const items: R2ImageItem[] = allObjects.map((obj) => {
-		const info = keyToArtifact.get(obj.key);
+		const artifactInfo = keyToArtifact.get(obj.key);
+		const settingInfo = keyToSetting.get(obj.key);
 		const ext = obj.key.split('.').pop()?.toLowerCase() ?? '';
 		return {
 			key: obj.key,
 			size: obj.size,
 			contentType: obj.httpMetadata?.contentType ?? `image/${ext}`,
 			uploaded: obj.uploaded.toISOString(),
-			...(info
+			...(artifactInfo
 				? {
-						artifactId: info.artifactId,
-						projectId: info.projectId,
-						projectName: info.projectName,
-						urlField: info.urlField
+						artifactId: artifactInfo.artifactId,
+						projectId: artifactInfo.projectId,
+						projectName: artifactInfo.projectName,
+						urlField: artifactInfo.urlField
+					}
+				: {}),
+			...(settingInfo
+				? {
+						settingKey: settingInfo.settingKey,
+						settingLabel: settingInfo.settingLabel
 					}
 				: {}),
 			isOptimized: ext === 'avif' || ext === 'webp'
