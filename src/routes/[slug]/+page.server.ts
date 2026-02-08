@@ -1,4 +1,5 @@
 import type { PageServerLoad } from './$types';
+import { error } from '@sveltejs/kit';
 import { and, eq, sql } from 'drizzle-orm';
 import { projects, categories, projectCategories, projectAttributes, projectArtifacts, projectCoverArtifact } from '$lib/server/db/schema';
 
@@ -18,7 +19,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 		.where(eq(projects.name, slug))
 		.limit(1);
 
-	if (!row) return { meta: null, projectId: 0 };
+	if (!row) throw error(404, 'Not found');
 
 	const projectId = row.id;
 
