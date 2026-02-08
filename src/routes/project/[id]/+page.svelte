@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
-  import { getImageSources } from '$lib/utils/image-formats';
+  import { getImageSources, replaceExtension } from '$lib/utils/image-formats';
   let { data }: { data: PageData } = $props();
 
   const item = $derived(portfolio.allItems.find(i => i.id === data.projectId));
@@ -130,9 +130,25 @@
 <svelte:head>
   {#if data.meta}
     {@const year = data.meta.year ? ` (${data.meta.year})` : ''}
-    <meta name="description" content={data.meta.description
+    {@const desc = data.meta.description
       ? `${data.meta.name}${year} — ${data.meta.description}`
-      : `${data.meta.name}${year} by Ethan Hathaway.`} />
+      : `${data.meta.name}${year} by Ethan Hathaway.`}
+    {@const ogImage = data.meta.coverImageUrl
+      ? `${data.origin}${data.meta.coverImageFormats?.includes('webp') ? replaceExtension(data.meta.coverImageUrl, 'webp') : data.meta.coverImageUrl}`
+      : null}
+    <title>{data.meta.name} — Ethan Hathaway</title>
+    <meta name="description" content={desc} />
+    <meta property="og:title" content={data.meta.name} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="{data.origin}/project/{data.projectId}" />
+    {#if ogImage}
+      <meta property="og:image" content={ogImage} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:image" content={ogImage} />
+    {/if}
+    <meta name="twitter:title" content={data.meta.name} />
+    <meta name="twitter:description" content={desc} />
   {:else}
     <meta name="description" content="A project by Ethan Hathaway." />
   {/if}

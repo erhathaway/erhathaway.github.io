@@ -11,7 +11,7 @@ import {
 	siteSettings
 } from '$lib/server/db/schema';
 
-export const load: PageServerLoad = async ({ locals, setHeaders }) => {
+export const load: PageServerLoad = async ({ locals, setHeaders, url }) => {
 	const db = locals.db;
 	if (!db) {
 		throw error(500, 'Database not available');
@@ -132,6 +132,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 	});
 
 	return {
+		origin: url.origin,
 		projects: projectList,
 		categories: catList,
 		namecardImage: namecardRow?.value ?? null,
