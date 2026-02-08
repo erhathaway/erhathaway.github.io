@@ -118,7 +118,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 	});
 
 	setHeaders({
-		'Cache-Control': 'public, s-maxage=300'
+		'Cache-Control': 'public, max-age=0, s-maxage=300'
 	});
 
 	return {

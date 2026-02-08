@@ -26,14 +26,60 @@
   const hasCover = $derived(!!item?.image);
   const additionalArtifacts = $derived(hasCover ? artifacts.filter(a => !a.isCover) : artifacts);
 
-  // Distribute artifacts across 2 columns in row-first order (left, right, left, right...)
-  // so sort order reads horizontally instead of top-to-bottom per column
-  const columns = $derived.by(() => {
+  // Masonry: preload images to get aspect ratios, then distribute into shortest column
+  let columnItems = $state<[Artifact[], Artifact[]]>([[], []]);
+
+  function getImageUrl(artifact: Artifact): string | null {
+    if (artifact.schema !== 'image-v1') return null;
+    const blob = artifact.dataBlob as Record<string, unknown> | null;
+    return typeof blob?.imageUrl === 'string' ? blob.imageUrl : null;
+  }
+
+  function distributeByAspectRatios(items: Artifact[], ratios: Map<number, number>): [Artifact[], Artifact[]] {
     const cols: [Artifact[], Artifact[]] = [[], []];
-    for (let i = 0; i < additionalArtifacts.length; i++) {
-      cols[i % 2].push(additionalArtifacts[i]);
+    const heights = [0, 0];
+    for (const item of items) {
+      const shorter = heights[0] <= heights[1] ? 0 : 1;
+      cols[shorter].push(item);
+      heights[shorter] += ratios.get(item.id) ?? 1;
     }
     return cols;
+  }
+
+  async function computeMasonry(items: Artifact[]) {
+    if (items.length === 0) {
+      columnItems = [[], []];
+      return;
+    }
+
+    const ratios = new Map<number, number>();
+
+    // Preload all images in parallel to get natural dimensions
+    await Promise.all(items.map((item) => {
+      const url = getImageUrl(item);
+      if (!url) {
+        ratios.set(item.id, 1);
+        return;
+      }
+      return new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          ratios.set(item.id, img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1);
+          resolve();
+        };
+        img.onerror = () => {
+          ratios.set(item.id, 1);
+          resolve();
+        };
+        img.src = url;
+      });
+    }));
+
+    columnItems = distributeByAspectRatios(items, ratios);
+  }
+
+  $effect(() => {
+    computeMasonry(additionalArtifacts);
   });
 
   // Reload artifacts whenever the project changes
@@ -189,13 +235,13 @@
       </button>
     </div>
 
-    <!-- Additional artifacts -->
+    <!-- Additional artifacts (masonry: shortest-column placement) -->
     {#if additionalArtifacts.length > 0}
       <div class="max-w-6xl mx-auto p-8">
         <div class="grid grid-cols-2 gap-4 items-start mb-12">
           {#each [0, 1] as col (col)}
             <div class="flex flex-col gap-4">
-              {#each columns[col] as artifact (artifact.id)}
+              {#each columnItems[col] as artifact (artifact.id)}
                 <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
               {/each}
             </div>
