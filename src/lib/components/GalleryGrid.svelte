@@ -160,6 +160,7 @@
                 style:transform="scale({portfolio.namecardImage.zoom})"
                 style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
                 style="view-transition-name: name-card-bg"
+                fetchpriority="high"
                 draggable="false"
               />
             </picture>
@@ -172,6 +173,7 @@
               style:transform="scale({portfolio.namecardImage.zoom})"
               style:transform-origin="{portfolio.namecardImage.positionX}% {portfolio.namecardImage.positionY}%"
               style="view-transition-name: name-card-bg"
+              fetchpriority="high"
               draggable="false"
             />
           {/if}
