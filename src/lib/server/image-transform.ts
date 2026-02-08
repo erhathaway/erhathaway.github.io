@@ -44,26 +44,32 @@ export async function transformToModernFormats(
 	// Check content types to verify we got actual transformed images
 	const avifCt = avifRes.headers.get('content-type') ?? '';
 	const webpCt = webpRes.headers.get('content-type') ?? '';
-	if (!avifCt.includes('avif') && !avifCt.includes('octet')) {
-		// Image Resizing may not be enabled — response is probably the original HTML/image
-		return { ok: false, reason: `AVIF response has unexpected content-type "${avifCt}". Image Resizing may not be enabled for this zone.` };
+	const gotAvif = avifCt.includes('avif');
+	const gotWebp = webpCt.includes('webp');
+
+	// If neither response is a modern format, Image Resizing probably isn't enabled
+	if (!gotAvif && !gotWebp && !avifCt.includes('octet') && !webpCt.includes('octet')) {
+		return { ok: false, reason: `Unexpected content-types: AVIF="${avifCt}", WebP="${webpCt}". Image Resizing may not be enabled for this zone.` };
 	}
 
-	const avifKey = `artifacts/${uuid}.avif`;
 	const webpKey = `artifacts/${uuid}.webp`;
+	const formats: string[] = [];
 
-	const [avifBody, webpBody] = await Promise.all([
-		avifRes.arrayBuffer(),
-		webpRes.arrayBuffer()
-	]);
+	// Always store WebP (guaranteed to work)
+	const webpBody = await webpRes.arrayBuffer();
+	await bucket.put(webpKey, webpBody, { httpMetadata: { contentType: 'image/webp' } });
+	formats.push('webp');
 
-	// Store both variants
-	await Promise.all([
-		bucket.put(avifKey, avifBody, { httpMetadata: { contentType: 'image/avif' } }),
-		bucket.put(webpKey, webpBody, { httpMetadata: { contentType: 'image/webp' } })
-	]);
+	// Store AVIF only if we actually got AVIF back (some zones fall back to WebP)
+	let avifKey = webpKey; // default to webp key if no avif
+	if (gotAvif) {
+		avifKey = `artifacts/${uuid}.avif`;
+		const avifBody = await avifRes.arrayBuffer();
+		await bucket.put(avifKey, avifBody, { httpMetadata: { contentType: 'image/avif' } });
+		formats.unshift('avif');
+	}
 
-	// Delete original if it's not already avif or webp
+	// Delete original if it's not already one of the new formats
 	if (ext !== 'avif' && ext !== 'webp') {
 		try {
 			await bucket.delete(originalKey);
@@ -72,5 +78,6 @@ export async function transformToModernFormats(
 		}
 	}
 
-	return { ok: true, avifKey, webpKey, formats: ['avif', 'webp'] };
+	// Primary key is avif if available, otherwise webp
+	return { ok: true, avifKey: gotAvif ? avifKey : webpKey, webpKey, formats };
 }
