@@ -30,6 +30,7 @@
 </script>
 
 <svelte:head>
+  <title>Ethan Hathaway — Things I Make</title>
   <meta name="description" content="Woodworking, pottery, and other things I make." />
   <meta property="og:title" content="Ethan Hathaway" />
   <meta property="og:description" content="Woodworking, pottery, and other things I make." />
