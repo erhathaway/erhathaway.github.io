@@ -1634,115 +1634,57 @@
 
 				<!-- Existing Artifacts -->
 				{#each artifacts as artifact, idx (artifact.id)}
-					<div class="relative group/insert">
-						<!-- Inline insert zone above card -->
+					<div class="relative">
+						<!-- Vertical line insertion zone in the left gap -->
 						{#if !rearranging}
-							<div class="absolute -top-[8px] left-0 right-0 h-4 z-10 flex items-center justify-center">
-								<button
-									type="button"
-									class="opacity-0 group-hover/insert:opacity-100 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm leading-none font-bold shadow-sm hover:bg-blue-600 transition-all duration-150 focus:opacity-100"
-									onclick={(e) => { e.stopPropagation(); inlineMenuIndex = inlineMenuIndex === idx ? null : idx; }}
-									aria-label="Insert artifact before this position"
-								>+</button>
+							<div class="absolute -left-3 top-0 bottom-0 w-3 z-10 group/gap flex items-center justify-center">
+								<div class="opacity-0 group-hover/gap:opacity-100 flex flex-col items-center h-full transition-opacity duration-150">
+									<div class="flex-1 w-px bg-blue-400/60"></div>
+									<button
+										type="button"
+										class="shrink-0 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs leading-none font-bold shadow-sm hover:bg-blue-600 transition-colors duration-150"
+										onclick={(e) => { e.stopPropagation(); inlineMenuIndex = inlineMenuIndex === idx ? null : idx; }}
+										aria-label="Insert artifact here"
+									>+</button>
+									<div class="flex-1 w-px bg-blue-400/60"></div>
+								</div>
 							</div>
 						{/if}
 
 						<!-- Inline popup menu -->
 						{#if inlineMenuIndex === idx}
 							<div
-								class="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full z-20 bg-white rounded-xl shadow-lg border border-slate-200 p-2 flex flex-wrap justify-center gap-1.5 w-max max-w-[320px]"
+								class="absolute -left-[6px] top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 px-1 flex flex-col gap-0.5 w-max"
 								role="menu"
 								tabindex="-1"
 								onclick={(e) => e.stopPropagation()}
 								onkeydown={(e) => { if (e.key === 'Escape') inlineMenuIndex = null; }}
 							>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; showCreateArtifactModal = true; }}
-								>
+								<button type="button" class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150" onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; showCreateArtifactModal = true; }}>
 									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
 									Upload
 								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150 {googlePhotosConnected ? '' : 'opacity-40 cursor-not-allowed'}"
-									disabled={!googlePhotosConnected}
-									onclick={() => { if (!googlePhotosConnected) return; insertAtIndex = idx; inlineMenuIndex = null; showGooglePhotosPickerModal = true; }}
-								>
+								<button type="button" class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150 {googlePhotosConnected ? '' : 'opacity-40 cursor-not-allowed'}" disabled={!googlePhotosConnected} onclick={() => { if (!googlePhotosConnected) return; insertAtIndex = idx; inlineMenuIndex = null; showGooglePhotosPickerModal = true; }}>
 									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
 									Photos
 								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; void createSimpleArtifact('divider-v1'); }}
-								>
+								<button type="button" class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150" onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; void createSimpleArtifact('divider-v1'); }}>
 									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12h18" /></svg>
 									Divider
 								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => {
-										insertAtIndex = idx;
-										inlineMenuIndex = null;
-										artifactSchema = 'section-title-v1';
-										const schemaDef = getArtifactSchema('section-title-v1');
-										if (schemaDef) {
-											artifactDraft = schemaDef.createDraft() as Record<string, unknown>;
-											const validation = validateArtifactData('section-title-v1', artifactDraft);
-											artifactDraftErrors = validation.ok ? [] : validation.errors;
-										}
-										showCreateArtifactModal = true;
-									}}
-								>
+								<button type="button" class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150" onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; artifactSchema = 'section-title-v1'; const schemaDef = getArtifactSchema('section-title-v1'); if (schemaDef) { artifactDraft = schemaDef.createDraft() as Record<string, unknown>; const validation = validateArtifactData('section-title-v1', artifactDraft); artifactDraftErrors = validation.ok ? [] : validation.errors; } showCreateArtifactModal = true; }}>
 									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h8" /></svg>
 									Title
 								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => {
-										insertAtIndex = idx;
-										inlineMenuIndex = null;
-										artifactSchema = 'narrative-v1';
-										const schemaDef = getArtifactSchema('narrative-v1');
-										if (schemaDef) {
-											artifactDraft = schemaDef.createDraft() as Record<string, unknown>;
-											const validation = validateArtifactData('narrative-v1', artifactDraft);
-											artifactDraftErrors = validation.ok ? [] : validation.errors;
-										}
-										showCreateArtifactModal = true;
-									}}
-								>
+								<button type="button" class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150" onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; artifactSchema = 'narrative-v1'; const schemaDef = getArtifactSchema('narrative-v1'); if (schemaDef) { artifactDraft = schemaDef.createDraft() as Record<string, unknown>; const validation = validateArtifactData('narrative-v1', artifactDraft); artifactDraftErrors = validation.ok ? [] : validation.errors; } showCreateArtifactModal = true; }}>
 									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
 									Narrative
 								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; void createDenseSectionPair(); }}
-								>
+								<button type="button" class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150" onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; void createDenseSectionPair(); }}>
 									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 18h16M8 12h8" /></svg>
 									Dense
 								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => {
-										insertAtIndex = idx;
-										inlineMenuIndex = null;
-										artifactSchema = 'enlarge-v1';
-										const schemaDef = getArtifactSchema('enlarge-v1');
-										if (schemaDef) {
-											artifactDraft = schemaDef.createDraft() as Record<string, unknown>;
-											const validation = validateArtifactData('enlarge-v1', artifactDraft);
-											artifactDraftErrors = validation.ok ? [] : validation.errors;
-										}
-										showCreateArtifactModal = true;
-									}}
-								>
+								<button type="button" class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150" onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; artifactSchema = 'enlarge-v1'; const schemaDef = getArtifactSchema('enlarge-v1'); if (schemaDef) { artifactDraft = schemaDef.createDraft() as Record<string, unknown>; const validation = validateArtifactData('enlarge-v1', artifactDraft); artifactDraftErrors = validation.ok ? [] : validation.errors; } showCreateArtifactModal = true; }}>
 									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
 									Enlarge
 								</button>
@@ -1840,119 +1782,6 @@
 						</div>
 					</div>
 				{/each}
-
-				<!-- Insert zone after last artifact -->
-				{#if artifacts.length > 0 && !rearranging}
-					<div class="relative group/insert-end flex items-start justify-center pt-2">
-						<button
-							type="button"
-							class="opacity-0 group-hover/insert-end:opacity-100 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm leading-none font-bold shadow-sm hover:bg-blue-600 transition-all duration-150 focus:opacity-100"
-							onclick={(e) => { e.stopPropagation(); inlineMenuIndex = inlineMenuIndex === artifacts.length ? null : artifacts.length; }}
-							aria-label="Insert artifact at end"
-						>+</button>
-
-						{#if inlineMenuIndex === artifacts.length}
-							<div
-								class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full z-20 bg-white rounded-xl shadow-lg border border-slate-200 p-2 flex flex-wrap justify-center gap-1.5 w-max max-w-[320px]"
-								role="menu"
-								tabindex="-1"
-								onclick={(e) => e.stopPropagation()}
-								onkeydown={(e) => { if (e.key === 'Escape') inlineMenuIndex = null; }}
-							>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => { insertAtIndex = artifacts.length; inlineMenuIndex = null; showCreateArtifactModal = true; }}
-								>
-									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-									Upload
-								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150 {googlePhotosConnected ? '' : 'opacity-40 cursor-not-allowed'}"
-									disabled={!googlePhotosConnected}
-									onclick={() => { if (!googlePhotosConnected) return; insertAtIndex = artifacts.length; inlineMenuIndex = null; showGooglePhotosPickerModal = true; }}
-								>
-									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-									Photos
-								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => { insertAtIndex = artifacts.length; inlineMenuIndex = null; void createSimpleArtifact('divider-v1'); }}
-								>
-									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12h18" /></svg>
-									Divider
-								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => {
-										insertAtIndex = artifacts.length;
-										inlineMenuIndex = null;
-										artifactSchema = 'section-title-v1';
-										const schemaDef = getArtifactSchema('section-title-v1');
-										if (schemaDef) {
-											artifactDraft = schemaDef.createDraft() as Record<string, unknown>;
-											const validation = validateArtifactData('section-title-v1', artifactDraft);
-											artifactDraftErrors = validation.ok ? [] : validation.errors;
-										}
-										showCreateArtifactModal = true;
-									}}
-								>
-									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h8" /></svg>
-									Title
-								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => {
-										insertAtIndex = artifacts.length;
-										inlineMenuIndex = null;
-										artifactSchema = 'narrative-v1';
-										const schemaDef = getArtifactSchema('narrative-v1');
-										if (schemaDef) {
-											artifactDraft = schemaDef.createDraft() as Record<string, unknown>;
-											const validation = validateArtifactData('narrative-v1', artifactDraft);
-											artifactDraftErrors = validation.ok ? [] : validation.errors;
-										}
-										showCreateArtifactModal = true;
-									}}
-								>
-									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
-									Narrative
-								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => { insertAtIndex = artifacts.length; inlineMenuIndex = null; void createDenseSectionPair(); }}
-								>
-									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 18h16M8 12h8" /></svg>
-									Dense
-								</button>
-								<button
-									type="button"
-									class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
-									onclick={() => {
-										insertAtIndex = artifacts.length;
-										inlineMenuIndex = null;
-										artifactSchema = 'enlarge-v1';
-										const schemaDef = getArtifactSchema('enlarge-v1');
-										if (schemaDef) {
-											artifactDraft = schemaDef.createDraft() as Record<string, unknown>;
-											const validation = validateArtifactData('enlarge-v1', artifactDraft);
-											artifactDraftErrors = validation.ok ? [] : validation.errors;
-										}
-										showCreateArtifactModal = true;
-									}}
-								>
-									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-									Enlarge
-								</button>
-							</div>
-						{/if}
-					</div>
-				{/if}
 			</div>
 		</section>
 	{:else}
