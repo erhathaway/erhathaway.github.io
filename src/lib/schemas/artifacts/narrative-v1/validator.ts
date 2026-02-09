@@ -9,6 +9,7 @@ export type NarrativeV1Align = 'left' | 'center' | 'right';
 export type NarrativeV1Data = {
 	text: string;
 	align?: NarrativeV1Align;
+	italic?: boolean;
 };
 
 const VALID_ALIGNS: NarrativeV1Align[] = ['left', 'center', 'right'];
@@ -37,6 +38,11 @@ export const validateNarrativeV1 = (payload: unknown): NarrativeV1ValidationResu
 		errors.push('align must be left, center, or right');
 	}
 
+	const italic = data.italic;
+	if (italic !== undefined && typeof italic !== 'boolean') {
+		errors.push('italic must be a boolean');
+	}
+
 	if (errors.length > 0) {
 		return { ok: false, errors };
 	}
@@ -45,7 +51,8 @@ export const validateNarrativeV1 = (payload: unknown): NarrativeV1ValidationResu
 		ok: true,
 		value: {
 			text: (text as string).trim(),
-			...(typeof align === 'string' && align !== 'center' ? { align: align as NarrativeV1Align } : {})
+			...(typeof align === 'string' && align !== 'center' ? { align: align as NarrativeV1Align } : {}),
+			...(italic ? { italic: true } : {})
 		}
 	};
 };

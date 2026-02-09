@@ -11,6 +11,7 @@
 	let { value, onChange }: Props = $props();
 
 	const align = $derived((typeof value.align === 'string' ? value.align : 'center') as 'left' | 'center' | 'right');
+	const italic = $derived(!!value.italic);
 
 	function handleInput(event: Event) {
 		const target = event.currentTarget as HTMLTextAreaElement;
@@ -64,6 +65,16 @@
 		>
 			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-width="2" d="M3 6h18M9 12h12M5 18h16" />
+			</svg>
+		</button>
+		<button
+			type="button"
+			class={`p-1.5 rounded-lg transition-colors duration-150 ml-2 ${italic ? 'bg-slate-200 text-slate-700' : 'text-slate-400 hover:bg-slate-100'}`}
+			onclick={() => onChange({ ...value, italic: !italic })}
+			title="Italic"
+		>
+			<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+				<path stroke-linecap="round" stroke-width="2" d="M10 4h4m-2 0l-4 16m0 0h4" />
 			</svg>
 		</button>
 	</div>

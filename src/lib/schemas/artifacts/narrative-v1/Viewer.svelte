@@ -15,7 +15,7 @@
 </script>
 
 <div class={`py-10 px-6 max-w-xl mx-auto ${alignClass} ${className}`}>
-	<p class="text-lg leading-relaxed text-cream/70" style="font-family: 'Cormorant Garamond', Georgia, serif; letter-spacing: 0.01em;">
+	<p class="text-lg leading-relaxed text-cream/70 {data.italic ? 'italic' : ''}" style="font-family: 'Cormorant Garamond', Georgia, serif; letter-spacing: 0.01em;">
 		{data.text}
 	</p>
 </div>
