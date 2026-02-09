@@ -10,7 +10,8 @@ import {
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
 	'Access-Control-Allow-Methods': 'GET, DELETE, OPTIONS',
-	'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+	'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+	'Cache-Control': 'no-store'
 };
 
 export const OPTIONS: RequestHandler = async () => {
@@ -40,6 +41,8 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 	try {
 		const accessToken = await getValidAccessToken(db, googleEnv);
 		const session = await getPickerSession(accessToken, params.sessionId);
+
+		console.log(`[poll] session=${params.sessionId} mediaItemsSet=${session.mediaItemsSet}`);
 
 		return json(
 			{

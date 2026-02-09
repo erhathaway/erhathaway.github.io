@@ -130,8 +130,11 @@
 			try {
 				// No auth header needed — the session ID is authorization enough,
 				// and Clerk tokens can expire during long Google Photos selections.
+				// cache: 'no-store' prevents the browser from returning a cached
+				// mediaItemsSet:false response on subsequent polls.
 				const response = await fetch(
-					`/api/admin/integrations/google-photos/sessions/${sessionId}`
+					`/api/admin/integrations/google-photos/sessions/${sessionId}`,
+					{ cache: 'no-store' }
 				);
 
 				if (!response.ok) {
@@ -153,22 +156,26 @@
 		}, 3000);
 	}
 
+	let popupClosed = $state(false);
+
 	function startPopupCheck() {
 		popupCheckTimer = setInterval(() => {
 			if (popup && popup.closed) {
 				if (popupCheckTimer) clearInterval(popupCheckTimer);
 				popupCheckTimer = null;
+				popupClosed = true;
 
+				// Google can take 30s+ to finalize mediaItemsSet after popup closes.
+				// Give it a full 2 minutes before giving up.
 				setTimeout(() => {
 					if (step === 'waiting') {
-						// Polling never saw mediaItemsSet — show error instead of silently closing
 						stopPolling();
 						errorMessage = pollFailures > 3
 							? 'Session expired — please refresh the page and try again.'
 							: 'Google Photos did not confirm your selection. Please try again.';
 						step = 'error';
 					}
-				}, 30000);
+				}, 120_000);
 			}
 		}, 1000);
 	}
@@ -427,12 +434,17 @@
 						</svg>
 					</div>
 					<div class="text-center">
-						<p class="text-sm font-medium text-slate-700">Select photos and videos</p>
-						<p class="text-xs text-slate-400 mt-1">Choose items in the Google Photos window, then click Done.</p>
+						{#if popupClosed}
+							<p class="text-sm font-medium text-slate-700">Processing your selection...</p>
+							<p class="text-xs text-slate-400 mt-1">Waiting for Google Photos to confirm. This can take a moment.</p>
+						{:else}
+							<p class="text-sm font-medium text-slate-700">Select photos and videos</p>
+							<p class="text-xs text-slate-400 mt-1">Choose items in the Google Photos window, then click Done.</p>
+						{/if}
 					</div>
 					<div class="flex items-center gap-2 text-xs text-slate-400">
 						<div class="h-3 w-3 animate-spin rounded-full border-2 border-slate-200 border-t-slate-400"></div>
-						Waiting for selection...
+						{popupClosed ? 'Confirming with Google...' : 'Waiting for selection...'}
 					</div>
 				</div>
 
