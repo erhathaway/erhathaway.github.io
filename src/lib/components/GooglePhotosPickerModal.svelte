@@ -66,7 +66,12 @@
 	});
 
 	async function authHeaders(): Promise<Record<string, string>> {
-		const token = await getToken();
+		// Race getToken against a 10s timeout — Clerk can hang if the session
+		// went stale while the user was in the Google Photos popup.
+		const token = await Promise.race([
+			getToken(),
+			new Promise<null>((resolve) => setTimeout(() => resolve(null), 10_000))
+		]);
 		return token ? { Authorization: `Bearer ${token}` } : {};
 	}
 
@@ -225,47 +230,47 @@
 
 			try {
 				const headers = await authHeaders();
+				if (!headers.Authorization) {
+					throw new Error('Session expired — please refresh the page and try again');
+				}
+
 				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), 120_000);
+				const timeoutId = setTimeout(() => controller.abort(), 90_000);
 
-				try {
-					const response = await fetch('/api/admin/integrations/google-photos/import-item', {
-						method: 'POST',
-						headers: { ...headers, 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							projectId,
-							item,
-							isPublished,
-							skipDescription
-						}),
-						signal: controller.signal
+				const response = await fetch('/api/admin/integrations/google-photos/import-item', {
+					method: 'POST',
+					headers: { ...headers, 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						projectId,
+						item,
+						isPublished,
+						skipDescription
+					}),
+					signal: controller.signal
+				});
+
+				clearTimeout(timeoutId);
+
+				if (!response.ok) {
+					const text = await response.text();
+					throw new Error(text || `Import failed (${response.status})`);
+				}
+
+				const data = await response.json();
+				importResults.created = [...importResults.created, data.artifact];
+
+				if (data.artifact.r2Key) {
+					r2Keys.push({
+						artifactId: data.artifact.id,
+						r2Key: data.artifact.r2Key,
+						field: 'imageUrl'
 					});
-
-					clearTimeout(timeoutId);
-
-					if (!response.ok) {
-						const text = await response.text();
-						throw new Error(text || 'Import failed');
-					}
-
-					const data = await response.json();
-					importResults.created = [...importResults.created, data.artifact];
-
-					if (data.artifact.r2Key) {
-						r2Keys.push({
-							artifactId: data.artifact.id,
-							r2Key: data.artifact.r2Key,
-							field: 'imageUrl'
-						});
-					}
-				} catch (fetchErr) {
-					clearTimeout(timeoutId);
-					throw fetchErr;
 				}
 			} catch (err) {
+				console.error(`[import] Failed to import ${item.mediaFile.filename}:`, err);
 				const message =
 					err instanceof DOMException && err.name === 'AbortError'
-						? 'Timed out (image may be too large)'
+						? 'Timed out — please try again'
 						: err instanceof Error
 							? err.message
 							: 'Import failed';
