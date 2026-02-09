@@ -1447,7 +1447,7 @@
 					</div>
 					<button
 						type="button"
-						onclick={() => { rearranging = !rearranging; if (!rearranging) { shrinkImages = false; recentMoves = new Map(); } }}
+						onclick={() => { rearranging = !rearranging; if (!rearranging) { shrinkImages = false; } }}
 						class={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150 ${
 							rearranging
 								? 'border-blue-300 bg-blue-50 text-blue-700'
@@ -1774,25 +1774,25 @@
 											title="Move to bottom"
 										>End</button>
 									</div>
-									{#if recentMoves.has(artifact.id)}
-										{@const moveType = recentMoves.get(artifact.id)}
-										<span class={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-medium ${
-											moveType === 'top' ? 'bg-violet-50 text-violet-600 border border-violet-200' :
-											moveType === 'bottom' ? 'bg-orange-50 text-orange-600 border border-orange-200' :
-											'bg-cyan-50 text-cyan-600 border border-cyan-200'
-										}`}>
-											<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												{#if moveType === 'top'}
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
-												{:else if moveType === 'bottom'}
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-												{:else}
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h8" />
-												{/if}
-											</svg>
-											{moveType === 'top' ? 'Moved top' : moveType === 'bottom' ? 'Moved end' : 'Moved mid'}
-										</span>
-									{/if}
+								{/if}
+								{#if recentMoves.has(artifact.id)}
+									{@const moveType = recentMoves.get(artifact.id)}
+									<span class={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-medium ${
+										moveType === 'top' ? 'bg-violet-50 text-violet-600 border border-violet-200' :
+										moveType === 'bottom' ? 'bg-orange-50 text-orange-600 border border-orange-200' :
+										'bg-cyan-50 text-cyan-600 border border-cyan-200'
+									}`}>
+										<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											{#if moveType === 'top'}
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+											{:else if moveType === 'bottom'}
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+											{:else}
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h8" />
+											{/if}
+										</svg>
+										{moveType === 'top' ? 'Moved top' : moveType === 'bottom' ? 'Moved end' : 'Moved mid'}
+									</span>
 								{/if}
 								<span class="text-[11px] font-medium text-slate-400">{getArtifactSchema(artifact.schema)?.label ?? artifact.schema}</span>
 								<span
