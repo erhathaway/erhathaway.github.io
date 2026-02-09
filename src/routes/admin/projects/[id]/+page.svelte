@@ -1480,7 +1480,7 @@
 					</div>
 				{:else}
 					<div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 flex flex-col items-center justify-center gap-3 min-h-[160px] transition-all duration-150">
-						<div class="flex gap-3">
+						<div class="flex flex-wrap justify-center gap-3">
 							<button
 								type="button"
 								class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-slate-400 hover:shadow-sm transition-all duration-150"
