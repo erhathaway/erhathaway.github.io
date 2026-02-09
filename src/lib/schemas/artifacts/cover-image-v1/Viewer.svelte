@@ -28,7 +28,7 @@
 				<img
 					src={coverSrc}
 					alt={item.name}
-					class="w-full object-cover"
+					class="w-full h-full object-cover"
 					srcset={coverSrcset}
 					sizes={coverSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
 					style:object-position="{pos?.x ?? 50}% {pos?.y ?? 50}%"
@@ -41,7 +41,7 @@
 			<img
 				src={coverSrc}
 				alt={item.name}
-				class="w-full object-cover"
+				class="w-full h-full object-cover"
 				srcset={coverSrcset}
 				sizes={coverSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
 				style:object-position="{pos?.x ?? 50}% {pos?.y ?? 50}%"
