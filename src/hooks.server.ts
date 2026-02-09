@@ -17,10 +17,19 @@ const dbHandle: Handle = async ({ event, resolve }) => {
 
 const adminAuthHandle: Handle = async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith('/api/admin/')) {
-		const userId = await verifyClerkAuth(event.request, event.platform?.env);
-		const authUserId = event.locals.auth?.()?.userId ?? null;
-		if (!userId && !authUserId) {
-			throw error(401, 'Unauthorized');
+		// Session poll uses the session ID as authorization — skip Clerk auth
+		// so polling continues working even if the Clerk token expires during
+		// a long Google Photos selection.
+		const isSessionPoll =
+			event.request.method === 'GET' &&
+			/^\/api\/admin\/integrations\/google-photos\/sessions\/[^/]+$/.test(event.url.pathname);
+
+		if (!isSessionPoll) {
+			const userId = await verifyClerkAuth(event.request, event.platform?.env);
+			const authUserId = event.locals.auth?.()?.userId ?? null;
+			if (!userId && !authUserId) {
+				throw error(401, 'Unauthorized');
+			}
 		}
 	}
 	return resolve(event);

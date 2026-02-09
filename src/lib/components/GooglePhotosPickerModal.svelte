@@ -122,24 +122,33 @@
 	}
 
 	// Step 3-4: Poll session
+	let pollFailures = 0;
+
 	function startPolling() {
+		pollFailures = 0;
 		pollTimer = setInterval(async () => {
 			try {
-				const headers = await authHeaders();
+				// No auth header needed — the session ID is authorization enough,
+				// and Clerk tokens can expire during long Google Photos selections.
 				const response = await fetch(
-					`/api/admin/integrations/google-photos/sessions/${sessionId}`,
-					{ headers }
+					`/api/admin/integrations/google-photos/sessions/${sessionId}`
 				);
 
-				if (!response.ok) return;
+				if (!response.ok) {
+					pollFailures++;
+					console.error(`[poll] Session poll failed: ${response.status} (attempt ${pollFailures})`);
+					return;
+				}
 
+				pollFailures = 0;
 				const data = await response.json();
 				if (data.mediaItemsSet) {
 					stopPolling();
 					await loadPickedItems();
 				}
-			} catch {
-				// Retry on next tick
+			} catch (err) {
+				pollFailures++;
+				console.error(`[poll] Session poll error (attempt ${pollFailures}):`, err);
 			}
 		}, 3000);
 	}
@@ -152,8 +161,12 @@
 
 				setTimeout(() => {
 					if (step === 'waiting') {
+						// Polling never saw mediaItemsSet — show error instead of silently closing
 						stopPolling();
-						onClose();
+						errorMessage = pollFailures > 3
+							? 'Session expired — please refresh the page and try again.'
+							: 'Google Photos did not confirm your selection. Please try again.';
+						step = 'error';
 					}
 				}, 30000);
 			}
