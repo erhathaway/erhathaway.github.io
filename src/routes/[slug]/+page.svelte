@@ -428,7 +428,7 @@
       <!-- Right: cover image -->
       <div class="flex-1 flex items-center justify-center p-8">
         <div
-          class="group relative aspect-square max-h-[67vh] max-w-full overflow-hidden rounded-lg vt-exclude-namecard"
+          class="group relative w-full aspect-square max-h-[67vh] max-w-[67vh] overflow-hidden rounded-lg vt-exclude-namecard"
           style="view-transition-name: project-image-{item.id}"
         >
           {#if item.hoverImage || item.image}
