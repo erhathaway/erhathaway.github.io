@@ -79,7 +79,7 @@
       <!-- Namecard image replaces gradient + text -->
       <button
         type="button"
-        class="namecard-vt absolute {isProjectPage ? 'top-3' : 'top-0'} left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] overflow-hidden z-20 {isProjectPage ? 'rounded-b-xl' : ''} cursor-pointer"
+        class="namecard-vt absolute {isProjectPage ? 'top-3' : 'top-0'} left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] overflow-hidden z-20 cursor-pointer"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
         onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
         aria-label="Go home"
