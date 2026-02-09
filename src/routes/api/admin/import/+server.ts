@@ -124,7 +124,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		throw error(400, 'Invalid ZIP file');
 	}
 
-	const manifestFile = zip.file('manifest.json');
+	// Prefer manifest-with-hashes.json (has image dedup hashes), fall back to manifest.json
+	const manifestFile = zip.file('manifest-with-hashes.json') ?? zip.file('manifest.json');
 	if (!manifestFile) {
 		throw error(400, 'Invalid export package: missing manifest.json');
 	}
