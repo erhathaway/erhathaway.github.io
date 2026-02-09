@@ -9,11 +9,20 @@
 		className?: string;
 	};
 
-	let { className = '' }: Props = $props();
+	let { data, className = '' }: Props = $props();
 
 	const item = $derived(portfolio.allItems.find(i => i.slug === page.params.slug));
-	const coverSrc = $derived(item?.hoverImage || item?.image);
-	const coverFormats = $derived(item?.hoverImage ? item?.hoverImageFormats : item?.imageFormats);
+	const useHighlight = $derived(data.source !== 'normal');
+	const coverSrc = $derived(
+		useHighlight
+			? (item?.hoverImage || item?.image)
+			: item?.image
+	);
+	const coverFormats = $derived(
+		useHighlight && item?.hoverImage
+			? item?.hoverImageFormats
+			: item?.imageFormats
+	);
 	const coverSrcset = $derived(coverSrc ? getResponsiveSrcset(coverSrc) : undefined);
 	const pos = $derived(item?.coverPosition);
 </script>

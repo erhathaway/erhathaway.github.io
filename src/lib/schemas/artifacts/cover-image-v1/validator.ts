@@ -4,9 +4,11 @@ export const coverImageV1Schema = {
 	description: 'Displays the current project cover image inline.'
 } as const;
 
-export type CoverImageV1Data = Record<string, never>;
+export type CoverImageV1Data = {
+	source?: 'highlight' | 'normal';
+};
 
-export const createCoverImageV1Draft = (): CoverImageV1Data => ({});
+export const createCoverImageV1Draft = (): CoverImageV1Data => ({ source: 'highlight' });
 
 export type CoverImageV1ValidationResult =
 	| { ok: true; value: CoverImageV1Data }
@@ -16,5 +18,18 @@ export const validateCoverImageV1 = (payload: unknown): CoverImageV1ValidationRe
 	if (payload !== null && payload !== undefined && typeof payload !== 'object') {
 		return { ok: false, errors: ['dataBlob must be an object'] };
 	}
-	return { ok: true, value: {} as CoverImageV1Data };
+
+	const data = (payload ?? {}) as Record<string, unknown>;
+	const source = data.source;
+
+	if (source !== undefined && source !== 'highlight' && source !== 'normal') {
+		return { ok: false, errors: ['source must be "highlight" or "normal"'] };
+	}
+
+	return {
+		ok: true,
+		value: {
+			...(source ? { source } : {})
+		}
+	};
 };
