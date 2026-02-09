@@ -9,12 +9,12 @@
 	let { data, className = '' }: Props = $props();
 </script>
 
-<div class={`sticky top-0 z-10 -mx-8 px-8 py-6 bg-white ${className}`}>
-	<h2 class="text-2xl text-charcoal" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em;">
+<div class={`sticky top-0 z-10 -mx-8 px-8 py-8 bg-white ${className}`}>
+	<h2 class="text-xl text-walnut" style="font-family: 'DM Sans', sans-serif; font-weight: 400; letter-spacing: 0.04em;">
 		{data.title}
 	</h2>
 	{#if data.subtitle}
-		<p class="mt-2 text-sm text-ash" style="font-family: 'DM Sans', sans-serif;">
+		<p class="mt-3 text-sm text-ash/40" style="font-family: 'DM Sans', sans-serif; font-weight: 300; letter-spacing: 0.01em;">
 			{data.subtitle}
 		</p>
 	{/if}
