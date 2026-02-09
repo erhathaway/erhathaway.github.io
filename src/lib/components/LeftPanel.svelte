@@ -75,7 +75,7 @@
       <!-- Namecard image replaces gradient + text -->
       <button
         type="button"
-        class="namecard-vt absolute top-0 left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] overflow-hidden z-20 {isProjectPage ? 'rounded-b-xl' : ''} cursor-pointer"
+        class="namecard-vt absolute {isProjectPage ? 'top-3' : 'top-0'} left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] overflow-hidden z-20 {isProjectPage ? 'rounded-b-xl' : ''} cursor-pointer"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
         onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
         aria-label="Go home"
@@ -95,7 +95,7 @@
     {:else}
       <!-- Background rectangle behind name and tagline -->
       <div
-        class="namecard-vt absolute top-0 left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] border z-0"
+        class="namecard-vt absolute {isProjectPage ? 'top-3' : 'top-0'} left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] border z-0"
         style="border-color: rgba(138,128,120,0.15); background-color: #fae6d0;"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
       ></div>
