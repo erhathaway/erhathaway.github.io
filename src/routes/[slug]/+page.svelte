@@ -559,6 +559,39 @@
         {/each}
       </div>
     {/if}
+
+    <!-- Prev / Next project footer -->
+    {#if hasPrev || hasNext}
+      {@const prevItem = hasPrev ? portfolio.filteredItems[currentIndex - 1] : null}
+      {@const nextItem = hasNext ? portfolio.filteredItems[currentIndex + 1] : null}
+      <footer class="max-w-6xl mx-auto px-8 pb-16 pt-8">
+        <div class="h-px bg-cream/10 mb-10"></div>
+        <div class="flex justify-between items-start">
+          {#if prevItem}
+            <a
+              href="/{prevItem.slug}"
+              class="group flex flex-col gap-1.5 text-left"
+              onclick={(e) => { e.preventDefault(); goto(`/${prevItem.slug}`); }}
+            >
+              <span class="text-[10px] font-medium tracking-widest uppercase text-cream/40 group-hover:text-copper/70 transition-colors">Previous</span>
+              <span class="text-xl text-cream/80 group-hover:text-copper transition-colors" style="font-family: 'Cormorant Garamond', Georgia, serif;">{prevItem.name}</span>
+            </a>
+          {:else}
+            <div></div>
+          {/if}
+          {#if nextItem}
+            <a
+              href="/{nextItem.slug}"
+              class="group flex flex-col gap-1.5 text-right ml-auto"
+              onclick={(e) => { e.preventDefault(); goto(`/${nextItem.slug}`); }}
+            >
+              <span class="text-[10px] font-medium tracking-widest uppercase text-cream/40 group-hover:text-copper/70 transition-colors">Next</span>
+              <span class="text-xl text-cream/80 group-hover:text-copper transition-colors" style="font-family: 'Cormorant Garamond', Georgia, serif;">{nextItem.name}</span>
+            </a>
+          {/if}
+        </div>
+      </footer>
+    {/if}
 </main>
 {/key}
 <!-- Floating mobile nav -->
