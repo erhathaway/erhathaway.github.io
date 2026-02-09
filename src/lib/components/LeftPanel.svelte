@@ -66,10 +66,14 @@
 </script>
 
 <aside
-  class="w-full h-full text-walnut flex flex-col relative {isProjectPage ? 'pt-3' : ''} {slideInActive ? 'animate-slide-in-left' : ''}"
+  class="w-full h-full text-walnut flex flex-col relative {slideInActive ? 'animate-slide-in-left' : ''}"
   onanimationend={handleSlideInDone}
   onanimationcancel={handleSlideInDone}
 >
+  {#if isProjectPage}
+    <div class="w-full h-3 shrink-0 relative z-30" style="background: #fcfbfa;"></div>
+  {/if}
+
   {#if showNameCard}
     {#if activeNamecardImage}
       <!-- Namecard image replaces gradient + text -->
