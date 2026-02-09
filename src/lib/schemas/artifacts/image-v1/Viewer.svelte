@@ -5,9 +5,11 @@
 	type Props = {
 		data: ImageV1Data;
 		className?: string;
+		eager?: boolean;
+		aspectRatio?: number;
 	};
 
-	let { data, className = '' }: Props = $props();
+	let { data, className = '', eager = false, aspectRatio }: Props = $props();
 
 	const hasPosition = $derived(
 		data.positionX !== undefined || data.positionY !== undefined || data.zoom !== undefined
@@ -26,7 +28,8 @@
 				<img
 					src={data.imageUrl}
 					alt={data.description ?? ''}
-					loading="lazy"
+					loading={eager ? 'eager' : 'lazy'}
+					fetchpriority={eager ? 'high' : undefined}
 					class="w-full max-h-[70vh] object-cover"
 					srcset={imgSrcset}
 					sizes={imgSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
@@ -39,7 +42,8 @@
 			<img
 				src={data.imageUrl}
 				alt={data.description ?? ''}
-				loading="lazy"
+				loading={eager ? 'eager' : 'lazy'}
+				fetchpriority={eager ? 'high' : undefined}
 				class="w-full max-h-[70vh] object-cover"
 				srcset={imgSrcset}
 				sizes={imgSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}

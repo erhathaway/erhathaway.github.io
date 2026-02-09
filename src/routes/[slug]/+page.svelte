@@ -58,6 +58,8 @@
 
   // Masonry: preload images to get aspect ratios, then distribute into shortest column
   let segmentColumns = $state<Map<number, [Artifact[], Artifact[]]>>(new Map());
+  let artifactRatios = $state<Map<number, number>>(new Map());
+  let eagerIds = $state<Set<number>>(new Set());
 
   function getImageUrl(artifact: Artifact): string | null {
     if (artifact.schema !== 'image-v1') return null;
@@ -118,6 +120,15 @@
       next.set(i, distributeByAspectRatios(seg.items, ratios));
     }
     segmentColumns = next;
+    artifactRatios = ratios;
+
+    // Mark the first ~4 image artifacts as eager-load
+    const eager = new Set<number>();
+    for (const item of allItems) {
+      if (eager.size >= 4) break;
+      eager.add(item.id);
+    }
+    eagerIds = eager;
   }
 
   $effect(() => {
@@ -336,7 +347,12 @@
               {#each [0, 1] as col (col)}
                 <div class="flex flex-col gap-4">
                   {#each cols[col] as artifact (artifact.id)}
-                    <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+                    <ArtifactView
+                      schema={artifact.schema}
+                      data={artifact.dataBlob}
+                      eager={eagerIds.has(artifact.id)}
+                      aspectRatio={artifactRatios.get(artifact.id)}
+                    />
                   {/each}
                 </div>
               {/each}
