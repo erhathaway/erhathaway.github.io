@@ -28,7 +28,7 @@
 </script>
 
 {#if item && coverSrc}
-	<div class={`w-1/2 mx-auto my-16 aspect-square overflow-hidden rounded-lg ${className}`}>
+	<div class={`w-full md:w-1/2 mx-auto my-16 aspect-square overflow-hidden rounded-lg ${className}`}>
 		{#if coverFormats?.length}
 			<picture>
 				{#each getImageSources(coverSrc, coverFormats, '(max-width: 767px) 100vw, calc(100vw - 320px)') as source (source.type)}
