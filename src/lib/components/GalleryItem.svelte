@@ -71,8 +71,9 @@
     }
   });
 
-  function handleMouseEnter() {
+  function handlePointerEnter(e: PointerEvent) {
     if (isStatic) return;
+    if (e.pointerType === 'touch') return;
     portfolio.setHoveredItem(item.id);
     try {
       window.dispatchEvent(new CustomEvent('portfolio:hover', { detail: { id: item.id } }));
@@ -98,7 +99,7 @@
 <a
   href={hrefOverride ?? `/${item.slug}`}
   class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {isStatic ? '' : gridSpan} block {fadeInActive ? 'animate-fade-in' : ''} {isActive ? 'ring-2 ring-copper' : ''}"
-  onmouseenter={handleMouseEnter}
+  onpointerenter={handlePointerEnter}
   onanimationend={isStatic ? undefined : handleFadeInDone}
   onanimationcancel={isStatic ? undefined : handleFadeInDone}
   aria-label="{item.name} - {item.categories.join(', ')}"

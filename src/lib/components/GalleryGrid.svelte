@@ -12,7 +12,8 @@
   const colCount = $derived(innerWidth < 900 ? 2 : 3);
   const isMobileGallery = $derived(innerWidth < 900);
 
-  function handleGalleryLeave() {
+  function handleGalleryLeave(e: PointerEvent | MouseEvent) {
+    if ('pointerType' in e && e.pointerType === 'touch') return;
     portfolio.setHoveredItem(null);
   }
 
@@ -30,7 +31,8 @@
     }
   }
 
-  function handleNamecardTileEnter() {
+  function handleNamecardTileEnter(e: PointerEvent) {
+    if (e.pointerType === 'touch') return;
     portfolio.setHoveredItem(null);
   }
 
@@ -138,12 +140,12 @@
 
 <svelte:window bind:innerWidth />
 
-<main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-hide" onmouseleave={handleGalleryLeave}>
+<main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-hide" onpointerleave={handleGalleryLeave}>
   <div class="grid gap-0.5 p-0.5 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
     {#if homeNamecardInGallery}
       <div
         class="gallery-item group relative aspect-square overflow-hidden block"
-        onmouseenter={handleNamecardTileEnter}
+        onpointerenter={handleNamecardTileEnter}
         role="img"
         aria-label="About Ethan Hathaway"
       >
