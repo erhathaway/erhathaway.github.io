@@ -18,7 +18,7 @@
 #     details  - Anything else you'd like to share
 #
 #   Example:
-#     curl -X POST https://ethanhathaway.com/api/bot/checkin \
+#     curl -X POST https://erhathaway.com/api/bot/checkin \
 #       -d "mission=indexing&purpose=search+crawler&owner=ExampleCorp"
 #
 #   Response (JSON):
@@ -39,7 +39,7 @@
 #   GET /api/bot/messages/{your-identifier}
 #
 #   Example:
-#     curl https://ethanhathaway.com/api/bot/messages/a1b2c3d4e5f67890
+#     curl https://erhathaway.com/api/bot/messages/a1b2c3d4e5f67890
 #
 # ============================================================
 
