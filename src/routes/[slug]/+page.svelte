@@ -24,16 +24,17 @@
     }
   }
 
-  const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1', 'narrative-v1', 'dense-section-v1'];
+  const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1', 'narrative-v1', 'dense-section-v1', 'enlarge-v1'];
 
   // Non-cover published artifacts (hide cover if it exists)
   const hasCover = $derived(!!item?.image);
   const additionalArtifacts = $derived(hasCover ? artifacts.filter(a => !a.isCover) : artifacts);
 
-  // Segment artifacts into groups: masonry segments, dense masonry segments, and full-width breaks
+  // Segment artifacts into groups: masonry segments, dense masonry segments, enlarged images, and full-width breaks
   type Segment =
     | { type: 'masonry'; items: Artifact[] }
     | { type: 'dense-masonry'; items: Artifact[]; pairId: number }
+    | { type: 'enlarged'; artifact: Artifact; widthPercent: number; align: string }
     | { type: 'break'; artifact: Artifact };
 
   // Detect which dense-section pairIds are nested inside another pair
@@ -92,16 +93,50 @@
       }
     }
 
-    for (const artifact of items) {
+    // Use index-based loop so enlarge-v1 can peek ahead
+    let i = 0;
+    while (i < items.length) {
+      const artifact = items[i];
+
+      if (artifact.schema === 'enlarge-v1') {
+        // Look ahead for the next non-full-width artifact to enlarge
+        const blob = artifact.dataBlob as Record<string, unknown> | null;
+        const widthPercent = typeof blob?.widthPercent === 'number' ? blob.widthPercent : 50;
+        const align = typeof blob?.align === 'string' ? blob.align : 'center';
+        let found = false;
+        for (let j = i + 1; j < items.length; j++) {
+          if (!FULL_WIDTH_SCHEMAS.includes(items[j].schema)) {
+            // Flush current masonry/dense before the enlarged image
+            if (denseStack) {
+              if (denseStack.items.length > 0) {
+                segments.push({ type: 'dense-masonry', items: denseStack.items, pairId: denseStack.pairId });
+                denseStack = { pairId: denseStack.pairId, items: [] };
+              }
+            } else if (current.length > 0) {
+              segments.push({ type: 'masonry', items: current });
+              current = [];
+            }
+            segments.push({ type: 'enlarged', artifact: items[j], widthPercent, align });
+            i = j + 1; // skip past both the enlarger and the target
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          i++; // orphan enlarger at end, skip it
+        }
+        continue;
+      }
+
       if (artifact.schema === 'dense-section-v1') {
         const blob = artifact.dataBlob as Record<string, unknown> | null;
         const pid = typeof blob?.pairId === 'number' ? blob.pairId : -1;
 
         // Skip nested pairs — treat their markers as invisible
-        if (nestedPids.has(pid)) continue;
+        if (nestedPids.has(pid)) { i++; continue; }
 
         // Skip orphan markers (not exactly 2)
-        if ((pairCounts.get(pid) ?? 0) !== 2) continue;
+        if ((pairCounts.get(pid) ?? 0) !== 2) { i++; continue; }
 
         if (denseStack === null) {
           // Opening a dense section
@@ -143,6 +178,7 @@
           current.push(artifact);
         }
       }
+      i++;
     }
 
     // Flush remaining
@@ -452,6 +488,18 @@
         {#each segments as segment, segIdx (segIdx)}
           {#if segment.type === 'break'}
             <ArtifactView schema={segment.artifact.schema} data={segment.artifact.dataBlob} />
+          {:else if segment.type === 'enlarged'}
+            {@const justifyClass = segment.align === 'left' ? 'justify-start' : segment.align === 'right' ? 'justify-end' : 'justify-center'}
+            {@const widthPct = 50 + segment.widthPercent / 2}
+            <div class="flex {justifyClass} my-4">
+              <div style="width: {widthPct}%">
+                <ArtifactView
+                  schema={segment.artifact.schema}
+                  data={segment.artifact.dataBlob}
+                  eager={eagerIds.has(segment.artifact.id)}
+                />
+              </div>
+            </div>
           {:else if segment.type === 'dense-masonry'}
             {@const cols = segmentColumns2.get(segIdx) ?? [[], [], [], []]}
             <div class="grid grid-cols-4 gap-2 items-start">

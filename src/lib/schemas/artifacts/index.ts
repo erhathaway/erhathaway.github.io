@@ -40,10 +40,18 @@ import {
 	type DenseSectionV1ValidationResult
 } from './dense-section-v1/validator';
 import { denseSectionV1Components } from './dense-section-v1/components';
+import {
+	enlargeV1Schema,
+	validateEnlargeV1,
+	createEnlargeV1Draft,
+	type EnlargeV1Data,
+	type EnlargeV1ValidationResult
+} from './enlarge-v1/validator';
+import { enlargeV1Components } from './enlarge-v1/components';
 
 export type { ArtifactComponentContext, ArtifactComponentMap } from './types';
 
-export type ArtifactSchemaName = 'image-v1' | 'divider-v1' | 'section-title-v1' | 'narrative-v1' | 'dense-section-v1';
+export type ArtifactSchemaName = 'image-v1' | 'divider-v1' | 'section-title-v1' | 'narrative-v1' | 'dense-section-v1' | 'enlarge-v1';
 
 export type ArtifactSchemaDefinition<TSchema extends string, TData> = {
 	name: TSchema;
@@ -59,6 +67,7 @@ export type ArtifactDataBySchema = {
 	'section-title-v1': SectionTitleV1Data;
 	'narrative-v1': NarrativeV1Data;
 	'dense-section-v1': DenseSectionV1Data;
+	'enlarge-v1': EnlargeV1Data;
 };
 
 export const imageV1Definition: ArtifactSchemaDefinition<'image-v1', ImageV1Data> = {
@@ -91,7 +100,13 @@ export const denseSectionV1Definition: ArtifactSchemaDefinition<'dense-section-v
 	createDraft: createDenseSectionV1Draft
 };
 
-export const artifactSchemas = [imageV1Definition, dividerV1Definition, sectionTitleV1Definition, narrativeV1Definition, denseSectionV1Definition] as const;
+export const enlargeV1Definition: ArtifactSchemaDefinition<'enlarge-v1', EnlargeV1Data> = {
+	...enlargeV1Schema,
+	validate: validateEnlargeV1,
+	createDraft: createEnlargeV1Draft
+};
+
+export const artifactSchemas = [imageV1Definition, dividerV1Definition, sectionTitleV1Definition, narrativeV1Definition, denseSectionV1Definition, enlargeV1Definition] as const;
 
 export const getArtifactSchema = (schema: string) => {
 	return artifactSchemas.find((definition) => definition.name === schema) ?? null;
@@ -103,6 +118,7 @@ export type ArtifactValidationResult =
 	| SectionTitleV1ValidationResult
 	| NarrativeV1ValidationResult
 	| DenseSectionV1ValidationResult
+	| EnlargeV1ValidationResult
 	| { ok: false; errors: string[] };
 
 export const validateArtifactData = (
@@ -122,7 +138,8 @@ export const artifactComponentRegistry: Record<ArtifactSchemaName, ArtifactCompo
 	'divider-v1': dividerV1Components,
 	'section-title-v1': sectionTitleV1Components,
 	'narrative-v1': narrativeV1Components,
-	'dense-section-v1': denseSectionV1Components
+	'dense-section-v1': denseSectionV1Components,
+	'enlarge-v1': enlargeV1Components
 };
 
 // Typed resolver
