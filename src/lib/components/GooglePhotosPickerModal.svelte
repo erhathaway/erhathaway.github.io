@@ -340,10 +340,11 @@
 					});
 
 					if (!response.ok) {
-						// Non-critical — image still works in original format
+						const text = await response.text().catch(() => '');
+						console.error(`[transform] ${r2Key}: ${response.status} ${text}`);
 					}
-				} catch {
-					// Non-critical
+				} catch (err) {
+					console.error(`[transform] ${r2Key}: network error`, err);
 				}
 
 				transformedCount++;

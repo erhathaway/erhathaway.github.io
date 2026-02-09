@@ -39,9 +39,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	}
 
 	const origin = new URL(request.url).origin;
+	console.log(`[transform] Starting: r2Key=${r2Key}, origin=${origin}`);
 	const result = await transformToModernFormats(bucket, r2Key, origin);
 
 	if (!result.ok) {
+		console.error(`[transform] Failed: ${result.reason}`);
 		throw error(500, result.reason);
 	}
 
