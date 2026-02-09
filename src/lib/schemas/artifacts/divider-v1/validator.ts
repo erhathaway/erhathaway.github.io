@@ -8,7 +8,7 @@ export type DividerV1Data = {
 	showLine?: boolean;
 };
 
-export const createDividerV1Draft = (): DividerV1Data => ({ showLine: false });
+export const createDividerV1Draft = (): DividerV1Data => ({ showLine: true });
 
 export type DividerV1ValidationResult =
 	| { ok: true; value: DividerV1Data }
