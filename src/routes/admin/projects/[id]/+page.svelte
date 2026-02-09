@@ -106,6 +106,10 @@
 	let defaultPublishNew = $state(true);
 	let defaultSkipDescription = $state(true);
 
+	let showCoverConfirmModal = $state(false);
+	let pendingCoverAction = $state<{ type: 'set'; artifactId: number } | { type: 'clear' } | null>(null);
+	const currentCoverArtifact = $derived(artifacts.find(a => a.isCover));
+
 	let rearranging = $state(false);
 	let shrinkImages = $state(false);
 	let draggedId = $state<number | null>(null);
@@ -846,6 +850,32 @@
 		pageSuccess = 'Cover cleared.';
 	}
 
+	function requestSetCover(artifactId: number) {
+		pendingCoverAction = { type: 'set', artifactId };
+		showCoverConfirmModal = true;
+	}
+
+	function requestClearCover() {
+		pendingCoverAction = { type: 'clear' };
+		showCoverConfirmModal = true;
+	}
+
+	async function confirmCoverAction() {
+		if (!pendingCoverAction) return;
+		if (pendingCoverAction.type === 'set') {
+			await setCoverArtifact(pendingCoverAction.artifactId);
+		} else {
+			await clearCoverArtifact();
+		}
+		showCoverConfirmModal = false;
+		pendingCoverAction = null;
+	}
+
+	function cancelCoverAction() {
+		showCoverConfirmModal = false;
+		pendingCoverAction = null;
+	}
+
 	async function updateProjectBasicInfo() {
 		pageError = '';
 		pageSuccess = '';
@@ -1523,7 +1553,7 @@
 										class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors duration-150"
 										onclick={(event) => {
 											event.stopPropagation();
-											void clearCoverArtifact();
+											requestClearCover();
 										}}
 										title="Click to remove as cover"
 									>
@@ -1538,7 +1568,7 @@
 										class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium text-slate-400 border border-transparent hover:bg-slate-100 hover:text-slate-600 hover:border-slate-200 transition-all duration-150"
 										onclick={(event) => {
 											event.stopPropagation();
-											void setCoverArtifact(artifact.id);
+											requestSetCover(artifact.id);
 										}}
 										title="Set as cover"
 									>
@@ -1882,6 +1912,55 @@
 						onclick={() => void deleteProject()}
 					>
 						{isDeletingProject ? 'Deleting...' : 'Delete project'}
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Cover Confirm Modal -->
+	{#if showCoverConfirmModal && pendingCoverAction}
+		<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
+			<button
+				type="button"
+				class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+				onclick={cancelCoverAction}
+				aria-label="Close cover confirmation"
+			></button>
+			<div class="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden">
+				<div class="px-5 pt-5 pb-4">
+					<div class="flex items-center gap-3 mb-3">
+						<div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100">
+							<svg class="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+								<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+							</svg>
+						</div>
+						<h3 class="text-sm font-semibold text-slate-900">
+							{pendingCoverAction.type === 'set' ? 'Change cover' : 'Remove cover'}
+						</h3>
+					</div>
+					{#if pendingCoverAction.type === 'set' && currentCoverArtifact}
+						<p class="text-sm text-slate-500">This project already has a cover image with custom position settings. Changing the cover will <strong class="text-slate-700">reset the cover position</strong> for the new image. Continue?</p>
+					{:else if pendingCoverAction.type === 'set'}
+						<p class="text-sm text-slate-500">Set this artifact as the project cover image?</p>
+					{:else}
+						<p class="text-sm text-slate-500">Remove the cover image? Any custom cover position settings will be lost.</p>
+					{/if}
+				</div>
+				<div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-100 bg-slate-50/50">
+					<button
+						type="button"
+						class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors duration-150"
+						onclick={cancelCoverAction}
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						class="px-4 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-medium hover:bg-amber-700 transition-colors duration-150"
+						onclick={() => void confirmCoverAction()}
+					>
+						{pendingCoverAction.type === 'set' ? 'Set as cover' : 'Remove cover'}
 					</button>
 				</div>
 			</div>
