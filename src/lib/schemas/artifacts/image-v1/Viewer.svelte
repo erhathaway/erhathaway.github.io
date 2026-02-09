@@ -19,7 +19,7 @@
 </script>
 
 <figure class={`space-y-3 ${className}`}>
-	<div class="overflow-hidden rounded-[0.35rem]">
+	<div class="relative overflow-hidden rounded-[0.35rem]">
 		{#if data.imageFormats?.length}
 			<picture>
 				{#each getImageSources(data.imageUrl, data.imageFormats, '(max-width: 767px) 100vw, calc(100vw - 320px)') as source (source.type)}
@@ -52,6 +52,7 @@
 				style:transform-origin={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
 			/>
 		{/if}
+		<div class="absolute inset-0 pointer-events-none rounded-[0.35rem]" style="box-shadow: inset 0 0 12px rgba(0,0,0,0.15);"></div>
 	</div>
 	{#if data.description}
 		<figcaption class="text-xs text-ash">{data.description}</figcaption>
