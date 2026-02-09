@@ -10,7 +10,7 @@
 	import GooglePhotosPickerModal from '$lib/components/GooglePhotosPickerModal.svelte';
 	import CoverPositionEditor from '$lib/components/CoverPositionEditor.svelte';
 
-	const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1', 'narrative-v1'];
+	const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1', 'narrative-v1', 'dense-section-v1'];
 
 	type Category = {
 		id: number;
@@ -603,6 +603,62 @@
 		pageSuccess = `${schemaDef.label} created.`;
 	}
 
+	function getNextDensePairId(): number {
+		let maxId = 0;
+		for (const a of artifacts) {
+			if (a.schema === 'dense-section-v1') {
+				const blob = a.dataBlob as Record<string, unknown> | null;
+				const pid = typeof blob?.pairId === 'number' ? blob.pairId : 0;
+				if (pid > maxId) maxId = pid;
+			}
+		}
+		return maxId + 1;
+	}
+
+	async function createDenseSectionPair() {
+		pageError = '';
+		pageSuccess = '';
+		const token = await getToken();
+		if (!token) {
+			pageError = 'Sign in to create artifacts.';
+			return;
+		}
+
+		const pairId = getNextDensePairId();
+		const dataBlob = { pairId };
+
+		// Create the first marker
+		const res1 = await fetch(`/api/admin/projects/${projectId}/artifacts`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+			body: JSON.stringify({ schema: 'dense-section-v1', dataBlob, isPublished: defaultPublishNew })
+		});
+		if (!res1.ok) {
+			pageError = 'Unable to create dense section.';
+			return;
+		}
+		const first = await res1.json();
+
+		// Create the second marker
+		const res2 = await fetch(`/api/admin/projects/${projectId}/artifacts`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+			body: JSON.stringify({ schema: 'dense-section-v1', dataBlob, isPublished: defaultPublishNew })
+		});
+		if (!res2.ok) {
+			pageError = 'Created one marker but failed to create the pair. Delete the orphan and try again.';
+			artifacts = [first, ...artifacts];
+			return;
+		}
+		const second = await res2.json();
+
+		// Insert both at the top
+		artifacts = [first, second, ...artifacts];
+		await persistCurrentOrder(token);
+		addArtifactStep = 'idle';
+		pageSuccess = `Dense Section #${pairId} created (2 markers).`;
+	}
+
 	function handleArtifactDraftChange(next: Record<string, unknown>) {
 		artifactDraft = next;
 		const validation = validateArtifactData(artifactSchema, next);
@@ -769,7 +825,16 @@
 	}
 
 	async function deleteArtifact(artifactId: number) {
-		if (!confirm('Delete this artifact?')) return;
+		const artifact = artifacts.find(a => a.id === artifactId);
+		const isDensePair = artifact?.schema === 'dense-section-v1';
+		const pairId = isDensePair ? (artifact.dataBlob as Record<string, unknown> | null)?.pairId : null;
+		const sibling = isDensePair && typeof pairId === 'number'
+			? artifacts.find(a => a.id !== artifactId && a.schema === 'dense-section-v1' && (a.dataBlob as Record<string, unknown> | null)?.pairId === pairId)
+			: null;
+
+		const msg = sibling ? 'Delete both Dense Section markers?' : 'Delete this artifact?';
+		if (!confirm(msg)) return;
+
 		const token = await getToken();
 		if (!token) {
 			pageError = 'Sign in to delete artifacts.';
@@ -777,19 +842,30 @@
 		}
 		const response = await fetch(`/api/admin/projects/${projectId}/artifacts/${artifactId}`, {
 			method: 'DELETE',
-			headers: {
-				Authorization: `Bearer ${token}`
-			}
+			headers: { Authorization: `Bearer ${token}` }
 		});
 		if (!response.ok) {
 			pageError = 'Unable to delete artifact.';
 			return;
 		}
-		artifacts = artifacts.filter((artifact) => artifact.id !== artifactId);
-		if (editingArtifactId === artifactId) {
+		let removedIds = [artifactId];
+
+		// Also delete the pair sibling
+		if (sibling) {
+			const sibRes = await fetch(`/api/admin/projects/${projectId}/artifacts/${sibling.id}`, {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` }
+			});
+			if (sibRes.ok) {
+				removedIds.push(sibling.id);
+			}
+		}
+
+		artifacts = artifacts.filter((a) => !removedIds.includes(a.id));
+		if (editingArtifactId !== null && removedIds.includes(editingArtifactId)) {
 			cancelArtifactEdit();
 		}
-		pageSuccess = 'Artifact deleted.';
+		pageSuccess = sibling ? 'Dense section deleted (both markers).' : 'Artifact deleted.';
 	}
 
 	async function setCoverArtifact(artifactId: number) {
@@ -1493,6 +1569,16 @@
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
 								</svg>
 								<span class="text-xs font-medium text-slate-600">Narrative</span>
+							</button>
+							<button
+								type="button"
+								class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-slate-400 hover:shadow-sm transition-all duration-150"
+								onclick={() => void createDenseSectionPair()}
+							>
+								<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 18h16M8 12h8" />
+								</svg>
+								<span class="text-xs font-medium text-slate-600">Dense Section</span>
 							</button>
 						</div>
 						<button

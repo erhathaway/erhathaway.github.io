@@ -24,29 +24,130 @@
     }
   }
 
-  const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1', 'narrative-v1'];
+  const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1', 'narrative-v1', 'dense-section-v1'];
 
   // Non-cover published artifacts (hide cover if it exists)
   const hasCover = $derived(!!item?.image);
   const additionalArtifacts = $derived(hasCover ? artifacts.filter(a => !a.isCover) : artifacts);
 
-  // Segment artifacts into groups: masonry segments separated by full-width break artifacts
-  type Segment = { type: 'masonry'; items: Artifact[] } | { type: 'break'; artifact: Artifact };
+  // Segment artifacts into groups: masonry segments, dense masonry segments, and full-width breaks
+  type Segment =
+    | { type: 'masonry'; items: Artifact[] }
+    | { type: 'dense-masonry'; items: Artifact[]; pairId: number }
+    | { type: 'break'; artifact: Artifact };
+
+  // Detect which dense-section pairIds are nested inside another pair
+  function findNestedPairIds(items: Artifact[]): Set<number> {
+    const nested = new Set<number>();
+    // First pass: find all dense-section markers and their positions
+    const markers: { index: number; pairId: number }[] = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].schema === 'dense-section-v1') {
+        const blob = items[i].dataBlob as Record<string, unknown> | null;
+        const pid = typeof blob?.pairId === 'number' ? blob.pairId : -1;
+        if (pid >= 0) markers.push({ index: i, pairId: pid });
+      }
+    }
+    // Group markers by pairId — valid pairs have exactly 2 markers
+    const pairMap = new Map<number, number[]>();
+    for (const m of markers) {
+      const arr = pairMap.get(m.pairId) ?? [];
+      arr.push(m.index);
+      pairMap.set(m.pairId, arr);
+    }
+    // For each valid pair, check if any other pair's both markers fall entirely within it
+    const validPairs = [...pairMap.entries()].filter(([, idxs]) => idxs.length === 2);
+    for (const [outerPid, outerIdxs] of validPairs) {
+      const [oStart, oEnd] = [Math.min(...outerIdxs), Math.max(...outerIdxs)];
+      for (const [innerPid, innerIdxs] of validPairs) {
+        if (innerPid === outerPid) continue;
+        const [iStart, iEnd] = [Math.min(...innerIdxs), Math.max(...innerIdxs)];
+        if (iStart > oStart && iEnd < oEnd) {
+          nested.add(innerPid);
+        }
+      }
+    }
+    return nested;
+  }
+
+  const nestingWarnings = $derived.by(() => {
+    const nestedPids = findNestedPairIds(additionalArtifacts);
+    return [...nestedPids].map(pid => `Dense Section #${pid} is nested inside another dense section and will be ignored.`);
+  });
 
   function buildSegments(items: Artifact[]): Segment[] {
+    const nestedPids = findNestedPairIds(items);
+
     const segments: Segment[] = [];
     let current: Artifact[] = [];
+    let denseStack: { pairId: number; items: Artifact[] } | null = null;
+
+    // Track which pairIds have valid pairs (exactly 2 markers)
+    const pairCounts = new Map<number, number>();
+    for (const a of items) {
+      if (a.schema === 'dense-section-v1') {
+        const blob = a.dataBlob as Record<string, unknown> | null;
+        const pid = typeof blob?.pairId === 'number' ? blob.pairId : -1;
+        pairCounts.set(pid, (pairCounts.get(pid) ?? 0) + 1);
+      }
+    }
 
     for (const artifact of items) {
-      if (FULL_WIDTH_SCHEMAS.includes(artifact.schema)) {
-        if (current.length > 0) {
-          segments.push({ type: 'masonry', items: current });
-          current = [];
+      if (artifact.schema === 'dense-section-v1') {
+        const blob = artifact.dataBlob as Record<string, unknown> | null;
+        const pid = typeof blob?.pairId === 'number' ? blob.pairId : -1;
+
+        // Skip nested pairs — treat their markers as invisible
+        if (nestedPids.has(pid)) continue;
+
+        // Skip orphan markers (not exactly 2)
+        if ((pairCounts.get(pid) ?? 0) !== 2) continue;
+
+        if (denseStack === null) {
+          // Opening a dense section
+          if (current.length > 0) {
+            segments.push({ type: 'masonry', items: current });
+            current = [];
+          }
+          denseStack = { pairId: pid, items: [] };
+        } else if (denseStack.pairId === pid) {
+          // Closing the current dense section
+          if (denseStack.items.length > 0) {
+            segments.push({ type: 'dense-masonry', items: denseStack.items, pairId: pid });
+          }
+          denseStack = null;
+        } else {
+          // Different pair encountered while inside a dense section — shouldn't happen
+          // if nesting detection is correct, but handle gracefully
+          denseStack.items.push(artifact);
         }
-        segments.push({ type: 'break', artifact });
+      } else if (FULL_WIDTH_SCHEMAS.includes(artifact.schema)) {
+        if (denseStack) {
+          // Full-width break inside a dense section: flush dense, emit break, reopen dense
+          if (denseStack.items.length > 0) {
+            segments.push({ type: 'dense-masonry', items: denseStack.items, pairId: denseStack.pairId });
+            denseStack = { pairId: denseStack.pairId, items: [] };
+          }
+          segments.push({ type: 'break', artifact });
+        } else {
+          if (current.length > 0) {
+            segments.push({ type: 'masonry', items: current });
+            current = [];
+          }
+          segments.push({ type: 'break', artifact });
+        }
       } else {
-        current.push(artifact);
+        if (denseStack) {
+          denseStack.items.push(artifact);
+        } else {
+          current.push(artifact);
+        }
       }
+    }
+
+    // Flush remaining
+    if (denseStack && denseStack.items.length > 0) {
+      segments.push({ type: 'dense-masonry', items: denseStack.items, pairId: denseStack.pairId });
     }
     if (current.length > 0) {
       segments.push({ type: 'masonry', items: current });
@@ -57,7 +158,7 @@
   const segments = $derived(buildSegments(additionalArtifacts));
 
   // Masonry: preload images to get aspect ratios, then distribute into shortest column
-  let segmentColumns = $state<Map<number, [Artifact[], Artifact[]]>>(new Map());
+  let segmentColumns2 = $state<Map<number, Artifact[][]>>(new Map());
   let artifactRatios = $state<Map<number, number>>(new Map());
   let eagerIds = $state<Set<number>>(new Set());
 
@@ -67,16 +168,17 @@
     return typeof blob?.imageUrl === 'string' ? blob.imageUrl : null;
   }
 
-  function distributeByAspectRatios(items: Artifact[], ratios: Map<number, number>): [Artifact[], Artifact[]] {
-    // Cap ratio so the masonry algorithm reflects the max-h-[70vh] visual constraint.
-    // A column is ~50% container width; 70vh / 50vw ≈ 1.4 is a reasonable max ratio.
+  function distributeIntoColumns(items: Artifact[], ratios: Map<number, number>, numCols: number): Artifact[][] {
     const MAX_RATIO = 1.4;
-    const cols: [Artifact[], Artifact[]] = [[], []];
-    const heights = [0, 0];
+    const cols: Artifact[][] = Array.from({ length: numCols }, () => []);
+    const heights = new Array(numCols).fill(0);
     for (const item of items) {
-      const shorter = heights[0] <= heights[1] ? 0 : 1;
-      cols[shorter].push(item);
-      heights[shorter] += Math.min(ratios.get(item.id) ?? 1, MAX_RATIO);
+      let shortest = 0;
+      for (let c = 1; c < numCols; c++) {
+        if (heights[c] < heights[shortest]) shortest = c;
+      }
+      cols[shortest].push(item);
+      heights[shortest] += Math.min(ratios.get(item.id) ?? 1, MAX_RATIO);
     }
     return cols;
   }
@@ -84,10 +186,11 @@
   async function computeAllMasonry(segs: Segment[]) {
     const masonrySegments = segs
       .map((seg, i) => ({ seg, i }))
-      .filter((s): s is { seg: Extract<Segment, { type: 'masonry' }>; i: number } => s.seg.type === 'masonry');
+      .filter((s): s is { seg: Extract<Segment, { type: 'masonry' }> | Extract<Segment, { type: 'dense-masonry' }>; i: number } =>
+        s.seg.type === 'masonry' || s.seg.type === 'dense-masonry');
 
     if (masonrySegments.length === 0) {
-      segmentColumns = new Map();
+      segmentColumns2 = new Map();
       return;
     }
 
@@ -115,11 +218,12 @@
       });
     }));
 
-    const next = new Map<number, [Artifact[], Artifact[]]>();
+    const next = new Map<number, Artifact[][]>();
     for (const { seg, i } of masonrySegments) {
-      next.set(i, distributeByAspectRatios(seg.items, ratios));
+      const numCols = seg.type === 'dense-masonry' ? 4 : 2;
+      next.set(i, distributeIntoColumns(seg.items, ratios, numCols));
     }
-    segmentColumns = next;
+    segmentColumns2 = next;
     artifactRatios = ratios;
 
     // Mark the first ~4 image artifacts as eager-load
@@ -338,15 +442,38 @@
         </button>
       </div>
       <div class="max-w-6xl mx-auto p-8 mb-12">
+        {#if nestingWarnings.length > 0}
+          <div class="mb-4 rounded-lg border border-amber-200/30 bg-amber-900/10 px-4 py-3">
+            {#each nestingWarnings as warning}
+              <p class="text-xs text-amber-300/80">{warning}</p>
+            {/each}
+          </div>
+        {/if}
         {#each segments as segment, segIdx (segIdx)}
           {#if segment.type === 'break'}
             <ArtifactView schema={segment.artifact.schema} data={segment.artifact.dataBlob} />
+          {:else if segment.type === 'dense-masonry'}
+            {@const cols = segmentColumns2.get(segIdx) ?? [[], [], [], []]}
+            <div class="grid grid-cols-4 gap-2 items-start">
+              {#each cols as col, colIdx (colIdx)}
+                <div class="flex flex-col gap-2">
+                  {#each col as artifact (artifact.id)}
+                    <ArtifactView
+                      schema={artifact.schema}
+                      data={artifact.dataBlob}
+                      eager={eagerIds.has(artifact.id)}
+                      aspectRatio={artifactRatios.get(artifact.id)}
+                    />
+                  {/each}
+                </div>
+              {/each}
+            </div>
           {:else}
-            {@const cols = segmentColumns.get(segIdx) ?? [[], []]}
+            {@const cols = segmentColumns2.get(segIdx) ?? [[], []]}
             <div class="grid grid-cols-2 gap-4 items-start">
-              {#each [0, 1] as col (col)}
+              {#each cols as col, colIdx (colIdx)}
                 <div class="flex flex-col gap-4">
-                  {#each cols[col] as artifact (artifact.id)}
+                  {#each col as artifact (artifact.id)}
                     <ArtifactView
                       schema={artifact.schema}
                       data={artifact.dataBlob}
