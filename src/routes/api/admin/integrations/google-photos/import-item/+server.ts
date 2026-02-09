@@ -1,6 +1,7 @@
 import type { RequestHandler } from './$types';
 import type { R2Bucket } from '@cloudflare/workers-types';
 import { error, json } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
 import { projectArtifacts, artifactMetadata } from '$lib/server/db/schema';
 import {
@@ -10,6 +11,7 @@ import {
 	mimeToExtension,
 	type PickedMediaItem
 } from '$lib/server/integrations/google-photos';
+import { transformToModernFormats } from '$lib/server/image-transform';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
@@ -85,10 +87,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	const ext = mimeToExtension(contentType);
 	const key = `artifacts/${crypto.randomUUID()}.${ext}`;
-	// Stream directly to R2 instead of buffering the entire image in Worker memory.
-	// Buffering large images (4096px, 5-15MB each) in rapid succession can exceed
-	// the 128MB Worker memory limit before GC reclaims previous allocations.
-	await bucket.put(key, mediaResponse.body, {
+	// Buffer into ArrayBuffer — local R2 (miniflare) requires a known length,
+	// and ReadableStream from Google Photos doesn't provide Content-Length.
+	// Single 4096px images are ~5-15MB, well within the 128MB Worker limit.
+	const imageBytes = await mediaResponse.arrayBuffer();
+	await bucket.put(key, imageBytes, {
 		httpMetadata: { contentType }
 	});
 	const mediaUrl = `/${key}`;
@@ -118,12 +121,32 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		source: 'google-photos'
 	});
 
+	// Try to transform to modern formats (AVIF/WebP) via Cloudflare Image Resizing.
+	// This only works in production — fails gracefully in local dev.
+	try {
+		const origin = new URL(request.url).origin;
+		const result = await transformToModernFormats(bucket, key, origin);
+
+		if (result.ok) {
+			dataBlob.imageUrl = `/${result.avifKey}`;
+			dataBlob.imageFormats = result.formats;
+
+			await db
+				.update(projectArtifacts)
+				.set({ dataBlob })
+				.where(eq(projectArtifacts.id, artifact.id))
+				.run();
+		}
+	} catch {
+		// Transform failed (e.g., local dev) — keep original format
+	}
+
 	return json(
 		{
 			artifact: {
 				id: artifact.id,
 				schema: artifact.schema,
-				dataBlob: artifact.dataBlob,
+				dataBlob,
 				isPublished: artifact.isPublished
 			}
 		},

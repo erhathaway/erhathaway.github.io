@@ -224,30 +224,47 @@
 				// Fetch fresh auth headers per-request — Clerk JWTs expire in ~60s,
 				// and importing many images can take several minutes.
 				const headers = await authHeaders();
-				const response = await fetch('/api/admin/integrations/google-photos/import-item', {
-					method: 'POST',
-					headers: { ...headers, 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						projectId,
-						item,
-						isPublished,
-						skipDescription
-					})
-				});
+				const controller = new AbortController();
+				const timeoutId = setTimeout(() => controller.abort(), 120_000); // 2 min per image
 
-				if (!response.ok) {
-					const text = await response.text();
-					throw new Error(text || 'Import failed');
+				try {
+					const response = await fetch('/api/admin/integrations/google-photos/import-item', {
+						method: 'POST',
+						headers: { ...headers, 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							projectId,
+							item,
+							isPublished,
+							skipDescription
+						}),
+						signal: controller.signal
+					});
+
+					clearTimeout(timeoutId);
+
+					if (!response.ok) {
+						const text = await response.text();
+						throw new Error(text || 'Import failed');
+					}
+
+					const data = await response.json();
+					importResults.created = [...importResults.created, data.artifact];
+				} catch (fetchErr) {
+					clearTimeout(timeoutId);
+					throw fetchErr;
 				}
-
-				const data = await response.json();
-				importResults.created = [...importResults.created, data.artifact];
 			} catch (err) {
+				const message =
+					err instanceof DOMException && err.name === 'AbortError'
+						? 'Timed out (image may be too large)'
+						: err instanceof Error
+							? err.message
+							: 'Import failed';
 				importResults.errors = [
 					...importResults.errors,
 					{
 						filename: item.mediaFile.filename,
-						error: err instanceof Error ? err.message : 'Import failed'
+						error: message
 					}
 				];
 			}
