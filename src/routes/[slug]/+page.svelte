@@ -193,6 +193,25 @@
 
   const segments = $derived(buildSegments(additionalArtifacts));
 
+  // Group segments into sections: each section-title break starts a new group.
+  // segIdx is preserved so segmentColumns2 lookups still work.
+  type SectionGroup = { segments: { segment: Segment; segIdx: number }[] };
+  const sectionGroups = $derived.by(() => {
+    const groups: SectionGroup[] = [];
+    let current: SectionGroup = { segments: [] };
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const isSectionTitle = seg.type === 'break' && seg.artifact.schema === 'section-title-v1';
+      if (isSectionTitle && current.segments.length > 0) {
+        groups.push(current);
+        current = { segments: [] };
+      }
+      current.segments.push({ segment: seg, segIdx: i });
+    }
+    if (current.segments.length > 0) groups.push(current);
+    return groups;
+  });
+
   // Masonry: preload images to get aspect ratios, then distribute into shortest column
   let segmentColumns2 = $state<Map<number, Artifact[][]>>(new Map());
   let artifactRatios = $state<Map<number, number>>(new Map());
@@ -485,54 +504,58 @@
             {/each}
           </div>
         {/if}
-        {#each segments as segment, segIdx (segIdx)}
-          {#if segment.type === 'break'}
-            <ArtifactView schema={segment.artifact.schema} data={segment.artifact.dataBlob} />
-          {:else if segment.type === 'enlarged'}
-            {@const justifyClass = segment.align === 'left' ? 'justify-start' : segment.align === 'right' ? 'justify-end' : 'justify-center'}
-            {@const widthPct = 50 + segment.widthPercent / 2}
-            <div class="flex {justifyClass} my-4">
-              <div style="width: {widthPct}%">
-                <ArtifactView
-                  schema={segment.artifact.schema}
-                  data={segment.artifact.dataBlob}
-                  eager={eagerIds.has(segment.artifact.id)}
-                />
-              </div>
-            </div>
-          {:else if segment.type === 'dense-masonry'}
-            {@const cols = segmentColumns2.get(segIdx) ?? [[], [], [], []]}
-            <div class="grid grid-cols-4 gap-2 items-start">
-              {#each cols as col, colIdx (colIdx)}
-                <div class="flex flex-col gap-2">
-                  {#each col as artifact (artifact.id)}
+        {#each sectionGroups as group, groupIdx (groupIdx)}
+          <div>
+            {#each group.segments as { segment, segIdx } (segIdx)}
+              {#if segment.type === 'break'}
+                <ArtifactView schema={segment.artifact.schema} data={segment.artifact.dataBlob} />
+              {:else if segment.type === 'enlarged'}
+                {@const justifyClass = segment.align === 'left' ? 'justify-start' : segment.align === 'right' ? 'justify-end' : 'justify-center'}
+                {@const widthPct = 50 + segment.widthPercent / 2}
+                <div class="flex {justifyClass} my-4">
+                  <div style="width: {widthPct}%">
                     <ArtifactView
-                      schema={artifact.schema}
-                      data={artifact.dataBlob}
-                      eager={eagerIds.has(artifact.id)}
-                      aspectRatio={artifactRatios.get(artifact.id)}
+                      schema={segment.artifact.schema}
+                      data={segment.artifact.dataBlob}
+                      eager={eagerIds.has(segment.artifact.id)}
                     />
+                  </div>
+                </div>
+              {:else if segment.type === 'dense-masonry'}
+                {@const cols = segmentColumns2.get(segIdx) ?? [[], [], [], []]}
+                <div class="grid grid-cols-4 gap-2 items-start">
+                  {#each cols as col, colIdx (colIdx)}
+                    <div class="flex flex-col gap-2">
+                      {#each col as artifact (artifact.id)}
+                        <ArtifactView
+                          schema={artifact.schema}
+                          data={artifact.dataBlob}
+                          eager={eagerIds.has(artifact.id)}
+                          aspectRatio={artifactRatios.get(artifact.id)}
+                        />
+                      {/each}
+                    </div>
                   {/each}
                 </div>
-              {/each}
-            </div>
-          {:else}
-            {@const cols = segmentColumns2.get(segIdx) ?? [[], []]}
-            <div class="grid grid-cols-2 gap-4 items-start">
-              {#each cols as col, colIdx (colIdx)}
-                <div class="flex flex-col gap-4">
-                  {#each col as artifact (artifact.id)}
-                    <ArtifactView
-                      schema={artifact.schema}
-                      data={artifact.dataBlob}
-                      eager={eagerIds.has(artifact.id)}
-                      aspectRatio={artifactRatios.get(artifact.id)}
-                    />
+              {:else}
+                {@const cols = segmentColumns2.get(segIdx) ?? [[], []]}
+                <div class="grid grid-cols-2 gap-4 items-start">
+                  {#each cols as col, colIdx (colIdx)}
+                    <div class="flex flex-col gap-4">
+                      {#each col as artifact (artifact.id)}
+                        <ArtifactView
+                          schema={artifact.schema}
+                          data={artifact.dataBlob}
+                          eager={eagerIds.has(artifact.id)}
+                          aspectRatio={artifactRatios.get(artifact.id)}
+                        />
+                      {/each}
+                    </div>
                   {/each}
                 </div>
-              {/each}
-            </div>
-          {/if}
+              {/if}
+            {/each}
+          </div>
         {/each}
       </div>
     {/if}

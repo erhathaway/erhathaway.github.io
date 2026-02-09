@@ -9,7 +9,7 @@
 	let { data, className = '' }: Props = $props();
 </script>
 
-<div class={`py-6 ${className}`}>
+<div class={`sticky top-0 z-10 py-6 bg-charcoal ${className}`}>
 	<h2 class="text-2xl text-cream/90" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em;">
 		{data.title}
 	</h2>
