@@ -19,7 +19,7 @@
 </script>
 
 <figure class={`space-y-3 ${className}`}>
-	<div class="overflow-hidden rounded-lg">
+	<div class="overflow-hidden rounded-[0.35rem]">
 		{#if data.imageFormats?.length}
 			<picture>
 				{#each getImageSources(data.imageUrl, data.imageFormats, '(max-width: 767px) 100vw, calc(100vw - 320px)') as source (source.type)}
