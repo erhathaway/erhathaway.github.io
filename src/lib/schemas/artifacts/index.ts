@@ -24,10 +24,18 @@ import {
 	type SectionTitleV1ValidationResult
 } from './section-title-v1/validator';
 import { sectionTitleV1Components } from './section-title-v1/components';
+import {
+	narrativeV1Schema,
+	validateNarrativeV1,
+	createNarrativeV1Draft,
+	type NarrativeV1Data,
+	type NarrativeV1ValidationResult
+} from './narrative-v1/validator';
+import { narrativeV1Components } from './narrative-v1/components';
 
 export type { ArtifactComponentContext, ArtifactComponentMap } from './types';
 
-export type ArtifactSchemaName = 'image-v1' | 'divider-v1' | 'section-title-v1';
+export type ArtifactSchemaName = 'image-v1' | 'divider-v1' | 'section-title-v1' | 'narrative-v1';
 
 export type ArtifactSchemaDefinition<TSchema extends string, TData> = {
 	name: TSchema;
@@ -41,6 +49,7 @@ export type ArtifactDataBySchema = {
 	'image-v1': ImageV1Data;
 	'divider-v1': DividerV1Data;
 	'section-title-v1': SectionTitleV1Data;
+	'narrative-v1': NarrativeV1Data;
 };
 
 export const imageV1Definition: ArtifactSchemaDefinition<'image-v1', ImageV1Data> = {
@@ -61,7 +70,13 @@ export const sectionTitleV1Definition: ArtifactSchemaDefinition<'section-title-v
 	createDraft: createSectionTitleV1Draft
 };
 
-export const artifactSchemas = [imageV1Definition, dividerV1Definition, sectionTitleV1Definition] as const;
+export const narrativeV1Definition: ArtifactSchemaDefinition<'narrative-v1', NarrativeV1Data> = {
+	...narrativeV1Schema,
+	validate: validateNarrativeV1,
+	createDraft: createNarrativeV1Draft
+};
+
+export const artifactSchemas = [imageV1Definition, dividerV1Definition, sectionTitleV1Definition, narrativeV1Definition] as const;
 
 export const getArtifactSchema = (schema: string) => {
 	return artifactSchemas.find((definition) => definition.name === schema) ?? null;
@@ -71,6 +86,7 @@ export type ArtifactValidationResult =
 	| ImageV1ValidationResult
 	| DividerV1ValidationResult
 	| SectionTitleV1ValidationResult
+	| NarrativeV1ValidationResult
 	| { ok: false; errors: string[] };
 
 export const validateArtifactData = (
@@ -88,7 +104,8 @@ export const validateArtifactData = (
 export const artifactComponentRegistry: Record<ArtifactSchemaName, ArtifactComponentMap> = {
 	'image-v1': imageV1Components,
 	'divider-v1': dividerV1Components,
-	'section-title-v1': sectionTitleV1Components
+	'section-title-v1': sectionTitleV1Components,
+	'narrative-v1': narrativeV1Components
 };
 
 // Typed resolver

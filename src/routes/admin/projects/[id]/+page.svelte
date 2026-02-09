@@ -10,7 +10,7 @@
 	import GooglePhotosPickerModal from '$lib/components/GooglePhotosPickerModal.svelte';
 	import CoverPositionEditor from '$lib/components/CoverPositionEditor.svelte';
 
-	const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1'];
+	const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1', 'narrative-v1'];
 
 	type Category = {
 		id: number;
@@ -1443,6 +1443,26 @@
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h8" />
 								</svg>
 								<span class="text-xs font-medium text-slate-600">Section Title</span>
+							</button>
+							<button
+								type="button"
+								class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-slate-400 hover:shadow-sm transition-all duration-150"
+								onclick={() => {
+									artifactSchema = 'narrative-v1';
+									const schemaDef = getArtifactSchema('narrative-v1');
+									if (schemaDef) {
+										artifactDraft = schemaDef.createDraft() as Record<string, unknown>;
+										const validation = validateArtifactData('narrative-v1', artifactDraft);
+										artifactDraftErrors = validation.ok ? [] : validation.errors;
+									}
+									addArtifactStep = 'idle';
+									showCreateArtifactModal = true;
+								}}
+							>
+								<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+								</svg>
+								<span class="text-xs font-medium text-slate-600">Narrative</span>
 							</button>
 						</div>
 						<button
