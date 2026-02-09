@@ -66,7 +66,7 @@
 </script>
 
 <aside
-  class="w-full h-full text-walnut flex flex-col relative {slideInActive ? 'animate-slide-in-left' : ''}"
+  class="w-full h-full text-walnut flex flex-col relative {isProjectPage ? 'pt-3' : ''} {slideInActive ? 'animate-slide-in-left' : ''}"
   onanimationend={handleSlideInDone}
   onanimationcancel={handleSlideInDone}
 >
