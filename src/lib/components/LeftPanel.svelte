@@ -130,7 +130,7 @@
   {/if}
 
   <!-- Main Content Area - glass white background fills from namecard to bottom -->
-  <div class="flex-1 flex flex-col relative z-0 min-h-0 border-l border-black/10" style="background: rgba(245, 241, 235, {isMobile ? 0.92 : 0.28}); -webkit-backdrop-filter: saturate(180%) blur(100px); backdrop-filter: saturate(180%) blur(100px);">
+  <div class="flex-1 flex flex-col relative z-0 min-h-0 {isProjectPage ? '' : 'border-l border-black/10'}" style="background: rgba(245, 241, 235, {isMobile ? 0.92 : 0.28}); -webkit-backdrop-filter: saturate(180%) blur(100px); backdrop-filter: saturate(180%) blur(100px);">
 
     <!-- Scrollable Navigation Area -->
     <nav
