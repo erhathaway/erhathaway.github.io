@@ -119,6 +119,8 @@
 	let insertAtIndex = $state<number | null>(null);
 	let inlineMenuIndex = $state<number | null>(null);
 
+	let recentMoves = $state<Map<number, 'top' | 'center' | 'bottom'>>(new Map());
+
 	$effect(() => {
 		(window as unknown as Record<string, unknown>).__adminRearranging = rearranging;
 		return () => { (window as unknown as Record<string, unknown>).__adminRearranging = false; };
@@ -183,6 +185,38 @@
 	function handleArtifactDragEnd() {
 		draggedId = null;
 		dropTargetId = null;
+	}
+
+	async function moveArtifact(artifactId: number, target: 'top' | 'center' | 'bottom') {
+		const fromIndex = artifacts.findIndex((a) => a.id === artifactId);
+		if (fromIndex === -1) return;
+
+		let toIndex: number;
+		if (target === 'top') {
+			toIndex = 0;
+		} else if (target === 'bottom') {
+			toIndex = artifacts.length - 1;
+		} else {
+			toIndex = Math.floor(artifacts.length / 2);
+		}
+
+		if (fromIndex === toIndex) return;
+
+		const reordered = [...artifacts];
+		const [moved] = reordered.splice(fromIndex, 1);
+		reordered.splice(toIndex, 0, moved);
+		artifacts = reordered;
+
+		recentMoves = new Map(recentMoves).set(artifactId, target);
+
+		reorderSaving = true;
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await persistCurrentOrder(token);
+		} finally {
+			reorderSaving = false;
+		}
 	}
 
 	let editingArtifactIndex = $derived(
@@ -1413,7 +1447,7 @@
 					</div>
 					<button
 						type="button"
-						onclick={() => { rearranging = !rearranging; if (!rearranging) shrinkImages = false; }}
+						onclick={() => { rearranging = !rearranging; if (!rearranging) { shrinkImages = false; recentMoves = new Map(); } }}
 						class={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150 ${
 							rearranging
 								? 'border-blue-300 bg-blue-50 text-blue-700'
@@ -1718,6 +1752,47 @@
 										<circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
 										<circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
 									</svg>
+									<div class="flex items-center gap-1">
+										<button
+											type="button"
+											class="px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors duration-150 {idx === 0 ? 'text-slate-300 cursor-default' : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600'}"
+											disabled={idx === 0}
+											onclick={(e) => { e.stopPropagation(); void moveArtifact(artifact.id, 'top'); }}
+											title="Move to top"
+										>Top</button>
+										<button
+											type="button"
+											class="px-1.5 py-0.5 rounded text-[10px] font-medium text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
+											onclick={(e) => { e.stopPropagation(); void moveArtifact(artifact.id, 'center'); }}
+											title="Move to center"
+										>Mid</button>
+										<button
+											type="button"
+											class="px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors duration-150 {idx === artifacts.length - 1 ? 'text-slate-300 cursor-default' : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600'}"
+											disabled={idx === artifacts.length - 1}
+											onclick={(e) => { e.stopPropagation(); void moveArtifact(artifact.id, 'bottom'); }}
+											title="Move to bottom"
+										>End</button>
+									</div>
+									{#if recentMoves.has(artifact.id)}
+										{@const moveType = recentMoves.get(artifact.id)}
+										<span class={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-medium ${
+											moveType === 'top' ? 'bg-violet-50 text-violet-600 border border-violet-200' :
+											moveType === 'bottom' ? 'bg-orange-50 text-orange-600 border border-orange-200' :
+											'bg-cyan-50 text-cyan-600 border border-cyan-200'
+										}`}>
+											<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												{#if moveType === 'top'}
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+												{:else if moveType === 'bottom'}
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+												{:else}
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h8" />
+												{/if}
+											</svg>
+											{moveType === 'top' ? 'Moved top' : moveType === 'bottom' ? 'Moved end' : 'Moved mid'}
+										</span>
+									{/if}
 								{/if}
 								<span class="text-[11px] font-medium text-slate-400">{getArtifactSchema(artifact.schema)?.label ?? artifact.schema}</span>
 								<span
