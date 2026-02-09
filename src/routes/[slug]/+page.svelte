@@ -24,7 +24,7 @@
     }
   }
 
-  const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1', 'narrative-v1', 'dense-section-v1', 'enlarge-v1'];
+  const FULL_WIDTH_SCHEMAS = ['divider-v1', 'section-title-v1', 'narrative-v1', 'dense-section-v1', 'enlarge-v1', 'cover-image-v1'];
 
   // Non-cover published artifacts (hide cover if it exists)
   const hasCover = $derived(!!item?.image);

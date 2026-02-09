@@ -1655,6 +1655,16 @@
 								</svg>
 								<span class="text-xs font-medium text-slate-600">Enlarge</span>
 							</button>
+							<button
+								type="button"
+								class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-slate-400 hover:shadow-sm transition-all duration-150"
+								onclick={() => void createSimpleArtifact('cover-image-v1')}
+							>
+								<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+								</svg>
+								<span class="text-xs font-medium text-slate-600">Cover Image</span>
+							</button>
 						</div>
 						<button
 							type="button"
@@ -1721,6 +1731,10 @@
 								<button type="button" class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150" onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; artifactSchema = 'enlarge-v1'; const schemaDef = getArtifactSchema('enlarge-v1'); if (schemaDef) { artifactDraft = schemaDef.createDraft() as Record<string, unknown>; const validation = validateArtifactData('enlarge-v1', artifactDraft); artifactDraftErrors = validation.ok ? [] : validation.errors; } showCreateArtifactModal = true; }}>
 									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
 									Enlarge
+								</button>
+								<button type="button" class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150" onclick={() => { insertAtIndex = idx; inlineMenuIndex = null; void createSimpleArtifact('cover-image-v1'); }}>
+									<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" /></svg>
+									Cover
 								</button>
 							</div>
 						{/if}
