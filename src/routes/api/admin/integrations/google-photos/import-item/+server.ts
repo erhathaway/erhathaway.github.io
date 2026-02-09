@@ -1,7 +1,6 @@
 import type { RequestHandler } from './$types';
 import type { R2Bucket } from '@cloudflare/workers-types';
 import { error, json } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
 import { projectArtifacts, artifactMetadata } from '$lib/server/db/schema';
 import {
@@ -11,7 +10,6 @@ import {
 	mimeToExtension,
 	type PickedMediaItem
 } from '$lib/server/integrations/google-photos';
-import { transformToModernFormats } from '$lib/server/image-transform';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
@@ -121,33 +119,15 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		source: 'google-photos'
 	});
 
-	// Try to transform to modern formats (AVIF/WebP) via Cloudflare Image Resizing.
-	// This only works in production — fails gracefully in local dev.
-	try {
-		const origin = new URL(request.url).origin;
-		const result = await transformToModernFormats(bucket, key, origin);
-
-		if (result.ok) {
-			dataBlob.imageUrl = `/${result.avifKey}`;
-			dataBlob.imageFormats = result.formats;
-
-			await db
-				.update(projectArtifacts)
-				.set({ dataBlob })
-				.where(eq(projectArtifacts.id, artifact.id))
-				.run();
-		}
-	} catch {
-		// Transform failed (e.g., local dev) — keep original format
-	}
-
 	return json(
 		{
 			artifact: {
 				id: artifact.id,
 				schema: artifact.schema,
-				dataBlob,
-				isPublished: artifact.isPublished
+				dataBlob: artifact.dataBlob,
+				isPublished: artifact.isPublished,
+				// Pass R2 key so the client can trigger format transform separately
+				r2Key: key
 			}
 		},
 		{ headers: corsHeaders }

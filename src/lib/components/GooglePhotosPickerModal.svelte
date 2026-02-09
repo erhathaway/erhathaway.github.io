@@ -35,7 +35,7 @@
 
 	let { projectId, getToken, onImported, onClose, isPublished = false, skipDescription = false }: Props = $props();
 
-	type Step = 'creating' | 'waiting' | 'loading-items' | 'confirm' | 'importing' | 'done' | 'error';
+	type Step = 'creating' | 'waiting' | 'loading-items' | 'confirm' | 'importing' | 'optimizing' | 'done' | 'error';
 	let step = $state<Step>('creating');
 	let errorMessage = $state('');
 
@@ -47,6 +47,10 @@
 	let importResults = $state<{ created: ImportedArtifact[]; errors: Array<{ filename: string; error: string }> }>({ created: [], errors: [] });
 	let currentFilename = $state('');
 	let cancelled = $state(false);
+
+	// Transform tracking
+	let transformedCount = $state(0);
+	let transformTotal = $state(0);
 
 	let popup: Window | null = null;
 	let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -114,7 +118,6 @@
 
 	// Step 3-4: Poll session
 	function startPolling() {
-		// Poll every 3 seconds (Google recommends using pollingConfig but this is a safe default)
 		pollTimer = setInterval(async () => {
 			try {
 				const headers = await authHeaders();
@@ -139,14 +142,11 @@
 	function startPopupCheck() {
 		popupCheckTimer = setInterval(() => {
 			if (popup && popup.closed) {
-				// Popup closed — give polling more time to catch the final state.
-				// Google may need 10-15s after the popup closes to finalize the selection.
 				if (popupCheckTimer) clearInterval(popupCheckTimer);
 				popupCheckTimer = null;
 
 				setTimeout(() => {
 					if (step === 'waiting') {
-						// Still waiting after popup closed — user may have cancelled
 						stopPolling();
 						onClose();
 					}
@@ -215,17 +215,18 @@
 		currentFilename = '';
 		importResults = { created: [], errors: [] };
 
+		// Collect r2Keys for transform phase
+		const r2Keys: Array<{ artifactId: number; r2Key: string; field: 'imageUrl' }> = [];
+
 		for (const item of pickedItems) {
 			if (cancelled) break;
 
 			currentFilename = item.mediaFile.filename;
 
 			try {
-				// Fetch fresh auth headers per-request — Clerk JWTs expire in ~60s,
-				// and importing many images can take several minutes.
 				const headers = await authHeaders();
 				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), 120_000); // 2 min per image
+				const timeoutId = setTimeout(() => controller.abort(), 120_000);
 
 				try {
 					const response = await fetch('/api/admin/integrations/google-photos/import-item', {
@@ -249,6 +250,14 @@
 
 					const data = await response.json();
 					importResults.created = [...importResults.created, data.artifact];
+
+					if (data.artifact.r2Key) {
+						r2Keys.push({
+							artifactId: data.artifact.id,
+							r2Key: data.artifact.r2Key,
+							field: 'imageUrl'
+						});
+					}
 				} catch (fetchErr) {
 					clearTimeout(timeoutId);
 					throw fetchErr;
@@ -285,12 +294,38 @@
 			// Non-critical cleanup failure
 		}
 
-		step = 'done';
-
-		// Notify parent
+		// Notify parent with imported artifacts (before transforms)
 		if (importResults.created.length > 0) {
 			onImported(importResults.created);
 		}
+
+		// Step 7: Optimize — transform each image to AVIF/WebP in separate requests
+		if (r2Keys.length > 0) {
+			step = 'optimizing';
+			transformTotal = r2Keys.length;
+			transformedCount = 0;
+
+			for (const { artifactId, r2Key, field } of r2Keys) {
+				try {
+					const headers = await authHeaders();
+					const response = await fetch('/api/admin/images/transform', {
+						method: 'POST',
+						headers: { ...headers, 'Content-Type': 'application/json' },
+						body: JSON.stringify({ r2Key, artifactId, field })
+					});
+
+					if (!response.ok) {
+						// Non-critical — image still works in original format
+					}
+				} catch {
+					// Non-critical
+				}
+
+				transformedCount++;
+			}
+		}
+
+		step = 'done';
 	}
 
 	function handleCancelImport() {
@@ -302,7 +337,6 @@
 		if (popup && !popup.closed) {
 			popup.close();
 		}
-		// Clean up session
 		if (sessionId) {
 			authHeaders().then((headers) => {
 				fetch(`/api/admin/integrations/google-photos/sessions/${sessionId}`, {
@@ -326,7 +360,7 @@
 	<button
 		type="button"
 		class="absolute inset-0 bg-black/40 backdrop-blur-sm"
-		onclick={step === 'importing' ? undefined : handleCancel}
+		onclick={step === 'importing' || step === 'optimizing' ? undefined : handleCancel}
 		aria-label="Close modal"
 	></button>
 
@@ -339,11 +373,12 @@
 				{:else if step === 'loading-items'}Loading selected items...
 				{:else if step === 'confirm'}Import from Google Photos
 				{:else if step === 'importing'}Importing...
+				{:else if step === 'optimizing'}Optimizing images...
 				{:else if step === 'done'}Import Complete
 				{:else}Error
 				{/if}
 			</h3>
-			{#if step !== 'importing'}
+			{#if step !== 'importing' && step !== 'optimizing'}
 				<button
 					type="button"
 					class="rounded-lg p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
@@ -432,6 +467,19 @@
 					{#if currentFilename}
 						<p class="text-xs text-slate-400 truncate max-w-full">{currentFilename}</p>
 					{/if}
+				</div>
+
+			{:else if step === 'optimizing'}
+				<div class="flex flex-col items-center gap-4 py-4">
+					<div class="w-full bg-slate-100 rounded-full h-2">
+						<div
+							class="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+							style="width: {transformTotal > 0 ? Math.max(5, (transformedCount / transformTotal) * 100) : 5}%"
+						></div>
+					</div>
+					<p class="text-sm text-slate-500">
+						Converting to AVIF/WebP: {transformedCount} of {transformTotal}
+					</p>
 				</div>
 
 			{:else if step === 'done'}

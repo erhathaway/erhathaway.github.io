@@ -414,3 +414,33 @@ The admin has a preview page at `/admin/schemas/[name]` that renders all 5 conte
 - Auth-gated via `+page.server.ts` (redirects to sign-in)
 - Linked from the "Schemas" section in the admin left nav (`src/routes/admin/+layout.svelte`)
 - The nav section is auto-generated from the `artifactSchemas` array, so new schemas appear automatically
+
+## Deployment
+
+The site deploys to Cloudflare Workers via Wrangler. The build and deploy are a single command:
+
+```bash
+bun run deploy        # or: bunx wrangler deploy
+```
+
+This runs `vite build` (configured in `wrangler.toml [build]`), then uploads the Worker + static assets to Cloudflare.
+
+- **Production URL:** `erhathaway.com`
+- **Route:** `erhathaway.com/*` (defined in `wrangler.toml`)
+
+### Secrets (set via `wrangler secret put <NAME>`)
+
+- `CLERK_SECRET_KEY` — Clerk authentication
+- `GOOGLE_CLIENT_SECRET` — Google Photos OAuth
+- `GOOGLE_TOKEN_ENCRYPTION_KEY` — AES-GCM key for encrypting stored Google tokens
+- `PUBLIC_CF_IMAGE_RESIZING` — set to `true` in production only (enables responsive srcset URLs)
+
+### Database migrations
+
+After schema changes, generate and apply migrations before deploying:
+
+```bash
+bun run db:generate                    # generate migration SQL
+bun run db:migrate:remote              # apply to production D1
+bun run deploy                         # deploy the Worker
+```

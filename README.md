@@ -54,9 +54,19 @@ PUBLIC_R2_BASE_URL=https://<account-id>.r2.cloudflarestorage.com/portfolio-artif
 ## Build and Deploy
 
 ```sh
-bun run build
-bun run preview
-bun run deploy
+bun run build          # build for production (Vite)
+bun run preview        # preview the build locally
+bun run deploy         # build + deploy to Cloudflare Workers (runs vite build, then wrangler deploy)
+```
+
+Deployment target is Cloudflare Workers at `erhathaway.com`. The `wrangler.toml [build]` section runs `bun run build` automatically, so `bun run deploy` is the only command needed.
+
+If you have pending database migrations, apply them before deploying:
+
+```sh
+bun run db:generate          # generate migration SQL from schema changes
+bun run db:migrate:remote    # apply to production D1
+bun run deploy               # deploy the Worker
 ```
 
 ## Integration Testing (API)
