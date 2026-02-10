@@ -175,8 +175,12 @@
     view-transition-name: none !important;
   }
 
-  /* During home↔project view transitions, keep the namecard trigger out of the nav animation. */
-  html.vt-home-project-nav .namecard-vt {
+  /* During home↔project view transitions, keep the namecard trigger out of the nav animation.
+     The name-card-bg image in the gallery tile must also be excluded — otherwise it gets
+     extracted into its own view-transition-group at z-index 299 and visually overflows
+     neighboring grid cells until the transition finishes. */
+  html.vt-home-project-nav .namecard-vt,
+  html.vt-home-project-nav .namecard-bg-nav-vt {
     view-transition-name: none !important;
   }
 

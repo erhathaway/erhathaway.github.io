@@ -192,7 +192,7 @@
               <img
                 src={portfolio.namecardImage.imageUrl}
                 alt="Ethan Hathaway"
-                class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                class="namecard-bg-nav-vt absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
                 style:object-position={innerWidth < 700 ? '50% 50%' : `${portfolio.namecardImage.positionX}% ${portfolio.namecardImage.positionY}%`}
                 style:transform="scale({portfolio.namecardImage.zoom * (innerWidth < 700 ? 1.25 : 1)})"
                 style:transform-origin={innerWidth < 700 ? '50% 50%' : `${portfolio.namecardImage.positionX}% ${portfolio.namecardImage.positionY}%`}
@@ -207,7 +207,7 @@
             <img
               src={portfolio.namecardImage.imageUrl}
               alt="Ethan Hathaway"
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+              class="namecard-bg-nav-vt absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
               style:object-position={innerWidth < 700 ? '50% 50%' : `${portfolio.namecardImage.positionX}% ${portfolio.namecardImage.positionY}%`}
               style:transform="scale({portfolio.namecardImage.zoom * (innerWidth < 700 ? 1.25 : 1)})"
               style:transform-origin={innerWidth < 700 ? '50% 50%' : `${portfolio.namecardImage.positionX}% ${portfolio.namecardImage.positionY}%`}
