@@ -2,7 +2,6 @@
   import type { PageData } from './$types';
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { goto } from '$app/navigation';
-  import { dev } from '$app/environment';
   import { onMount } from 'svelte';
   import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
   import { getImageSources, getResponsiveSrcset, replaceExtension } from '$lib/utils/image-formats';
@@ -657,15 +656,3 @@
 </div>
 {/if}
 
-{#if dev}
-  <button
-    type="button"
-    class="fixed bottom-4 right-4 z-[9999] px-3 py-1.5 rounded-lg bg-red-900/80 text-red-200 text-xs hover:bg-red-800 transition-colors"
-    onclick={() => {
-      hasScrolled = false;
-      showScrollHint = true;
-    }}
-  >
-    Reset tease
-  </button>
-{/if}
