@@ -434,52 +434,8 @@
 {:else}
 {#key item.id}
 <main bind:this={mainEl} class="h-screen overflow-y-auto bg-charcoal" style="border-left: 1px solid #00000024;">
-    <!-- Bottom gradient glow -->
-    {#if additionalArtifacts.length > 0 && !hasScrolled}
-      <div
-        class="pointer-events-none fixed bottom-0 left-0 right-0 z-20 h-24 transition-opacity duration-700"
-        style="background: linear-gradient(to top, rgba(184, 115, 51, 0.12), transparent)"
-      ></div>
-    {/if}
-    <!-- "Scroll for more" + arrows aligned with cover image center -->
-    {#if additionalArtifacts.length > 0}
-      <div
-        class="fixed bottom-5 z-20 flex items-center gap-3 transition-all duration-700"
-        style="left: {coverCenterX}px; transform: translateX(-50%) translateY({showScrollHint ? '0' : '12px'}); opacity: {showScrollHint ? 1 : 0}"
-      >
-        <span
-          class="pointer-events-none text-xs tracking-widest uppercase {hasScrolled ? '' : 'scroll-hint-text'}"
-          style="font-family: 'DM Sans', sans-serif; {hasScrolled ? 'color: #88847F;' : ''}"
-        >Scroll for more</span>
-        <div class="flex gap-0.5">
-          <button
-            type="button"
-            class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
-            style={hasScrolled ? '' : 'animation: scroll-wave 2.5s ease-in-out infinite'}
-            onclick={() => mainEl?.scrollBy({ top: -200, behavior: 'smooth' })}
-            aria-label="Scroll up"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
-            style={hasScrolled ? '' : 'animation: scroll-wave 2.5s ease-in-out 0.25s infinite'}
-            onclick={() => mainEl?.scrollBy({ top: 200, behavior: 'smooth' })}
-            aria-label="Scroll down"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    {/if}
-
     <!-- Hero: text + cover side by side -->
-    <div class="flex flex-col lg:flex-row min-h-screen lg:items-center">
+    <div class="relative flex flex-col lg:flex-row min-h-screen lg:items-center">
       <!-- Left: project info -->
       <div class="lg:w-64 shrink-0 self-stretch flex flex-col p-8 pt-10 pb-4 lg:pb-8">
         <a href="/" class="hidden lg:inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-10 text-sm" onclick={(event) => {
@@ -564,6 +520,43 @@
           {/if}
         </div>
       </div>
+
+      <!-- "Scroll for more" + arrows at bottom of hero -->
+      {#if additionalArtifacts.length > 0}
+        <div
+          class="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-3 transition-all duration-700"
+          style="opacity: {showScrollHint ? 1 : 0}; transform: translateY({showScrollHint ? '0' : '12px'})"
+        >
+          <span
+            class="pointer-events-none text-xs tracking-widest uppercase {hasScrolled ? '' : 'scroll-hint-text'}"
+            style="font-family: 'DM Sans', sans-serif; {hasScrolled ? 'color: #88847F;' : ''}"
+          >Scroll for more</span>
+          <div class="flex gap-0.5">
+            <button
+              type="button"
+              class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
+              style={hasScrolled ? '' : 'animation: scroll-wave 2.5s ease-in-out infinite'}
+              onclick={() => mainEl?.scrollBy({ top: -200, behavior: 'smooth' })}
+              aria-label="Scroll up"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
+              style={hasScrolled ? '' : 'animation: scroll-wave 2.5s ease-in-out 0.25s infinite'}
+              onclick={() => mainEl?.scrollBy({ top: 200, behavior: 'smooth' })}
+              aria-label="Scroll down"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      {/if}
     </div>
 
     {#if additionalArtifacts.length > 0}
