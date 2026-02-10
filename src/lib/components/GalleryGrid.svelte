@@ -7,6 +7,11 @@
   import HoverInfo from './HoverInfo.svelte';
   import AuthButton from './AuthButton.svelte';
   import { getImageSources, getResponsiveSrcset, GALLERY_SIZES } from '$lib/utils/image-formats';
+  import { onMount } from 'svelte';
+
+  onMount(() => {
+    portfolio.setHoveredItem(null);
+  });
 
   let innerWidth = $state(browser ? window.innerWidth : 1200);
   const colCount = $derived(innerWidth < 900 ? 2 : 3);
