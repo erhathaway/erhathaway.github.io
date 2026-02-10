@@ -248,7 +248,7 @@
           class="relative overflow-hidden border backdrop-blur-md"
           style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08)); background-color: #f3e9e1;"
         >
-          <div class="relative px-8 py-5 flex items-center justify-center">
+          <div class="relative px-8 py-5 flex items-center justify-start min-[600px]:justify-center">
             <div class="flex gap-6 text-[11px] tracking-[0.2em] uppercase text-ash/50" style="font-family: 'DM Sans', sans-serif; font-weight: 500;">
               <a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">GitHub</a>
               <a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">Instagram</a>
