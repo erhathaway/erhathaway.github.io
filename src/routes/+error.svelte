@@ -598,48 +598,51 @@
 
     function drawDeer(f: number) {
       const deerCol = '#bb8844';
-      const antler = '#997744';
+      const antler = '#aa8855';
       const fawnCol = '#cc9966';
 
-      const d1x = Math.floor(cols * 0.04 + Math.sin(f * 0.002) * cols * 0.15);
-      const d1y = rows - 6;
+      // Buck (side view with antlers)
+      const d1x = Math.floor(cols * 0.02 + Math.sin(f * 0.002) * cols * 0.08);
+      const d1y = rows - 12;
       const headUp = Math.sin(f * 0.008) > 0.5;
 
       if (headUp) {
-        puts(d1x, d1y - 3, ' |/ |/', antler);
-        puts(d1x, d1y - 2, '  (O)', deerCol);
-        puts(d1x, d1y - 1, '  |~~\\', deerCol);
-        puts(d1x, d1y,     '  |   |', deerCol);
-        puts(d1x, d1y + 1, '  |l |l', deerCol);
+        puts(d1x+5, d1y - 2, 'v v', antler);
+        puts(d1x+5, d1y - 1, '(o)', deerCol);
+        puts(d1x,   d1y,     '/~~~~|', deerCol);
+        puts(d1x,   d1y + 1, '|    |', deerCol);
+        puts(d1x,   d1y + 2, '|l   |l', deerCol);
       } else {
-        puts(d1x, d1y - 2, ' |/ |/', antler);
-        puts(d1x, d1y - 1, ' |~~(O)', deerCol);
-        puts(d1x, d1y,     ' |   | ,', deerCol);
-        puts(d1x, d1y + 1, ' |l |l', deerCol);
+        puts(d1x+4, d1y - 1, 'v v', antler);
+        puts(d1x,   d1y,     '/~~~~(o)', deerCol);
+        puts(d1x,   d1y + 1, '|    |', deerCol);
+        puts(d1x,   d1y + 2, '|l   |l', deerCol);
       }
 
-      const d2x = Math.floor(cols * 0.14 + Math.sin(f * 0.003 + 1) * cols * 0.12);
-      const d2y = rows - 5;
+      // Doe (side view, no antlers)
+      const d2x = Math.floor(cols * 0.25 + Math.sin(f * 0.003 + 1) * cols * 0.08);
+      const d2y = rows - 12;
       const d2head = Math.sin(f * 0.01 + 2) > 0.2;
 
       if (d2head) {
-        puts(d2x, d2y - 2, ' \\/ \\/', antler);
-        puts(d2x, d2y - 1, '  (o) ', deerCol);
-        puts(d2x, d2y,     '  |~~|', deerCol);
-        puts(d2x, d2y + 1, '  || ||', deerCol);
+        puts(d2x+5, d2y - 1, '(o)', deerCol);
+        puts(d2x,   d2y,     '/~~~~|', deerCol);
+        puts(d2x,   d2y + 1, '|    |', deerCol);
+        puts(d2x,   d2y + 2, '|l   |l', deerCol);
       } else {
-        puts(d2x, d2y - 1, '  |~~(o)', deerCol);
-        puts(d2x, d2y,     '  |   |', deerCol);
-        puts(d2x, d2y + 1, '  || ||', deerCol);
+        puts(d2x,   d2y,     '/~~~~(o)', deerCol);
+        puts(d2x,   d2y + 1, '|    |', deerCol);
+        puts(d2x,   d2y + 2, '|l   |l', deerCol);
       }
 
-      const d3x = d1x + 12;
-      const d3y = rows - 4;
+      // Fawn (side view, smaller)
+      const d3x = Math.floor(cols * 0.13 + Math.sin(f * 0.004 + 3) * cols * 0.05);
+      const d3y = rows - 10;
       const fawnBounce = Math.sin(f * 0.015) > 0.6 ? -1 : 0;
 
-      puts(d3x, d3y - 1 + fawnBounce, '(o)', fawnCol);
-      puts(d3x, d3y + fawnBounce,     '|~|', fawnCol);
-      puts(d3x, d3y + 1 + fawnBounce, '|| ', fawnCol);
+      puts(d3x,   d3y + fawnBounce,     '/~~(o)', fawnCol);
+      puts(d3x,   d3y + 1 + fawnBounce, '|   |', fawnCol);
+      puts(d3x,   d3y + 2 + fawnBounce, '|l  |l', fawnCol);
     }
 
     function drawRocks() {
