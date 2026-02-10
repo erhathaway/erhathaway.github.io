@@ -84,7 +84,10 @@
     return `span ${fillerSpan}`;
   });
 
+  const isTouchDevice = $derived(browser && window.matchMedia('(pointer: coarse)').matches);
+
   const dockTarget = $derived.by((): DockTarget => {
+    if (isTouchDevice) return null;
     if (!hoveredItem) return null;
     if (hoveredDisplayIndex < 0) return null;
 
