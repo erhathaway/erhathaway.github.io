@@ -145,8 +145,8 @@
 
 <svelte:window bind:innerWidth />
 
-<main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-hide" onpointerleave={handleGalleryLeave}>
-  <div class="grid gap-0.5 p-0.5 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
+<main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-hide" style="height: 100dvh;" onpointerleave={handleGalleryLeave}>
+  <div class="grid gap-0.5 p-0.5 vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
     {#if homeNamecardInGallery}
       <div
         class="gallery-item group relative aspect-square overflow-hidden block"
@@ -242,25 +242,21 @@
         {/if}
       </div>
     {/if}
-    {#if browser && $page.url.pathname === '/'}
-      <div style="grid-column: span {colCount};">
-        <div
-          class="relative overflow-hidden border backdrop-blur-md"
-          style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08)); background-color: #f3e9e1;"
-        >
-          <div class="relative px-8 py-5 flex items-center justify-start min-[600px]:justify-center">
-            <div class="flex gap-6 text-[11px] tracking-[0.2em] uppercase text-ash/50" style="font-family: 'DM Sans', sans-serif; font-weight: 500;">
-              <a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">GitHub</a>
-              <a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">Instagram</a>
-              <a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors duration-300">Contact</a>
-            </div>
-            <div class="absolute right-8 top-1/2 -translate-y-1/2">
-              <AuthButton inline onOpenModal={() => window.dispatchEvent(new Event('auth:open-login'))} />
-            </div>
-          </div>
-        </div>
+  </div>
+  <div
+    class="relative overflow-hidden border backdrop-blur-md"
+    style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08)); background-color: #f3e9e1;"
+  >
+    <div class="relative px-8 py-5 flex items-center justify-start min-[600px]:justify-center">
+      <div class="flex gap-6 text-[11px] tracking-[0.2em] uppercase text-ash/50" style="font-family: 'DM Sans', sans-serif; font-weight: 500;">
+        <a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">GitHub</a>
+        <a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">Instagram</a>
+        <a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors duration-300">Contact</a>
       </div>
-    {/if}
+      <div class="absolute right-8 top-1/2 -translate-y-1/2">
+        <AuthButton inline onOpenModal={() => window.dispatchEvent(new Event('auth:open-login'))} />
+      </div>
+    </div>
   </div>
   {#if portfolio.selectedCategory !== 'all' && hiddenCount > 0}
     <div class="py-10 flex items-start justify-center px-8">
