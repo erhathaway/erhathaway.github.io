@@ -34,7 +34,7 @@ export function getResponsiveSrcset(url: string, widths: number[] = [400, 800, 1
 	if (!isResizingEnabled()) return undefined;
 	const webpPath = replaceExtension(url, 'webp');
 	const path = webpPath.startsWith('/') ? webpPath.slice(1) : webpPath;
-	return widths.map((w) => `/cdn-cgi/image/width=${w},quality=80,format=auto/${path} ${w}w`).join(', ');
+	return widths.map((w) => `/cdn-cgi/image/width=${w},quality=65,format=auto/${path} ${w}w`).join(', ');
 }
 
 /** Gallery tile sizes attribute (3-col desktop, 2-col mobile). */
@@ -58,7 +58,7 @@ export function getImageSources(
 				const webpPath = replaceExtension(url, 'webp');
 				const path = webpPath.startsWith('/') ? webpPath.slice(1) : webpPath;
 				const srcset = [400, 800, 1200]
-					.map((w) => `/cdn-cgi/image/width=${w},quality=80,format=${fmt}/${path} ${w}w`)
+					.map((w) => `/cdn-cgi/image/width=${w},quality=65,format=${fmt}/${path} ${w}w`)
 					.join(', ');
 				return { srcset, type, sizes };
 			}
