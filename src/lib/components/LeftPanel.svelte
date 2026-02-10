@@ -66,7 +66,7 @@
 </script>
 
 <aside
-  class="w-full h-full text-walnut flex flex-col relative {slideInActive ? 'animate-slide-in-left' : ''}"
+  class="w-full h-full text-walnut flex flex-col relative overflow-visible {slideInActive ? 'animate-slide-in-left' : ''}"
   onanimationend={handleSlideInDone}
   onanimationcancel={handleSlideInDone}
 >
@@ -102,41 +102,41 @@
         tabindex="-1"
       ></div>
     {:else}
-      <!-- Background rectangle behind name and tagline -->
+      <!-- Fixed Header - Always on top -->
       <div
-        class="namecard-vt absolute {isProjectPage ? 'top-3' : 'top-0'} left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] border z-0 cursor-pointer"
+        class="namecard-vt relative {isProjectPage ? '' : 'w-[280px]'} border z-30 cursor-pointer"
         style="border-color: rgba(138,128,120,0.15); background-color: #fae6d0;"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
-        onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
-        role="button"
-        tabindex="-1"
-      ></div>
-
-      <!-- Fixed Header - Always on top -->
-      <button
-        type="button"
-        class="p-8 pt-10 pb-0 z-30 relative bg-transparent cursor-pointer text-left"
-        onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
-        aria-label="Go home"
       >
-        <span
-          class="namecard-vt text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block {slideUpActive ? 'animate-slide-up' : ''}"
-          style="animation-delay: 0.1s; font-family: 'Playfair Display', Georgia, serif;"
-          style:view-transition-name={hasTransitionNames ? 'name-text' : undefined}
+        {#if isProjectPage}
+          <div class="absolute -top-2.5 -bottom-4 z-30" style="left: -1px; width: 2px; background: linear-gradient(to bottom, rgba(0,0,0,0.08) 15%, rgba(0,0,0,0.02) 15%, rgba(0,0,0,0.02) 85%, rgba(0,0,0,0.08) 85%);"></div>
+          <div class="absolute -top-2.5 -bottom-4 z-30" style="width: 0.5px; right: -1px; background: linear-gradient(to bottom, rgba(0,0,0,0.08) 15%, rgba(0,0,0,0.01) 15%, rgba(0,0,0,0.01) 85%, rgba(0,0,0,0.08) 85%);"></div>
+        {/if}
+        <button
+          type="button"
+          class="p-8 pt-10 pb-0 relative bg-transparent cursor-pointer text-left w-full"
+          onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
+          aria-label="Go home"
         >
-          Ethan<br>Hathaway
-        </span>
-      </button>
-      <p
-        class="namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 px-8 pt-4 pb-11 z-30 relative border-b border-black/5 {slideUpActive ? 'animate-slide-up' : ''} cursor-pointer"
-        style="animation-delay: 0.2s; background-color: #fae6d0;"
-        style:view-transition-name={hasTransitionNames ? 'subtitle-text' : undefined}
-        onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
-        role="button"
-        tabindex="0"
-      >
-        Things I Make
-      </p>
+          <span
+            class="namecard-vt text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block {slideUpActive ? 'animate-slide-up' : ''}"
+            style="animation-delay: 0.1s; font-family: 'Playfair Display', Georgia, serif;"
+            style:view-transition-name={hasTransitionNames ? 'name-text' : undefined}
+          >
+            Ethan<br>Hathaway
+          </span>
+        </button>
+        <p
+          class="namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 px-8 pt-4 pb-11 relative border-b border-black/5 {slideUpActive ? 'animate-slide-up' : ''} cursor-pointer"
+          style="animation-delay: 0.2s;"
+          style:view-transition-name={hasTransitionNames ? 'subtitle-text' : undefined}
+          onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
+          role="button"
+          tabindex="0"
+        >
+          Things I Make
+        </p>
+      </div>
     {/if}
   {/if}
 

@@ -445,7 +445,7 @@
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 	{:else}
 		{#if !isHomePage && !isErrorPage}
-			<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[200] vt-exclude-namecard" style="view-transition-name: left-bar"></div>
+			<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[50] vt-exclude-namecard" style="view-transition-name: left-bar"></div>
 		{/if}
 
 		<div class="font-body bg-charcoal text-cream h-screen flex {isHomePage || isErrorPage ? '' : 'ml-[12px]'}">
@@ -466,7 +466,7 @@
 		{/if}
 		<!-- Overlay panel for all screen sizes -->
 		{#if !isHomePage && !isErrorPage}
-			<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 vt-exclude-namecard" style="view-transition-name: left-panel">
+			<div class="fixed inset-y-0 left-[12px] w-80 z-[100] transition-transform duration-300 {mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 overflow-visible vt-exclude-namecard" style="view-transition-name: left-panel">
 				<LeftPanel isMobile={isMobileScreen} onNameClick={expandNameCard} hasTransitionNames={panelTransitionNames} showNameCard={showLeftPanelNameCard} onItemClick={() => {
 					// Only close menu on mobile when clicking an item
 					if (isMobileScreen) {
