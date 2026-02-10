@@ -72,5 +72,5 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		isCover: row.id === coverArtifactId
 	}));
 
-	return json(normalized, { headers: corsHeaders });
+	return json(normalized, { headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=60, s-maxage=300' } });
 };

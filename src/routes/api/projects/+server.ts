@@ -107,5 +107,5 @@ export const GET: RequestHandler = async ({ locals }) => {
 		};
 	});
 
-	return json(result, { headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=0, s-maxage=300' } });
+	return json(result, { headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=60, s-maxage=300' } });
 };

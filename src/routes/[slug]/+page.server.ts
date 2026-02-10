@@ -3,7 +3,7 @@ import { error } from '@sveltejs/kit';
 import { and, eq, sql } from 'drizzle-orm';
 import { projects, categories, projectCategories, projectAttributes, projectArtifacts, projectCoverArtifact } from '$lib/server/db/schema';
 
-export const load: PageServerLoad = async ({ params, locals, url }) => {
+export const load: PageServerLoad = async ({ params, locals, url, setHeaders }) => {
 	const db = locals.db;
 	if (!db) return { meta: null, projectId: 0 };
 
@@ -53,6 +53,10 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 			coverImageFormats = blob.imageFormats;
 		}
 	}
+
+	setHeaders({
+		'Cache-Control': 'public, max-age=60, s-maxage=300'
+	});
 
 	return {
 		origin: url.origin,
