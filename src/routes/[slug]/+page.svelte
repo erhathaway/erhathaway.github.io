@@ -475,10 +475,10 @@
       </div>
 
       <!-- Right: cover image -->
-      <div class="flex-1 flex items-center justify-center p-8">
+      <div class="flex-1 flex items-center justify-center p-8 pb-20 lg:pb-8">
         <div
           bind:this={coverEl}
-          class="group relative w-full aspect-square max-h-[67vh] max-w-[67vh] overflow-hidden rounded-lg vt-exclude-namecard"
+          class="group relative w-full aspect-square max-h-[50vh] lg:max-h-[67vh] max-w-[67vh] overflow-hidden rounded-lg vt-exclude-namecard"
           style="view-transition-name: project-image-{item.id}"
         >
           {#if item.hoverImage || item.image}
@@ -524,7 +524,7 @@
       <!-- "Scroll for more" + arrows at bottom of hero -->
       {#if additionalArtifacts.length > 0}
         <div
-          class="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-3 transition-all duration-700"
+          class="absolute bottom-16 lg:bottom-6 left-0 right-0 flex items-center justify-center gap-3 transition-all duration-700"
           style="opacity: {showScrollHint ? 1 : 0}; transform: translateY({showScrollHint ? '0' : '12px'})"
         >
           <span
