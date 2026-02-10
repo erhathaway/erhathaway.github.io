@@ -446,6 +446,32 @@
     }
   }
 
+  /* "Scroll for more" text with color scrolling through it */
+  @keyframes color-scroll {
+    0%, 100% { background-position: 0% 0%; }
+    90% { background-position: 0% 100%; }
+    90.1%, 95% { background-position: 0% 0%; }
+  }
+  .scroll-hint-text {
+    background: linear-gradient(
+      to bottom,
+      #88847F 0%,
+      #88847F 35%,
+      #B87333 43%,
+      #F5F1EB 50%,
+      #B87333 57%,
+      #88847F 65%,
+      #88847F 100%
+    );
+    background-size: 100% 400%;
+    background-position: 0% 0%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: color-scroll 7s ease-in-out infinite;
+  }
+
   /* Scroll arrow wave animation — ripples top-to-bottom with a slight grow */
   @keyframes scroll-wave {
     0%, 30%, 100% { transform: translateY(0) scale(1); }
@@ -460,7 +486,8 @@
     ::view-transition-new(*) {
       animation: none !important;
     }
-    [style*="scroll-wave"] {
+    [style*="scroll-wave"],
+    .scroll-hint-text {
       animation: none !important;
     }
   }

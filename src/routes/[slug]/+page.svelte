@@ -2,6 +2,7 @@
   import type { PageData } from './$types';
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { goto } from '$app/navigation';
+  import { dev } from '$app/environment';
   import { onMount } from 'svelte';
   import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
   import { getImageSources, getResponsiveSrcset, replaceExtension } from '$lib/utils/image-formats';
@@ -300,6 +301,22 @@
   });
 
   let mainEl = $state<HTMLElement | null>(null);
+  let hasScrolled = $state(false);
+  let showScrollHint = $state(false);
+  let coverEl = $state<HTMLElement | null>(null);
+  let coverCenterX = $state(0);
+
+  $effect(() => {
+    if (!coverEl) return;
+    function update() {
+      if (!coverEl) return;
+      const rect = coverEl.getBoundingClientRect();
+      coverCenterX = rect.left + rect.width / 2;
+    }
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  });
 
   const currentIndex = $derived(portfolio.filteredItems.findIndex(i => i.slug === data.slug));
   const hasPrev = $derived(currentIndex > 0);
@@ -334,7 +351,39 @@
     }
 
     window.addEventListener('keydown', handleKeydown);
-    return () => window.removeEventListener('keydown', handleKeydown);
+
+    // Detect user scroll to dismiss the bottom glow
+    const TEASE_KEY = 'hasScrolledArtifacts';
+    function onScroll() {
+      if (mainEl && mainEl.scrollTop > 20) {
+        hasScrolled = true;
+        if (additionalArtifacts.length > 0) {
+          try { sessionStorage.setItem(TEASE_KEY, '1'); } catch {}
+        }
+        mainEl.removeEventListener('scroll', onScroll);
+      }
+    }
+    mainEl?.addEventListener('scroll', onScroll);
+
+    // Auto-scroll tease: only if user hasn't scrolled on any artifact page this session
+    const alreadySeen = (() => { try { return sessionStorage.getItem(TEASE_KEY) === '1'; } catch { return false; } })();
+    const teaseTimer = !alreadySeen ? setTimeout(() => {
+      if (mainEl && !hasScrolled && additionalArtifacts.length > 0) {
+        mainEl.scrollTo({ top: 80, behavior: 'smooth' });
+        setTimeout(() => {
+          if (mainEl && mainEl.scrollTop <= 80) {
+            mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => { showScrollHint = true; }, 600);
+          }
+        }, 800);
+      }
+    }, 1500) : null;
+
+    return () => {
+      window.removeEventListener('keydown', handleKeydown);
+      mainEl?.removeEventListener('scroll', onScroll);
+      if (teaseTimer) clearTimeout(teaseTimer);
+    };
   });
 </script>
 
@@ -385,6 +434,19 @@
 {:else}
 {#key item.id}
 <main bind:this={mainEl} class="h-screen overflow-y-auto bg-charcoal" style="border-left: 1px solid #00000024;">
+    <!-- Bottom gradient glow -->
+    {#if additionalArtifacts.length > 0 && !hasScrolled}
+      <div
+        class="pointer-events-none fixed bottom-0 left-0 right-0 z-20 h-24 transition-opacity duration-700"
+        style="background: linear-gradient(to top, rgba(184, 115, 51, 0.12), transparent)"
+      ></div>
+      <!-- "Scroll for more" aligned with cover image center -->
+      <span
+        class="pointer-events-none fixed bottom-5 z-20 text-xs tracking-widest uppercase transition-all duration-700 scroll-hint-text"
+        style="font-family: 'DM Sans', sans-serif; left: {coverCenterX}px; transform: translateX(-50%) translateY({showScrollHint ? '0' : '12px'}); opacity: {showScrollHint ? 1 : 0}"
+      >Scroll for more</span>
+    {/if}
+
     <!-- Hero: text + cover side by side -->
     <div class="flex flex-col lg:flex-row min-h-screen lg:items-center">
       <!-- Left: project info -->
@@ -428,6 +490,7 @@
       <!-- Right: cover image -->
       <div class="flex-1 flex items-center justify-center p-8">
         <div
+          bind:this={coverEl}
           class="group relative w-full aspect-square max-h-[67vh] max-w-[67vh] overflow-hidden rounded-lg vt-exclude-namecard"
           style="view-transition-name: project-image-{item.id}"
         >
@@ -627,4 +690,19 @@
     </svg>
   </button>
 </div>
+{/if}
+
+{#if dev}
+  <button
+    type="button"
+    class="fixed bottom-4 right-4 z-[9999] px-3 py-1.5 rounded-lg bg-red-900/80 text-red-200 text-xs hover:bg-red-800 transition-colors"
+    onclick={() => {
+      try { sessionStorage.removeItem('hasScrolledArtifacts'); } catch {}
+      hasScrolled = false;
+      showScrollHint = false;
+      window.location.reload();
+    }}
+  >
+    Reset tease
+  </button>
 {/if}
