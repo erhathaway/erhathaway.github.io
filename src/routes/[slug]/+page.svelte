@@ -478,6 +478,7 @@
         <button
           type="button"
           class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
+          style="animation: scroll-wave 2.5s ease-in-out infinite"
           onclick={() => mainEl?.scrollBy({ top: -200, behavior: 'smooth' })}
           aria-label="Scroll up"
         >
@@ -488,6 +489,7 @@
         <button
           type="button"
           class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
+          style="animation: scroll-wave 2.5s ease-in-out 0.25s infinite"
           onclick={() => mainEl?.scrollBy({ top: 200, behavior: 'smooth' })}
           aria-label="Scroll down"
         >
