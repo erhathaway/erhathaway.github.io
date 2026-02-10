@@ -8,6 +8,7 @@
   import AuthButton from './AuthButton.svelte';
   import { getImageSources, getResponsiveSrcset, GALLERY_SIZES } from '$lib/utils/image-formats';
   import { onMount } from 'svelte';
+  import { SvelteSet } from 'svelte/reactivity';
 
   onMount(() => {
     portfolio.setHoveredItem(null);
@@ -34,6 +35,27 @@
     } catch {
       // ignore
     }
+  }
+
+  let waveActiveIds = new SvelteSet<number>();
+  let waveGeneration = 0;
+
+  function triggerWave() {
+    waveActiveIds.clear();
+    const gen = ++waveGeneration;
+    const items = portfolio.filteredItems.filter((i) => i.hoverImage);
+    const stagger = 120;
+    const holdDuration = 600;
+    items.forEach((item, i) => {
+      setTimeout(() => {
+        if (waveGeneration !== gen) return;
+        waveActiveIds.add(item.id);
+      }, i * stagger);
+      setTimeout(() => {
+        if (waveGeneration !== gen) return;
+        waveActiveIds.delete(item.id);
+      }, i * stagger + holdDuration);
+    });
   }
 
   function handleNamecardTileEnter(e: PointerEvent) {
@@ -152,9 +174,12 @@
   <div class="grid gap-0.5 p-0.5 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
     {#if homeNamecardInGallery}
       <div
-        class="gallery-item group relative aspect-square overflow-hidden block"
+        class="gallery-item group relative aspect-square overflow-hidden block cursor-pointer"
         onpointerenter={handleNamecardTileEnter}
-        role="img"
+        onclick={triggerWave}
+        onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerWave(); } }}
+        role="button"
+        tabindex="0"
         aria-label="About Ethan Hathaway"
       >
         {#if portfolio.namecardImage}
@@ -233,6 +258,7 @@
         dockHoverSourceId={hoveredItem?.id ?? null}
         dockHasTarget={hasDockTarget}
         dockSide={dockSide}
+        waveHighlight={waveActiveIds.has(item.id)}
       />
     {/each}
     {#if fillerSpan > 0}

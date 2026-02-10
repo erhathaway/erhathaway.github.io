@@ -17,7 +17,8 @@
     dockHasTarget = false,
     dockSide = 'left',
     static: isStatic = false,
-    href: hrefOverride = undefined
+    href: hrefOverride = undefined,
+    waveHighlight = false
   }: {
     item: PortfolioItem;
     index?: number;
@@ -30,6 +31,7 @@
     dockSide?: 'left' | 'right';
     static?: boolean;
     href?: string;
+    waveHighlight?: boolean;
   } = $props();
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animation after its first run.
@@ -121,6 +123,7 @@
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+          style:opacity={item.hoverImage && waveHighlight ? 0 : undefined}
           srcset={imgSrcset}
           sizes={imgSrcset ? GALLERY_SIZES : undefined}
           loading={index < 6 ? 'eager' : 'lazy'}
@@ -135,6 +138,7 @@
         style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
         style:transform="scale({item.coverPosition?.zoom ?? 1})"
         style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+        style:opacity={item.hoverImage && waveHighlight ? 0 : undefined}
         srcset={imgSrcset}
         sizes={imgSrcset ? GALLERY_SIZES : undefined}
         loading={index < 6 ? 'eager' : 'lazy'}
@@ -155,6 +159,7 @@
             style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
             style:transform="scale({item.coverPosition?.zoom ?? 1})"
             style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+            style:opacity={waveHighlight ? 1 : undefined}
             srcset={hoverSrcset}
             sizes={hoverSrcset ? GALLERY_SIZES : undefined}
             loading="lazy"
@@ -168,6 +173,7 @@
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
+          style:opacity={waveHighlight ? 1 : undefined}
           srcset={hoverSrcset}
           sizes={hoverSrcset ? GALLERY_SIZES : undefined}
           loading="lazy"
