@@ -95,13 +95,21 @@
         />
       </button>
       <!-- Spacer to match the flow-space the header text would occupy -->
-      <div class="h-[130px] shrink-0"></div>
+      <div
+        class="h-[130px] shrink-0 cursor-pointer"
+        onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
+        role="button"
+        tabindex="-1"
+      ></div>
     {:else}
       <!-- Background rectangle behind name and tagline -->
       <div
-        class="namecard-vt absolute {isProjectPage ? 'top-3' : 'top-0'} left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] border z-0"
+        class="namecard-vt absolute {isProjectPage ? 'top-3' : 'top-0'} left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] border z-0 cursor-pointer"
         style="border-color: rgba(138,128,120,0.15); background-color: #fae6d0;"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
+        onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
+        role="button"
+        tabindex="-1"
       ></div>
 
       <!-- Fixed Header - Always on top -->
@@ -120,9 +128,12 @@
         </span>
       </button>
       <p
-        class="namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 px-8 pt-4 pb-11 z-30 relative border-b border-black/5 {slideUpActive ? 'animate-slide-up' : ''}"
+        class="namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 px-8 pt-4 pb-11 z-30 relative border-b border-black/5 {slideUpActive ? 'animate-slide-up' : ''} cursor-pointer"
         style="animation-delay: 0.2s; background-color: #fae6d0;"
         style:view-transition-name={hasTransitionNames ? 'subtitle-text' : undefined}
+        onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
+        role="button"
+        tabindex="0"
       >
         Things I Make
       </p>
