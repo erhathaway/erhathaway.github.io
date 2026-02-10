@@ -128,19 +128,22 @@
 		<div class="absolute inset-0 backdrop-blur-xl" style="background: rgba(243, 233, 225, 0.4);"></div>
 		<div class="absolute inset-0 stucco-gradient"></div>
 
-		<button
-			onclick={() => { onClose(); resetState(); }}
-			class="absolute top-10 left-10 text-ash/40 hover:text-walnut transition-colors duration-300 z-10"
-			style="font-family: 'DM Sans', sans-serif;"
-			aria-label="Close"
-		>
-			<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-				<path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="1.5"/>
-			</svg>
-		</button>
-
-		<div class="relative flex items-center justify-center h-full">
-			<div class="w-full max-w-sm px-6">
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="relative flex items-center justify-center h-full" onclick={() => { if (!isLoading) { onClose(); resetState(); } }}>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div class="modal-card w-full max-w-md relative" onclick={(e) => e.stopPropagation()}>
+				<button
+					onclick={() => { onClose(); resetState(); }}
+					class="absolute top-4 left-4 text-ash/40 hover:text-walnut transition-colors duration-300"
+					style="font-family: 'DM Sans', sans-serif;"
+					aria-label="Close"
+				>
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="1.5"/>
+					</svg>
+				</button>
 				<p class="text-ash/40 text-[13px] tracking-[0.25em] uppercase mb-10 text-center" style="font-family: 'DM Sans', sans-serif; font-weight: 500;">Admin</p>
 
 				{#if !showCodeInput}
@@ -253,6 +256,17 @@
 {/if}
 
 <style>
+	.modal-card {
+		padding: 72px 48px;
+		background:
+			radial-gradient(ellipse at 50% 40%, rgba(184, 115, 51, 0.12) 0%, transparent 80%),
+			rgba(255, 255, 255, 0.45);
+		border: 1px solid rgba(138, 128, 120, 0.15);
+		border-radius: 16px;
+		backdrop-filter: blur(16px);
+		box-shadow: 0 4px 24px rgba(44, 34, 24, 0.06);
+	}
+
 	.stucco-gradient {
 		background: radial-gradient(
 			ellipse at center,
