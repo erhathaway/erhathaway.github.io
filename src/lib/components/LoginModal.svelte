@@ -260,7 +260,7 @@
 		padding: 72px 48px;
 		background:
 			radial-gradient(ellipse at 50% 40%, rgba(184, 115, 51, 0.12) 0%, transparent 80%),
-			rgba(255, 255, 255, 0.45);
+			rgba(255, 255, 255, 0.92);
 		border: 1px solid rgba(138, 128, 120, 0.15);
 		border-radius: 16px;
 		backdrop-filter: blur(16px);
