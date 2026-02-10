@@ -44,8 +44,8 @@
     waveActiveIds.clear();
     const gen = ++waveGeneration;
     const items = portfolio.filteredItems.filter((i) => i.hoverImage);
-    const stagger = 150;
-    const animDuration = 1000;
+    const stagger = 120;
+    const holdDuration = 600;
     items.forEach((item, i) => {
       setTimeout(() => {
         if (waveGeneration !== gen) return;
@@ -54,7 +54,7 @@
       setTimeout(() => {
         if (waveGeneration !== gen) return;
         waveActiveIds.delete(item.id);
-      }, i * stagger + animDuration);
+      }, i * stagger + holdDuration);
     });
   }
 

@@ -143,24 +143,7 @@
   .animate-fade-in { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
   .animate-slide-in-left { animation: slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) both; }
 
-  @keyframes wave-diffuse-in {
-    0%   { opacity: 0; filter: blur(6px); }
-    35%  { opacity: 1; filter: blur(0px); }
-    65%  { opacity: 1; filter: blur(0px); }
-    100% { opacity: 0; filter: blur(6px); }
-  }
-  @keyframes wave-diffuse-out {
-    0%   { opacity: 1; }
-    35%  { opacity: 0; }
-    65%  { opacity: 0; }
-    100% { opacity: 1; }
-  }
-  .animate-wave-hover {
-    animation: wave-diffuse-in 1s ease-in-out both;
-  }
-  .animate-wave-primary {
-    animation: wave-diffuse-out 1s ease-in-out both;
-  }
+
 }
 
 .right-panel::-webkit-scrollbar { width: 6px; }

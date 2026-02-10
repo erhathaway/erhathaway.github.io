@@ -119,7 +119,8 @@
         <img
           src={item.image}
           alt={item.name}
-          class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''} {item.hoverImage && waveHighlight ? 'animate-wave-primary' : ''}"
+          class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''}"
+          style:opacity={item.hoverImage && waveHighlight ? 0 : undefined}
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
@@ -133,7 +134,8 @@
       <img
         src={item.image}
         alt={item.name}
-        class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''} {item.hoverImage && waveHighlight ? 'animate-wave-primary' : ''}"
+        class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''}"
+          style:opacity={item.hoverImage && waveHighlight ? 0 : undefined}
         style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
         style:transform="scale({item.coverPosition?.zoom ?? 1})"
         style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
@@ -153,7 +155,8 @@
           <img
             src={item.hoverImage}
             alt={item.name}
-            class="w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100 {waveHighlight ? 'animate-wave-hover' : ''}"
+            class="w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style:opacity={waveHighlight ? 1 : undefined}
             style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
             style:transform="scale({item.coverPosition?.zoom ?? 1})"
             style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
@@ -166,7 +169,8 @@
         <img
           src={item.hoverImage}
           alt={item.name}
-          class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100 {waveHighlight ? 'animate-wave-hover' : ''}"
+          class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style:opacity={waveHighlight ? 1 : undefined}
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
