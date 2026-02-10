@@ -364,11 +364,29 @@
 		if (!document.startViewTransition) return;
 
 		const HOME_PROJECT_NAV_CLASS = 'vt-home-project-nav';
+		const MORPH_SOURCE_CLASS = 'vt-morph-source';
 		document.documentElement.classList.add(HOME_PROJECT_NAV_CLASS);
 
 		if (isHomeToProject) {
 			document.documentElement.classList.add('vt-home-to-project');
 		}
+
+		// Mark the gallery item that should keep its view-transition-name for the
+		// image morph. All other gallery items get their names stripped via CSS to
+		// avoid the expensive multi-group capture that blocks the main thread.
+		const morphSlug = isHomeToProject
+			? navigation.to?.params?.slug
+			: navigation.from?.params?.slug;
+
+		if (isHomeToProject && morphSlug) {
+			document.querySelector(`a.gallery-item[href="/${morphSlug}"]`)
+				?.classList.add(MORPH_SOURCE_CLASS);
+		}
+
+		const cleanupMorphSource = () => {
+			document.querySelector(`.${MORPH_SOURCE_CLASS}`)
+				?.classList.remove(MORPH_SOURCE_CLASS);
+		};
 
 		return new Promise((resolve) => {
 			let resolved = false;
@@ -405,6 +423,12 @@
 					if (isProjectToHome) {
 						// Ensure the ViewTransition captures the restored scroll position.
 						await restoreHomeRightPanelScrollTop();
+						// Mark the target gallery item in the newly rendered home page so the
+						// browser only creates one VT group for gallery items in the new state.
+						if (morphSlug) {
+							document.querySelector(`a.gallery-item[href="/${morphSlug}"]`)
+								?.classList.add(MORPH_SOURCE_CLASS);
+						}
 					}
 				});
 
@@ -413,12 +437,13 @@
 				const finished = (t as any).finished;
 				if (finished && typeof finished.then === 'function') {
 					finished.then(
-						() => document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS),
-						() => document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS)
+						() => { document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS); cleanupMorphSource(); },
+						() => { document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS); cleanupMorphSource(); }
 					);
 				} else {
 					window.setTimeout(() => {
 						document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS);
+						cleanupMorphSource();
 					}, 1200);
 				}
 			} catch {
@@ -426,6 +451,7 @@
 				if (isHomeToProject) {
 					document.documentElement.classList.remove('vt-home-to-project');
 				}
+				cleanupMorphSource();
 				resolveOnce();
 			}
 		});

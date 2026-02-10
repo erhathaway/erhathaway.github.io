@@ -184,6 +184,13 @@
     view-transition-name: none !important;
   }
 
+  /* Only the clicked gallery item needs its own VT group (for the image morph).
+     Strip VT names from all others to avoid expensive multi-group capture that
+     blocks the main thread and causes a noticeable delay before the transition starts. */
+  html.vt-home-project-nav .gallery-item:not(.vt-morph-source) {
+    view-transition-name: none !important;
+  }
+
   /* Root snapshot: keep UA positioning transform; disable crossfade */
   ::view-transition-group(root) {
     animation-duration: 0s !important;
