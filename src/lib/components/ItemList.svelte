@@ -174,7 +174,7 @@
             <span
               class="item-label block px-8"
               class:active-project={isActive}
-              style="font-family: 'Playfair Display', Georgia, serif; font-size: {isActive ? (isMobile ? 1.35 : 1.05) * scale : (isMobile ? 1.1 : 0.85) * scale}rem; opacity: {isActive ? Math.pow(scale, 3) : Math.pow(scale, 3) * 0.7};{isActive ? ' margin-bottom: 3px;' : ''}"
+              style="font-family: 'Playfair Display', Georgia, serif; font-size: {isActive ? (isMobile ? 1.35 : 1.05) * scale : (isMobile ? 1.1 : 0.85) * scale}rem; opacity: {isActive ? Math.pow(scale, 3) : Math.pow(scale, 3) * 0.7};{isActive ? ' margin-bottom: 2px;' : ''}"
             >
               {item.name}
             </span>
