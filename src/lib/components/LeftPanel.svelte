@@ -157,7 +157,7 @@
       <div class="hidden lg:flex items-center justify-center gap-3 px-8 pb-8 pt-3 shrink-0 -ml-8">
         <button
           type="button"
-          class="p-1.5 rounded-lg transition-colors duration-150 {hasPrev ? 'text-ash hover:text-copper cursor-pointer' : 'text-ash/20 cursor-default'}"
+          class="p-1.5 rounded-lg transition-all duration-150 {hasPrev ? 'text-ash hover:text-copper cursor-pointer opacity-100' : 'text-ash cursor-default opacity-20'}"
           disabled={!hasPrev}
           onclick={() => hasPrev && goto(`/${portfolio.filteredItems[currentIndex - 1].slug}`)}
           aria-label="Previous project"
@@ -169,7 +169,7 @@
         <span class="text-[10px] tracking-widest uppercase text-ash/40">{currentIndex + 1} / {portfolio.filteredItems.length}</span>
         <button
           type="button"
-          class="p-1.5 rounded-lg transition-colors duration-150 {hasNext ? 'text-ash hover:text-copper cursor-pointer' : 'text-ash/20 cursor-default'}"
+          class="p-1.5 rounded-lg transition-all duration-150 {hasNext ? 'text-ash hover:text-copper cursor-pointer opacity-100' : 'text-ash cursor-default opacity-20'}"
           disabled={!hasNext}
           onclick={() => hasNext && goto(`/${portfolio.filteredItems[currentIndex + 1].slug}`)}
           aria-label="Next project"
