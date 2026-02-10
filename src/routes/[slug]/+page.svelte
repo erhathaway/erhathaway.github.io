@@ -365,24 +365,18 @@
     }
     mainEl?.addEventListener('scroll', onScroll);
 
-    // Auto-scroll tease: only if user hasn't scrolled on any artifact page this session
+    // Show scroll hint after delay (skip if user already scrolled on an artifact page this session)
     const alreadySeen = (() => { try { return sessionStorage.getItem(TEASE_KEY) === '1'; } catch { return false; } })();
-    const teaseTimer = !alreadySeen ? setTimeout(() => {
-      if (mainEl && !hasScrolled && additionalArtifacts.length > 0) {
-        mainEl.scrollTo({ top: 80, behavior: 'smooth' });
-        setTimeout(() => {
-          if (mainEl && mainEl.scrollTop <= 80) {
-            mainEl.scrollTo({ top: 0, behavior: 'smooth' });
-            setTimeout(() => { showScrollHint = true; }, 600);
-          }
-        }, 800);
+    const hintTimer = !alreadySeen ? setTimeout(() => {
+      if (!hasScrolled && additionalArtifacts.length > 0) {
+        showScrollHint = true;
       }
-    }, 1500) : null;
+    }, 3000) : null;
 
     return () => {
       window.removeEventListener('keydown', handleKeydown);
       mainEl?.removeEventListener('scroll', onScroll);
-      if (teaseTimer) clearTimeout(teaseTimer);
+      if (hintTimer) clearTimeout(hintTimer);
     };
   });
 </script>
