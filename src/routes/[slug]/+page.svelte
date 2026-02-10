@@ -302,7 +302,7 @@
 
   let mainEl = $state<HTMLElement | null>(null);
   let hasScrolled = $state(false);
-  let showScrollHint = $state(false);
+  let showScrollHint = $state(true);
   let coverEl = $state<HTMLElement | null>(null);
   let coverCenterX = $state(0);
 
@@ -352,31 +352,18 @@
 
     window.addEventListener('keydown', handleKeydown);
 
-    // Detect user scroll to dismiss the bottom glow
-    const TEASE_KEY = 'hasScrolledArtifacts';
+    // Detect user scroll to dismiss the wave animation on arrows
     function onScroll() {
       if (mainEl && mainEl.scrollTop > 20) {
         hasScrolled = true;
-        if (additionalArtifacts.length > 0) {
-          try { sessionStorage.setItem(TEASE_KEY, '1'); } catch {}
-        }
         mainEl.removeEventListener('scroll', onScroll);
       }
     }
     mainEl?.addEventListener('scroll', onScroll);
 
-    // Show scroll hint after delay (skip if user already scrolled on an artifact page this session)
-    const alreadySeen = (() => { try { return sessionStorage.getItem(TEASE_KEY) === '1'; } catch { return false; } })();
-    const hintTimer = !alreadySeen ? setTimeout(() => {
-      if (!hasScrolled && additionalArtifacts.length > 0) {
-        showScrollHint = true;
-      }
-    }, 3000) : null;
-
     return () => {
       window.removeEventListener('keydown', handleKeydown);
       mainEl?.removeEventListener('scroll', onScroll);
-      if (hintTimer) clearTimeout(hintTimer);
     };
   });
 </script>
@@ -516,41 +503,26 @@
       </div>
 
       <!-- "Scroll for more" + arrows at bottom of hero -->
-      {#if additionalArtifacts.length > 0}
-        <div
-          class="absolute bottom-16 lg:bottom-6 left-0 right-0 flex items-center justify-center gap-3 transition-all duration-700"
-          style="opacity: {showScrollHint ? 1 : 0}; transform: translateY({showScrollHint ? '0' : '12px'})"
+      <div
+        class="absolute bottom-16 lg:bottom-6 right-6 flex items-center gap-3 transition-all duration-700"
+        style="opacity: {showScrollHint ? 1 : 0}; transform: translateY({showScrollHint ? '0' : '12px'})"
+      >
+        <span
+          class="pointer-events-none text-xs tracking-widest uppercase {hasScrolled ? '' : 'scroll-hint-text'}"
+          style="font-family: 'DM Sans', sans-serif; {hasScrolled ? 'color: #88847F;' : ''}"
+        >Scroll</span>
+        <button
+          type="button"
+          class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
+          style={hasScrolled ? '' : 'animation: scroll-wave 2.5s ease-in-out infinite'}
+          onclick={() => mainEl?.scrollBy({ top: 200, behavior: 'smooth' })}
+          aria-label="Scroll down"
         >
-          <span
-            class="pointer-events-none text-xs tracking-widest uppercase {hasScrolled ? '' : 'scroll-hint-text'}"
-            style="font-family: 'DM Sans', sans-serif; {hasScrolled ? 'color: #88847F;' : ''}"
-          >Scroll for more</span>
-          <div class="flex gap-0.5">
-            <button
-              type="button"
-              class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
-              style={hasScrolled ? '' : 'animation: scroll-wave 2.5s ease-in-out infinite'}
-              onclick={() => mainEl?.scrollBy({ top: -200, behavior: 'smooth' })}
-              aria-label="Scroll up"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              class="p-1.5 rounded-lg text-cream/30 hover:text-cream/60 transition-colors duration-150"
-              style={hasScrolled ? '' : 'animation: scroll-wave 2.5s ease-in-out 0.25s infinite'}
-              onclick={() => mainEl?.scrollBy({ top: 200, behavior: 'smooth' })}
-              aria-label="Scroll down"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      {/if}
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     {#if additionalArtifacts.length > 0}
@@ -690,10 +662,8 @@
     type="button"
     class="fixed bottom-4 right-4 z-[9999] px-3 py-1.5 rounded-lg bg-red-900/80 text-red-200 text-xs hover:bg-red-800 transition-colors"
     onclick={() => {
-      try { sessionStorage.removeItem('hasScrolledArtifacts'); } catch {}
       hasScrolled = false;
-      showScrollHint = false;
-      window.location.reload();
+      showScrollHint = true;
     }}
   >
     Reset tease
