@@ -119,11 +119,10 @@
         <img
           src={item.image}
           alt={item.name}
-          class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''}"
+          class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''} {item.hoverImage && waveHighlight ? 'animate-wave-primary' : ''}"
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-          style:opacity={item.hoverImage && waveHighlight ? 0 : undefined}
           srcset={imgSrcset}
           sizes={imgSrcset ? GALLERY_SIZES : undefined}
           loading={index < 6 ? 'eager' : 'lazy'}
@@ -134,11 +133,10 @@
       <img
         src={item.image}
         alt={item.name}
-        class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''}"
+        class="w-full h-full object-cover {item.hoverImage ? 'transition-opacity duration-300 group-hover:opacity-0' : ''} {item.hoverImage && waveHighlight ? 'animate-wave-primary' : ''}"
         style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
         style:transform="scale({item.coverPosition?.zoom ?? 1})"
         style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-        style:opacity={item.hoverImage && waveHighlight ? 0 : undefined}
         srcset={imgSrcset}
         sizes={imgSrcset ? GALLERY_SIZES : undefined}
         loading={index < 6 ? 'eager' : 'lazy'}
@@ -155,11 +153,10 @@
           <img
             src={item.hoverImage}
             alt={item.name}
-            class="w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            class="w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100 {waveHighlight ? 'animate-wave-hover' : ''}"
             style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
             style:transform="scale({item.coverPosition?.zoom ?? 1})"
             style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-            style:opacity={waveHighlight ? 1 : undefined}
             srcset={hoverSrcset}
             sizes={hoverSrcset ? GALLERY_SIZES : undefined}
             loading="lazy"
@@ -169,11 +166,10 @@
         <img
           src={item.hoverImage}
           alt={item.name}
-          class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100 {waveHighlight ? 'animate-wave-hover' : ''}"
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
-          style:opacity={waveHighlight ? 1 : undefined}
           srcset={hoverSrcset}
           sizes={hoverSrcset ? GALLERY_SIZES : undefined}
           loading="lazy"
