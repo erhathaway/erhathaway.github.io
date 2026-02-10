@@ -469,7 +469,7 @@
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
-    animation: color-scroll 7s ease-in-out infinite;
+    animation: color-scroll 7s ease-in-out 3s infinite;
   }
 
   /* Scroll arrow wave animation — ripples top-to-bottom with a slight grow */
