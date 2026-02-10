@@ -30,7 +30,7 @@
       sun:      '#ffcc00',
       sunGlow:  '#ffaa00',
       ray:      '#ffdd44',
-      bird:     '#111122',
+      bird:     '#aabbcc',
       cloud:    '#f0f4ff',
       hillFar:  '#80cc60',
       hillMid:  '#60aa40',
@@ -186,10 +186,10 @@
     function drawBirds(f: number) {
       const numBirds = cols > 80 ? 5 : 3;
       for (let i = 0; i < numBirds; i++) {
-        const speed = 0.08 + i * 0.02;
+        const speed = 0.2 + i * 0.05;
         const bx = ((f * speed + i * 40) % (cols + 20)) - 10;
         const by = Math.max(1, Math.floor(rows * 0.04 + Math.sin(f * 0.015 + i * 2) * 3 + i * 2.5));
-        const wingPhase = Math.sin(f * 0.04 + i * 3);
+        const wingPhase = Math.sin(f * 0.3 + i * 3);
         if (wingPhase > 0.3) {
           puts(bx, by, "v   v", C.bird);
           puts(bx, by+1, " \\_/ ", C.bird);
@@ -535,8 +535,12 @@
     function drawButterflies(f: number) {
       const h = horizonY();
       const bfs = [
-        { cx: cols * 0.3, cy: h + 5, r: 4, speed: 0.008 },
-        { cx: cols * 0.68, cy: h + 4, r: 3, speed: 0.01 },
+        { cx: cols * 0.3, cy: h + 5, r: 4, speed: 0.025 },
+        { cx: cols * 0.68, cy: h + 4, r: 3, speed: 0.03 },
+        { cx: cols * 0.15, cy: h + 7, r: 5, speed: 0.02 },
+        { cx: cols * 0.5, cy: h + 3, r: 3.5, speed: 0.035 },
+        { cx: cols * 0.82, cy: h + 6, r: 4.5, speed: 0.022 },
+        { cx: cols * 0.4, cy: h + 9, r: 3, speed: 0.028 },
       ];
       bfs.forEach((b, i) => {
         const angle = f * b.speed + i * Math.PI;
@@ -597,7 +601,7 @@
       const antler = '#997744';
       const fawnCol = '#cc9966';
 
-      const d1x = Math.floor(cols * 0.04 + Math.sin(f * 0.002) * cols * 0.04);
+      const d1x = Math.floor(cols * 0.04 + Math.sin(f * 0.002) * cols * 0.15);
       const d1y = rows - 6;
       const headUp = Math.sin(f * 0.008) > 0.5;
 
@@ -614,7 +618,7 @@
         puts(d1x, d1y + 1, ' |l |l', deerCol);
       }
 
-      const d2x = Math.floor(cols * 0.14 + Math.sin(f * 0.003 + 1) * cols * 0.03);
+      const d2x = Math.floor(cols * 0.14 + Math.sin(f * 0.003 + 1) * cols * 0.12);
       const d2y = rows - 5;
       const d2head = Math.sin(f * 0.01 + 2) > 0.2;
 
@@ -629,7 +633,7 @@
         puts(d2x, d2y + 1, '  || ||', deerCol);
       }
 
-      const d3x = d1x + 9;
+      const d3x = d1x + 12;
       const d3y = rows - 4;
       const fawnBounce = Math.sin(f * 0.015) > 0.6 ? -1 : 0;
 
@@ -656,23 +660,92 @@
 
     function drawErrorMessage(f: number) {
       const h = horizonY();
-      const msgY = h + Math.floor((rows - h) * 0.65);
+      const msgY = h + Math.floor((rows - h) * 0.5);
+
+      const bigDigits: Record<string, string[]> = {
+        '4': [
+          '█  █',
+          '█  █',
+          '████',
+          '   █',
+          '   █',
+        ],
+        '0': [
+          '████',
+          '█  █',
+          '█  █',
+          '█  █',
+          '████',
+        ],
+        '1': [
+          ' █ ',
+          '██ ',
+          ' █ ',
+          ' █ ',
+          '███',
+        ],
+        '2': [
+          '████',
+          '   █',
+          '████',
+          '█   ',
+          '████',
+        ],
+        '3': [
+          '████',
+          '   █',
+          '████',
+          '   █',
+          '████',
+        ],
+        '5': [
+          '████',
+          '█   ',
+          '████',
+          '   █',
+          '████',
+        ],
+      };
 
       const code = String(statusCode);
-      const line1 = `~ ${code.split('').join(' ')} ~`;
+      const digitRows = 5;
+      const gap = 3;
+
+      // Calculate total width
+      let totalW = 0;
+      for (let d = 0; d < code.length; d++) {
+        const digit = bigDigits[code[d]];
+        if (digit) {
+          if (d > 0) totalW += gap;
+          totalW += digit[0].length;
+        }
+      }
+
+      const startX = Math.floor((cols - totalW) / 2);
+      const y = Math.min(msgY, rows - digitRows - 4);
+
+      // Draw big digits
+      let cx = startX;
+      for (let d = 0; d < code.length; d++) {
+        const digit = bigDigits[code[d]];
+        if (!digit) continue;
+        if (d > 0) cx += gap;
+        for (let row = 0; row < digitRows; row++) {
+          puts(cx, y + row, digit[row], C.error);
+        }
+        cx += digit[0].length;
+      }
+
       const line2 = statusCode === 404
         ? 'this page wandered off the trail'
         : 'something went wrong';
       const line3 = '. . . enjoy the view . . .';
 
-      const x1 = Math.floor((cols - line1.length) / 2);
       const x2 = Math.floor((cols - line2.length) / 2);
       const x3 = Math.floor((cols - line3.length) / 2);
 
-      const y = Math.min(msgY, rows - 5);
-      puts(x1, y, line1, C.error);
-      puts(x2, y + 2, line2, C.errorSub);
-      puts(x3, y + 3, line3, C.errorSub);
+      puts(x2, y + digitRows + 2, line2, C.errorSub);
+      puts(x3, y + digitRows + 3, line3, C.errorSub);
     }
 
     function drawPath() {
@@ -777,7 +850,7 @@
   .error-page {
     position: fixed;
     inset: 0;
-    background: linear-gradient(to bottom, #5ea0d4 0%, #5ea0d4 43%, #3a7a2a 43%, #2d6a1d 100%);
+    background: #000000;
     display: flex;
     align-items: center;
     justify-content: center;
