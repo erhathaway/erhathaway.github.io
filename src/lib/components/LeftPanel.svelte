@@ -110,7 +110,6 @@
       >
         {#if isProjectPage}
           <div class="absolute -top-2.5 -bottom-4 z-30" style="left: -1px; width: 2px; background: linear-gradient(to bottom, rgba(0,0,0,0.08) 15%, rgba(0,0,0,0.02) 15%, rgba(0,0,0,0.02) 85%, rgba(0,0,0,0.08) 85%);"></div>
-          <div class="absolute -top-2.5 -bottom-4 z-30" style="width: 0.5px; right: -1px; background: linear-gradient(to bottom, rgba(0,0,0,0.08) 15%, rgba(0,0,0,0.01) 15%, rgba(0,0,0,0.01) 85%, rgba(0,0,0,0.08) 85%);"></div>
         {/if}
         <button
           type="button"
