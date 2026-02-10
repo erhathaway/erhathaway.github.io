@@ -564,7 +564,7 @@
     {#if hasPrev || hasNext}
       {@const prevItem = hasPrev ? portfolio.filteredItems[currentIndex - 1] : null}
       {@const nextItem = hasNext ? portfolio.filteredItems[currentIndex + 1] : null}
-      <footer class="max-w-6xl mx-auto px-8 pb-16 pt-8">
+      <footer class="hidden lg:block max-w-6xl mx-auto px-8 pb-16 pt-8">
         <div class="h-px bg-cream/10 mb-10"></div>
         <div class="flex justify-between items-start">
           {#if prevItem}
