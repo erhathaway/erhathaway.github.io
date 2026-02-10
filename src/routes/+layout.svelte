@@ -272,10 +272,13 @@
 		const handleAuthOpen = () => { showLoginModal = true; };
 		window.addEventListener('auth:open-login', handleAuthOpen);
 
+		const isTouch = window.matchMedia('(pointer: coarse)').matches;
 		const unsubscribe = page.subscribe(($page) => {
 			const hoverId = $page.state?.hoverId as number | undefined;
 			if (hoverId && hoverId !== appliedHoverId) {
-				portfolio.lockHover(hoverId);
+				if (!isTouch) {
+					portfolio.lockHover(hoverId);
+				}
 				appliedHoverId = hoverId;
 			}
 		});
