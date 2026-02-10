@@ -627,7 +627,7 @@
 <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] lg:hidden flex items-center gap-3">
   <button
     type="button"
-    class="p-2.5 bg-white/80 backdrop-blur-sm rounded-full shadow-lg transition-colors {hasPrev ? 'text-walnut' : 'text-walnut/25'}"
+    class="p-2.5 bg-white/80 backdrop-blur-sm rounded-full shadow-lg transition-all {hasPrev ? 'text-walnut opacity-100' : 'text-walnut opacity-20'}"
     disabled={!hasPrev}
     onclick={() => hasPrev && goto(`/${portfolio.filteredItems[currentIndex - 1].slug}`)}
     aria-label="Previous project"
@@ -644,7 +644,7 @@
   </a>
   <button
     type="button"
-    class="p-2.5 bg-white/80 backdrop-blur-sm rounded-full shadow-lg transition-colors {hasNext ? 'text-walnut' : 'text-walnut/25'}"
+    class="p-2.5 bg-white/80 backdrop-blur-sm rounded-full shadow-lg transition-all {hasNext ? 'text-walnut opacity-100' : 'text-walnut opacity-20'}"
     disabled={!hasNext}
     onclick={() => hasNext && goto(`/${portfolio.filteredItems[currentIndex + 1].slug}`)}
     aria-label="Next project"
