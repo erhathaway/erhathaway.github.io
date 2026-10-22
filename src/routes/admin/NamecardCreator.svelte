@@ -254,12 +254,8 @@
 	});
 </script>
 
-<section
-	{@attach attachContainer}
-	class="mt-8 rounded-2xl border border-slate-200 bg-slate-50/50 p-5 sm:p-6"
-	aria-label="Name card creator"
->
-	<h2 class="text-base font-semibold text-slate-900">Create a name card</h2>
+<section {@attach attachContainer} class="pt-5" aria-label="Name card creator">
+	<h3 class="text-sm font-semibold text-slate-900">Design & preview</h3>
 	<p class="mt-1 text-sm text-slate-500">
 		Add your text and choose a background image or color. Preview the card before applying it.
 	</p>
@@ -388,87 +384,92 @@
 					placeholder="Things I Make"
 				></textarea>
 			</label>
-			<div class="space-y-4">
-				<NamecardSlider
-					label="Text vertical position"
-					value={textPositionY}
-					defaultValue={NAMECARD_DEFAULTS.textPositionY}
-					min={20}
-					max={80}
-					unit="%"
-					onChange={(value) => (textPositionY = value)}
-				/>
-				<NamecardSlider
-					label="Title size"
-					value={titleSize}
-					defaultValue={NAMECARD_DEFAULTS.titleSize}
-					min={72}
-					max={300}
-					step={2}
-					unit="px"
-					onChange={(value) => (titleSize = value)}
-				/>
-				<NamecardSlider
-					label="Title line spacing"
-					value={titleLineHeight}
-					defaultValue={NAMECARD_DEFAULTS.titleLineHeight}
-					min={0.8}
-					max={1.6}
-					step={0.01}
-					unit="×"
-					onChange={(value) => (titleLineHeight = value)}
-				/>
-				<NamecardSlider
-					label="Space above divider"
-					value={titleGap}
-					defaultValue={NAMECARD_DEFAULTS.titleGap}
-					min={0}
-					max={240}
-					step={4}
-					unit="px"
-					onChange={(value) => (titleGap = value)}
-				/>
-				<NamecardSlider
-					label="Space below divider"
-					value={subtitleGap}
-					defaultValue={NAMECARD_DEFAULTS.subtitleGap}
-					min={0}
-					max={240}
-					step={4}
-					unit="px"
-					onChange={(value) => (subtitleGap = value)}
-				/>
-				<NamecardSlider
-					label="Subtitle size"
-					value={subtitleSize}
-					defaultValue={NAMECARD_DEFAULTS.subtitleSize}
-					min={24}
-					max={96}
-					step={2}
-					unit="px"
-					onChange={(value) => (subtitleSize = value)}
-				/>
-				<NamecardSlider
-					label="Subtitle letter spacing"
-					value={subtitleLetterSpacing}
-					defaultValue={NAMECARD_DEFAULTS.subtitleLetterSpacing}
-					min={0}
-					max={24}
-					step={1}
-					unit="px"
-					onChange={(value) => (subtitleLetterSpacing = value)}
-				/>
-				<NamecardSlider
-					label="Divider width"
-					value={dividerWidth}
-					defaultValue={NAMECARD_DEFAULTS.dividerWidth}
-					min={48}
-					max={480}
-					step={4}
-					unit="px"
-					onChange={(value) => (dividerWidth = value)}
-				/>
-			</div>
+			<details class="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+				<summary class="cursor-pointer text-sm font-medium text-slate-700"
+					>Typography & spacing</summary
+				>
+				<div class="mt-4 space-y-4">
+					<NamecardSlider
+						label="Text vertical position"
+						value={textPositionY}
+						defaultValue={NAMECARD_DEFAULTS.textPositionY}
+						min={20}
+						max={80}
+						unit="%"
+						onChange={(value) => (textPositionY = value)}
+					/>
+					<NamecardSlider
+						label="Title size"
+						value={titleSize}
+						defaultValue={NAMECARD_DEFAULTS.titleSize}
+						min={72}
+						max={300}
+						step={2}
+						unit="px"
+						onChange={(value) => (titleSize = value)}
+					/>
+					<NamecardSlider
+						label="Title line spacing"
+						value={titleLineHeight}
+						defaultValue={NAMECARD_DEFAULTS.titleLineHeight}
+						min={0.8}
+						max={1.6}
+						step={0.01}
+						unit="×"
+						onChange={(value) => (titleLineHeight = value)}
+					/>
+					<NamecardSlider
+						label="Space above divider"
+						value={titleGap}
+						defaultValue={NAMECARD_DEFAULTS.titleGap}
+						min={0}
+						max={240}
+						step={4}
+						unit="px"
+						onChange={(value) => (titleGap = value)}
+					/>
+					<NamecardSlider
+						label="Space below divider"
+						value={subtitleGap}
+						defaultValue={NAMECARD_DEFAULTS.subtitleGap}
+						min={0}
+						max={240}
+						step={4}
+						unit="px"
+						onChange={(value) => (subtitleGap = value)}
+					/>
+					<NamecardSlider
+						label="Subtitle size"
+						value={subtitleSize}
+						defaultValue={NAMECARD_DEFAULTS.subtitleSize}
+						min={24}
+						max={96}
+						step={2}
+						unit="px"
+						onChange={(value) => (subtitleSize = value)}
+					/>
+					<NamecardSlider
+						label="Subtitle letter spacing"
+						value={subtitleLetterSpacing}
+						defaultValue={NAMECARD_DEFAULTS.subtitleLetterSpacing}
+						min={0}
+						max={24}
+						step={1}
+						unit="px"
+						onChange={(value) => (subtitleLetterSpacing = value)}
+					/>
+					<NamecardSlider
+						label="Divider width"
+						value={dividerWidth}
+						defaultValue={NAMECARD_DEFAULTS.dividerWidth}
+						min={48}
+						max={480}
+						step={4}
+						unit="px"
+						onChange={(value) => (dividerWidth = value)}
+					/>
+				</div>
+			</details>
 			<label class="flex items-center gap-2 text-sm text-slate-600"
 				><input
 					type="checkbox"
@@ -583,7 +584,7 @@
 						onclick={() => card && generate(card.blob)}
 						disabled={busy || !card || !title.trim()}
 						class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
-						>{generating ? 'Generating…' : 'Generate name card'}</button
+						>{generating ? 'Generating…' : 'Generate & apply'}</button
 					>
 					{#if card}<button
 							type="button"
@@ -595,7 +596,7 @@
 						class="mt-3 text-sm text-emerald-700"
 						role="status"
 					>
-						Name card generated. Name and save it as a variant below, then promote it to use it.
+						Image applied. Save your variant to keep this design.
 					</p>{/if}
 			{:catch previewError}
 				<p class="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-600" role="alert">
@@ -603,7 +604,7 @@
 				</p>
 			{/await}
 			<p class="mt-2 text-xs text-slate-400">
-				1200 × 1200 pixels. Save the generated card as a variant below, then promote it to use it.
+				1200 × 1200 pixels. Applying returns you to the variant editor.
 			</p>
 			{#if error}<p class="mt-3 text-sm text-red-600" role="alert">{error}</p>{/if}
 		</div>

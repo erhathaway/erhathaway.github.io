@@ -6,7 +6,11 @@ import type { NamecardImageSetting, NamecardVariant } from '$lib/types/site-sett
 import { validateNamecardRecipe } from './namecard-recipe';
 
 export const NAMECARD_VARIANT_PREFIX = 'namecard-variant:';
-const activeKeys = { landing: 'namecard_image', project: 'project_namecard_image' } as const;
+const activeKeys = {
+	landing: 'namecard_image',
+	project: 'project_namecard_image',
+	preview: 'preview_namecard_image'
+} as const;
 
 export async function listNamecardVariants(db: Db): Promise<NamecardVariant[]> {
 	const rows = await db
@@ -18,7 +22,11 @@ export async function listNamecardVariants(db: Db): Promise<NamecardVariant[]> {
 		.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id));
 }
 
-export async function saveNamecardVariant(db: Db, input: unknown): Promise<NamecardVariant> {
+export async function saveNamecardVariant(
+	db: Db,
+	input: unknown,
+	existingId?: string
+): Promise<NamecardVariant> {
 	if (!input || typeof input !== 'object') throw error(400, 'A name card is required.');
 	const body = input as Record<string, unknown>;
 	if (body.name != null && (typeof body.name !== 'string' || body.name.trim().length > 100)) {
@@ -44,8 +52,17 @@ export async function saveNamecardVariant(db: Db, input: unknown): Promise<Namec
 	) {
 		throw error(400, 'Invalid image formats.');
 	}
-	const id = crypto.randomUUID();
-	const createdAt = new Date().toISOString();
+	let existing: NamecardVariant | undefined;
+	if (existingId) {
+		const [row] = await db
+			.select()
+			.from(siteSettings)
+			.where(eq(siteSettings.key, `${NAMECARD_VARIANT_PREFIX}${existingId}`));
+		if (!row) throw error(404, 'Name card variant not found.');
+		existing = row.value as NamecardVariant;
+	}
+	const id = existing?.id ?? crypto.randomUUID();
+	const createdAt = existing?.createdAt ?? new Date().toISOString();
 	const recipe = validateNamecardRecipe(body.recipe);
 	const variant: NamecardVariant = {
 		id,
@@ -60,9 +77,15 @@ export async function saveNamecardVariant(db: Db, input: unknown): Promise<Namec
 		zoom: number('zoom', 1, 0.5, 2),
 		...(body.imageFormats ? { imageFormats: body.imageFormats as string[] } : {})
 	};
-	await db
-		.insert(siteSettings)
-		.values({ key: `${NAMECARD_VARIANT_PREFIX}${variant.id}`, value: variant });
+	const key = `${NAMECARD_VARIANT_PREFIX}${variant.id}`;
+	if (existing) {
+		await db
+			.update(siteSettings)
+			.set({ value: variant, updatedAt: new Date().toISOString() })
+			.where(eq(siteSettings.key, key));
+	} else {
+		await db.insert(siteSettings).values({ key, value: variant });
+	}
 	return variant;
 }
 
@@ -71,7 +94,8 @@ export async function promoteNamecardVariant(
 	id: string,
 	target: unknown
 ): Promise<NamecardImageSetting> {
-	if (target !== 'landing' && target !== 'project') throw error(400, 'Choose landing or project.');
+	if (target !== 'landing' && target !== 'project' && target !== 'preview')
+		throw error(400, 'Choose landing, project, or preview.');
 	const [row] = await db
 		.select()
 		.from(siteSettings)
@@ -117,7 +141,9 @@ export async function getNamecardImageReferences(db: Db) {
 						? 'Namecard (Landing)'
 						: row.key === activeKeys.project
 							? 'Namecard (Project)'
-							: `Namecard variant: ${(row.value as NamecardVariant).name}`,
+							: row.key === activeKeys.preview
+								? 'Namecard (Preview)'
+								: `Namecard variant: ${(row.value as NamecardVariant).name}`,
 				value: row.value as NamecardImageSetting
 			},
 			...(background

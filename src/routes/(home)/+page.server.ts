@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders, url }) => {
 		throw error(500, 'Database not available');
 	}
 
-	const [rows, catList, namecardRow, projectNamecardRow] = await Promise.all([
+	const [rows, catList, namecardRow, projectNamecardRow, previewNamecardRow] = await Promise.all([
 		db
 			.select({
 				id: projects.id,
@@ -45,6 +45,11 @@ export const load: PageServerLoad = async ({ locals, setHeaders, url }) => {
 			.select()
 			.from(siteSettings)
 			.where(eq(siteSettings.key, 'project_namecard_image'))
+			.then((r) => r[0] ?? null),
+		db
+			.select()
+			.from(siteSettings)
+			.where(eq(siteSettings.key, 'preview_namecard_image'))
 			.then((r) => r[0] ?? null)
 	]);
 
@@ -136,6 +141,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders, url }) => {
 		projects: projectList,
 		categories: catList,
 		namecardImage: namecardRow?.value ?? null,
+		previewNamecardImage: previewNamecardRow?.value ?? null,
 		projectNamecardImage: projectNamecardRow?.value ?? null
 	};
 };

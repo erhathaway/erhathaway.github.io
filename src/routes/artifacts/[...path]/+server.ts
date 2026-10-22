@@ -56,7 +56,7 @@ export const GET: RequestHandler = async ({ request, params, platform, locals })
 				.select({ key: siteSettings.key })
 				.from(siteSettings)
 				.where(and(
-					inArray(siteSettings.key, ['namecard_image', 'project_namecard_image']),
+					inArray(siteSettings.key, ['namecard_image', 'project_namecard_image', 'preview_namecard_image']),
 					uuidPattern
 						? sql`(json_extract(${siteSettings.value}, '$.imageUrl') = ${url} OR json_extract(${siteSettings.value}, '$.imageUrl') LIKE ${uuidPattern})`
 						: sql`json_extract(${siteSettings.value}, '$.imageUrl') = ${url}`
