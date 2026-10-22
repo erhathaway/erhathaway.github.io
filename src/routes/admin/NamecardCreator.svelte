@@ -30,6 +30,15 @@
 		settingLabel?: string;
 		uploaded: string;
 	}
+	let gradient = $state<NonNullable<NamecardDesign['gradient']>>('none');
+	let gradientColor = $state('#fdda82');
+	let gradientOpacity = $state(30);
+	let gradientSize = $state(60);
+	let gradientX = $state(100);
+	let gradientY = $state(100);
+	let gradientAngle = $state(135);
+	let textPadding = $state(48);
+	let subtitleColor = $state<string | undefined>();
 	let background = $state<HTMLImageElement | null>(null);
 	let backgroundName = $state('');
 	let backgroundSource = $state<File | NamecardBackground | null>(null);
@@ -64,6 +73,15 @@
 	});
 	let generatedBlob = $state<Blob | null>(null);
 	const design = $derived({
+		gradient,
+		gradientColor,
+		gradientOpacity,
+		gradientSize,
+		gradientX,
+		gradientY,
+		gradientAngle,
+		textPadding,
+		subtitleColor,
 		title,
 		subtitle,
 		textPositionY,
@@ -192,6 +210,15 @@
 			backgroundName = '';
 		}
 		backgroundSource = recipe.background ? { ...recipe.background } : null;
+		gradient = recipe.design.gradient ?? 'none';
+		gradientColor = recipe.design.gradientColor ?? '#fdda82';
+		gradientOpacity = recipe.design.gradientOpacity ?? 30;
+		gradientSize = recipe.design.gradientSize ?? 60;
+		gradientX = recipe.design.gradientX ?? 100;
+		gradientY = recipe.design.gradientY ?? 100;
+		gradientAngle = recipe.design.gradientAngle ?? 135;
+		textPadding = recipe.design.textPadding ?? 48;
+		subtitleColor = recipe.design.subtitleColor;
 		title = recipe.design.title;
 		subtitle = recipe.design.subtitle;
 		textPositionY = recipe.design.textPositionY;
@@ -220,6 +247,15 @@
 	}
 
 	function resetDefaults() {
+		gradient = 'none';
+		gradientColor = '#fdda82';
+		gradientOpacity = 30;
+		gradientSize = 60;
+		gradientX = 100;
+		gradientY = 100;
+		gradientAngle = 135;
+		textPadding = 48;
+		subtitleColor = undefined;
 		title = NAMECARD_DEFAULTS.title;
 		subtitle = NAMECARD_DEFAULTS.subtitle;
 		textPositionY = NAMECARD_DEFAULTS.textPositionY;
@@ -390,6 +426,15 @@
 				>
 				<div class="mt-4 space-y-4">
 					<NamecardSlider
+						label="Text side padding"
+						value={textPadding}
+						defaultValue={48}
+						min={0}
+						max={240}
+						unit="px"
+						onChange={(v) => (textPadding = v)}
+					/>
+					<NamecardSlider
 						label="Text vertical position"
 						value={textPositionY}
 						defaultValue={NAMECARD_DEFAULTS.textPositionY}
@@ -512,6 +557,105 @@
 						>Reset</button
 					>
 				</div>
+			</div>
+			<details class="rounded-xl border border-slate-200 p-4" open={gradient !== 'none'}>
+				<summary class="cursor-pointer text-sm font-medium text-slate-700"
+					>Background gradient</summary
+				>
+				<div class="mt-4 space-y-4">
+					<label class="block text-xs font-semibold text-slate-600"
+						>Gradient type
+						<select
+							bind:value={gradient}
+							class="mt-2 block rounded-lg border border-slate-200 px-3 py-2"
+							><option value="none">None</option><option value="radial">Radial glow</option><option
+								value="linear">Linear</option
+							></select
+						>
+					</label>
+					{#if gradient !== 'none'}
+						<div class="flex gap-3">
+							<label class="text-xs text-slate-600"
+								>Gradient color <input type="color" bind:value={gradientColor} /></label
+							><button
+								type="button"
+								class="text-xs underline"
+								onclick={() => (gradientColor = '#fdda82')}>Reset gradient color</button
+							>
+						</div>
+						<NamecardSlider
+							label="Gradient opacity"
+							value={gradientOpacity}
+							defaultValue={30}
+							min={0}
+							max={100}
+							unit="%"
+							onChange={(v) => (gradientOpacity = v)}
+						/>
+						{#if gradient === 'radial'}
+							<NamecardSlider
+								label="Gradient spread"
+								value={gradientSize}
+								defaultValue={60}
+								min={10}
+								max={150}
+								unit="%"
+								onChange={(v) => (gradientSize = v)}
+							/>
+							<NamecardSlider
+								label="Gradient horizontal position"
+								value={gradientX}
+								defaultValue={100}
+								min={0}
+								max={100}
+								unit="%"
+								onChange={(v) => (gradientX = v)}
+							/>
+							<NamecardSlider
+								label="Gradient vertical position"
+								value={gradientY}
+								defaultValue={100}
+								min={0}
+								max={100}
+								unit="%"
+								onChange={(v) => (gradientY = v)}
+							/>
+						{:else}
+							<NamecardSlider
+								label="Gradient angle"
+								value={gradientAngle}
+								defaultValue={135}
+								min={0}
+								max={360}
+								unit="°"
+								onChange={(v) => (gradientAngle = v)}
+							/>
+						{/if}
+					{/if}
+					<p class="text-xs text-slate-500">
+						Gradients sit over the background color. Remove the background image to see them.
+					</p>
+					{#if background}<button
+							type="button"
+							class="text-xs underline"
+							onclick={() => {
+								background = null;
+								backgroundSource = null;
+								backgroundName = '';
+							}}>Remove background image</button
+						>{/if}
+				</div>
+			</details>
+			<div class="flex gap-3">
+				<label class="text-xs text-slate-600"
+					>Subtitle color <input
+						type="color"
+						value={subtitleColor ?? textColor}
+						oninput={(event) => (subtitleColor = event.currentTarget.value)}
+					/></label
+				><button type="button" class="text-xs underline" onclick={() => (subtitleColor = undefined)}
+					>Reset subtitle color</button
+				>
 			</div>
 			<NamecardSlider
 				label="Darken background"

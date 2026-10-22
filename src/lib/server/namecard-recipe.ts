@@ -29,6 +29,31 @@ export function validateNamecardRecipe(input: unknown): NamecardRecipe | undefin
 			throw error(400, 'Invalid generator color.');
 		design[key] = raw[key];
 	}
+	if (raw.gradient !== undefined && !['none', 'radial', 'linear'].includes(raw.gradient as string))
+		throw error(400, 'Invalid gradient.');
+	design.gradient = (raw.gradient ?? 'none') as NamecardDesign['gradient'];
+	for (const key of ['gradientColor', 'subtitleColor'] as const) {
+		if (raw[key] === undefined) continue;
+		if (typeof raw[key] !== 'string' || !/^#[0-9a-f]{6}$/i.test(raw[key]))
+			throw error(400, 'Invalid generator color.');
+		design[key] = raw[key];
+	}
+	const optionalRanges = {
+		gradientOpacity: [0, 100],
+		gradientSize: [10, 150],
+		gradientX: [0, 100],
+		gradientY: [0, 100],
+		gradientAngle: [0, 360],
+		textPadding: [0, 240]
+	} as const;
+	for (const key of Object.keys(optionalRanges) as Array<keyof typeof optionalRanges>) {
+		if (raw[key] === undefined) continue;
+		const value = raw[key];
+		const [min, max] = optionalRanges[key];
+		if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max)
+			throw error(400, `Invalid generator ${key}.`);
+		design[key] = value;
+	}
 	const ranges = {
 		titleSize: [72, 300],
 		titleLineHeight: [0.8, 1.6],

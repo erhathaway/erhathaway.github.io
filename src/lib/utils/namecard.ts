@@ -1,4 +1,13 @@
 export interface NamecardDesign {
+	gradient?: 'none' | 'radial' | 'linear';
+	gradientColor?: string;
+	gradientOpacity?: number;
+	gradientSize?: number;
+	gradientX?: number;
+	gradientY?: number;
+	gradientAngle?: number;
+	textPadding?: number;
+	subtitleColor?: string;
 	title: string;
 	subtitle: string;
 	titleSize: number;
@@ -20,6 +29,14 @@ export interface NamecardDesign {
 }
 
 export const NAMECARD_DEFAULTS: Readonly<NamecardDesign> = {
+	gradient: 'none',
+	gradientColor: '#fdda82',
+	gradientOpacity: 30,
+	gradientSize: 60,
+	gradientX: 100,
+	gradientY: 100,
+	gradientAngle: 135,
+	textPadding: 48,
 	title: 'Ethan\nHathaway',
 	subtitle: 'THINGS I MAKE',
 	titleSize: 156,
@@ -56,6 +73,32 @@ export async function renderNamecard(image: HTMLImageElement | null, design: Nam
 
 	ctx.fillStyle = design.backgroundColor;
 	ctx.fillRect(0, 0, SIZE, SIZE);
+	if (design.gradient && design.gradient !== 'none') {
+		const x = (SIZE * (design.gradientX ?? 100)) / 100;
+		const y = (SIZE * (design.gradientY ?? 100)) / 100;
+		const radius =
+			(Math.max(
+				Math.hypot(x, y),
+				Math.hypot(SIZE - x, y),
+				Math.hypot(x, SIZE - y),
+				Math.hypot(SIZE - x, SIZE - y)
+			) *
+				(design.gradientSize ?? 60)) /
+			100;
+		const angle = (((design.gradientAngle ?? 135) - 90) * Math.PI) / 180;
+		const dx = (Math.cos(angle) * SIZE) / 2;
+		const dy = (Math.sin(angle) * SIZE) / 2;
+		const gradient =
+			design.gradient === 'radial'
+				? ctx.createRadialGradient(x, y, 0, x, y, Math.max(1, radius))
+				: ctx.createLinearGradient(SIZE / 2 - dx, SIZE / 2 - dy, SIZE / 2 + dx, SIZE / 2 + dy);
+		gradient.addColorStop(0, design.gradientColor ?? '#fdda82');
+		gradient.addColorStop(1, `${design.gradientColor ?? '#fdda82'}00`);
+		ctx.globalAlpha = (design.gradientOpacity ?? 30) / 100;
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, SIZE, SIZE);
+		ctx.globalAlpha = 1;
+	}
 	if (image) {
 		const scale = Math.max(SIZE / image.naturalWidth, SIZE / image.naturalHeight) * design.zoom;
 		const width = image.naturalWidth * scale;
@@ -103,7 +146,7 @@ export async function renderNamecard(image: HTMLImageElement | null, design: Nam
 		});
 	}
 
-	const padding = 48;
+	const padding = design.textPadding ?? 48;
 	let titleSize = design.titleSize;
 	let subtitleSize = design.subtitleSize;
 	let titleLines: string[] = [];
@@ -152,6 +195,7 @@ export async function renderNamecard(image: HTMLImageElement | null, design: Nam
 		}
 		y += design.titleGap + design.subtitleGap;
 		ctx.font = `400 ${subtitleSize}px "DM Sans", sans-serif`;
+		ctx.fillStyle = design.subtitleColor ?? design.textColor;
 		for (const line of subtitleLines) {
 			ctx.textAlign = 'left';
 			let x =
@@ -186,3 +230,49 @@ export async function renderNamecardPreview(
 	});
 	return { blob, url };
 }
+
+// Editable starting points for the site's built-in name cards.
+export const NAMECARD_PRESETS = [
+	{
+		id: 'landing',
+		name: 'Landing default',
+		design: {
+			...NAMECARD_DEFAULTS,
+			backgroundColor: '#f4ebe4',
+			gradient: 'radial',
+			alignment: 'left',
+			divider: false,
+			textColor: '#000000',
+			subtitleColor: '#000000',
+			titleSize: 110,
+			titleLineHeight: 1.05,
+			subtitleSize: 29,
+			subtitleLetterSpacing: 9.2,
+			titleGap: 57,
+			subtitleGap: 0,
+			textPositionY: 50,
+			textPadding: 66
+		}
+	},
+	{
+		id: 'project',
+		name: 'Project default',
+		design: {
+			...NAMECARD_DEFAULTS,
+			backgroundColor: '#fae6d0',
+			alignment: 'left',
+			divider: false,
+			textColor: '#2c2218',
+			subtitleColor: '#8a8078',
+			titleSize: 163,
+			titleLineHeight: 1.2,
+			subtitleSize: 47,
+			subtitleLetterSpacing: 15,
+			titleGap: 68,
+			subtitleGap: 0,
+			textPositionY: 50,
+			textPadding: 137
+		}
+	},
+	{ id: 'preview', name: 'Preview default', design: { ...NAMECARD_DEFAULTS } }
+] satisfies Array<{ id: 'landing' | 'project' | 'preview'; name: string; design: NamecardDesign }>;

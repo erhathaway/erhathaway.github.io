@@ -9,7 +9,8 @@
 	} from '$lib/types/site-settings';
 	import NamecardCreator from './NamecardCreator.svelte';
 	import { fetchNamecardAdmin } from '$lib/utils/namecard-request';
-	import type { NamecardDesign } from '$lib/utils/namecard';
+	import { NAMECARD_PRESETS, type NamecardDesign } from '$lib/utils/namecard';
+	import NamecardPresetTile from './NamecardPresetTile.svelte';
 
 	let {
 		getToken,
@@ -66,6 +67,13 @@
 		editing = true;
 		removingVariantId = null;
 		statusMessage = '';
+	}
+
+	async function openPreset(preset: (typeof NAMECARD_PRESETS)[number]) {
+		openEditor();
+		variantName = `${preset.name} customized`;
+		draftRecipe = { version: 1, background: null, design: { ...preset.design } };
+		await openGenerator();
 	}
 
 	function backToVariants() {
@@ -375,7 +383,7 @@
 			<div class="collection-bar">
 				<span
 					>{variants.length} saved {variants.length === 1 ? 'variant' : 'variants'} · Shared across landing
-					and project pages</span
+					and project pages · 3 editable defaults</span
 				>
 				<div class="image-actions">
 					{#each destinations as destination (destination.id)}
@@ -394,6 +402,16 @@
 					<strong>New variant</strong>
 					<span>Upload an image or generate a design</span>
 				</button>
+				{#each NAMECARD_PRESETS as preset (preset.id)}
+					<NamecardPresetTile
+						name={preset.name}
+						design={preset.design}
+						inUse={preset.id !== 'preview' && !active[preset.id]}
+						previewOnly={preset.id === 'preview'}
+						disabled={busy}
+						onclick={() => openPreset(preset)}
+					/>
+				{/each}
 				{#each variants as variant (variant.id)}
 					<button
 						class="variant-card"
@@ -429,7 +447,7 @@
 		{:else}
 			<div class="editor-shell">
 				<div class="editor-heading">
-					<h3>{selected ? selected.name : 'New variant'}</h3>
+					<h3>{selected ? selected.name : variantName || 'New variant'}</h3>
 					<span class="muted"
 						>{dirty ? 'Unsaved changes' : selected ? 'Saved' : 'Start with an image'}</span
 					>
@@ -501,12 +519,14 @@
 										{#if isActive(selected, destination.id)}<button
 												class="text-button"
 												disabled={dirty}
-												aria-label={`Unpromote from ${destination.label}`} onclick={() => handleRemove(destination.id)}>Unpromote</button
+												aria-label={`Unpromote from ${destination.label}`}
+												onclick={() => handleRemove(destination.id)}>Unpromote</button
 											>
 										{:else}<button
 												class="secondary"
 												disabled={dirty}
-												aria-label={`Promote to ${destination.label}`} onclick={() => selected && promote(selected, destination.id)}
+												aria-label={`Promote to ${destination.label}`}
+												onclick={() => selected && promote(selected, destination.id)}
 												>Promote</button
 											>{/if}
 									</div>
