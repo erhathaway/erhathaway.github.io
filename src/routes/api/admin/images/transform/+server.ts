@@ -40,7 +40,9 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	const origin = new URL(request.url).origin;
 	console.log(`[transform] Starting: r2Key=${r2Key}, origin=${origin}`);
-	const result = await transformToModernFormats(bucket, r2Key, origin);
+	// Existing images can be shared by active cards and saved variants. Keep the
+	// source until the image library confirms that nothing references it.
+	const result = await transformToModernFormats(bucket, r2Key, origin, true);
 
 	if (!result.ok) {
 		console.error(`[transform] Failed: ${result.reason}`);
@@ -63,8 +65,13 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		}
 
 		const val = typeof row.value === 'string' ? JSON.parse(row.value) : (row.value ?? {});
-		val.imageUrl = newUrl;
-		val.imageFormats = result.formats;
+		if (val.recipe?.background?.imageUrl === `/${r2Key}`) {
+			val.recipe.background.imageUrl = newUrl;
+			val.recipe.background.imageFormats = result.formats;
+		} else {
+			val.imageUrl = newUrl;
+			val.imageFormats = result.formats;
+		}
 
 		await db
 			.update(siteSettings)
