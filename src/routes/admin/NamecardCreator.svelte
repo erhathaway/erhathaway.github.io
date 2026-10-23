@@ -1,5 +1,11 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import {
+		DEFAULT_THEME,
+		snapshotTypography,
+		type TypographyTheme,
+		type TypographyContext
+	} from '$lib/typography';
 	import { SvelteMap } from 'svelte/reactivity';
 	import NamecardSlider from './NamecardSlider.svelte';
 	import type { NamecardRecipe, NamecardBackground } from '$lib/types/site-settings';
@@ -72,7 +78,40 @@
 		mounted = true;
 	});
 	let generatedBlob = $state<Blob | null>(null);
+	let typographyTheme = $state<TypographyTheme>(DEFAULT_THEME);
+	let typographyContext = $state<TypographyContext>('landing');
+	let themeLoaded = $state(false);
+	let themeError = $state('');
+	async function loadTheme() {
+		const response = await fetchNamecardAdmin(getToken, '/api/admin/typography');
+		if (!response.ok) throw new Error('Could not load the active typography theme.');
+		const result = (await response.json()) as { themes: TypographyTheme[]; activeId: string };
+		const active = result.themes.find((theme) => theme.id === result.activeId);
+		if (!active) throw new Error('Active typography theme not found.');
+		typographyTheme = active;
+		themeLoaded = true;
+		return active;
+	}
+	function applyThemeSizing() {
+		const snapshot = snapshotTypography(typographyTheme, typographyContext);
+		titleSize = Math.min(300, Math.max(72, Math.round((snapshot.title.size * 1200) / 340)));
+		subtitleSize = Math.min(96, Math.max(24, Math.round((snapshot.subtitle.size * 1200) / 340)));
+		titleLineHeight = Math.min(1.6, Math.max(0.8, snapshot.title.lineHeight));
+		subtitleLetterSpacing = Math.min(24, Math.max(0, snapshot.subtitle.tracking * subtitleSize));
+	}
+	async function retryTheme() {
+		themeError = '';
+		try {
+			await loadTheme();
+		} catch (err) {
+			themeError = err instanceof Error ? err.message : 'Could not load typography.';
+		}
+	}
+	onMount(() => {
+		void retryTheme();
+	});
 	const design = $derived({
+		typography: snapshotTypography(typographyTheme, typographyContext),
 		gradient,
 		gradientColor,
 		gradientOpacity,
@@ -112,7 +151,7 @@
 	let libraryError = $state('');
 	let search = $state('');
 	let imageRequest = 0;
-	const busy = $derived(disabled || generating || loadingImage);
+	const busy = $derived(disabled || generating || loadingImage || !themeLoaded);
 	const filteredImages = $derived(
 		library.filter((image) =>
 			`${image.projectName ?? ''} ${image.settingLabel ?? ''} ${image.key}`
@@ -182,14 +221,20 @@
 		}
 	}
 
-	async function generate(blob: Blob) {
+	async function generate(_blob: Blob) {
 		if (busy || !title.trim()) return;
 		generating = true;
 		error = '';
 		try {
+			const active = await loadTheme();
+			const currentDesign = {
+				...design,
+				typography: snapshotTypography(active, typographyContext)
+			};
+			const { blob } = await renderNamecardPreview(background, currentDesign);
 			const recipe = await onGenerate(
 				new File([blob], 'namecard.png', { type: 'image/png' }),
-				{ ...design },
+				currentDesign,
 				backgroundSource
 			);
 			backgroundSource = recipe.background;
@@ -202,6 +247,7 @@
 	}
 
 	export async function edit(recipe: NamecardRecipe): Promise<boolean> {
+		typographyContext = recipe.design.typography?.context ?? 'landing';
 		if (recipe.background) {
 			const loaded = await loadBackground(recipe.background.imageUrl, 'Saved background');
 			if (!loaded) return false;
@@ -278,11 +324,24 @@
 		generatedBlob = null;
 	}
 
-	function download(url: string) {
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = 'namecard.png';
-		link.click();
+	async function download(_url: string) {
+		if (busy) return;
+		generating = true;
+		try {
+			const active = await loadTheme();
+			const { url } = await renderNamecardPreview(background, {
+				...design,
+				typography: snapshotTypography(active, typographyContext)
+			});
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = 'namecard.png';
+			link.click();
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Could not download image.';
+		} finally {
+			generating = false;
+		}
 	}
 
 	onDestroy(() => {
@@ -295,6 +354,27 @@
 	<p class="mt-1 text-sm text-slate-500">
 		Add your text and choose a background image or color. Preview the card before applying it.
 	</p>
+	<div class="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+		<label
+			>Typography context <select
+				bind:value={typographyContext}
+				disabled={generating || disabled}
+				class="ml-2 rounded border border-slate-200 px-2 py-1"
+				><option value="landing">Landing</option><option value="project">Project</option><option
+					value="preview">Preview</option
+				></select
+			></label
+		>
+		<button type="button" disabled={busy} onclick={applyThemeSizing} class="ml-3 underline"
+			>Apply theme size & spacing</button
+		>
+		<p class="mt-2">
+			Active theme: {themeLoaded ? typographyTheme.name : 'Loading…'}. Size and spacing below
+			override the theme for this image.
+		</p>
+		{#if themeError}<p role="alert" class="mt-2 text-red-600">{themeError}</p>
+			<button type="button" onclick={retryTheme} class="underline">Retry typography</button>{/if}
+	</div>
 	<div class="mt-6 grid gap-8 lg:grid-cols-2">
 		<fieldset disabled={busy} class="min-w-0 space-y-5 disabled:opacity-60">
 			<legend class="sr-only">Name card design</legend>
@@ -732,6 +812,7 @@
 					>
 					{#if card}<button
 							type="button"
+							disabled={busy}
 							onclick={() => download(card.url)}
 							class="text-sm text-slate-500 underline hover:text-slate-900">Download PNG</button
 						>{/if}

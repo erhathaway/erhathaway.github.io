@@ -1,3 +1,5 @@
+import { validateStyle } from './typography';
+import type { TypographySnapshot, TextStyle } from '$lib/typography';
 import { error } from '@sveltejs/kit';
 import type { NamecardRecipe } from '$lib/types/site-settings';
 import { NAMECARD_DEFAULTS, type NamecardDesign } from '$lib/utils/namecard';
@@ -99,6 +101,41 @@ export function validateNamecardRecipe(input: unknown): NamecardRecipe | undefin
 			imageUrl: source.imageUrl,
 			...(source.imageFormats ? { imageFormats: source.imageFormats as string[] } : {})
 		};
+	}
+	if (raw.typography !== undefined) {
+		const snapshot = raw.typography as Record<string, unknown>;
+		if (
+			!snapshot ||
+			typeof snapshot !== 'object' ||
+			!['landing', 'project', 'preview'].includes(String(snapshot.context))
+		)
+			throw error(400, 'Invalid typography context.');
+		for (const field of ['themeId', 'themeName', 'revision'])
+			if (typeof snapshot[field] !== 'string' || (snapshot[field] as string).length > 150)
+				throw error(400, 'Invalid typography reference.');
+		const title = validateStyle(snapshot.title);
+		const subtitle = validateStyle(snapshot.subtitle);
+		const fields = [
+			'font',
+			'weight',
+			'italic',
+			'size',
+			'mobileSize',
+			'lineHeight',
+			'tracking',
+			'transform',
+			'decoration'
+		];
+		if (!fields.every((key) => key in title && key in subtitle))
+			throw error(400, 'Incomplete typography snapshot.');
+		design.typography = {
+			themeId: snapshot.themeId,
+			themeName: snapshot.themeName,
+			revision: snapshot.revision,
+			context: snapshot.context,
+			title: title as TextStyle,
+			subtitle: subtitle as TextStyle
+		} as TypographySnapshot;
 	}
 	return { version: 1, design, background };
 }

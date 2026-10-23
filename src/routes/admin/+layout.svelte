@@ -586,6 +586,8 @@
 					</ul>
 				</div>
 
+				<a href={resolve('/admin/typography')} class="block rounded-lg px-2.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">Typography themes</a>
+
 				<!-- Schemas -->
 				<div>
 					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Schemas</p>

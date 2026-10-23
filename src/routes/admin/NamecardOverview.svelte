@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { snapshotTypography } from '$lib/typography';
 	import { resolve } from '$app/paths';
 	import type { NamecardImageSetting } from '$lib/types/site-settings';
 	import { NAMECARD_PRESETS, renderNamecardPreview } from '$lib/utils/namecard';
@@ -25,7 +27,10 @@
 			? Promise.all(
 					NAMECARD_PRESETS.slice(0, 2).map(async (preset) => ({
 						id: preset.id,
-						...(await renderNamecardPreview(null, preset.design))
+						...(await renderNamecardPreview(null, {
+							...preset.design,
+							typography: snapshotTypography(page.data.typographyTheme, preset.id)
+						}))
 					}))
 				)
 			: null

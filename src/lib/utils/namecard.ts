@@ -1,4 +1,6 @@
+import { fontStack, type TextStyle, type TypographySnapshot } from '$lib/typography';
 export interface NamecardDesign {
+	typography?: TypographySnapshot;
 	gradient?: 'none' | 'radial' | 'linear';
 	gradientColor?: string;
 	gradientOpacity?: number;
@@ -62,10 +64,23 @@ const SIZE = 1200;
 // Preview and export share this renderer so their typography and crop match.
 export async function renderNamecard(image: HTMLImageElement | null, design: NamecardDesign) {
 	await document.fonts.ready;
-	await Promise.all([
-		document.fonts.load('400 132px "Playfair Display"'),
-		document.fonts.load('400 36px "DM Sans"')
+	const titleStyle = design.typography?.title;
+	const subtitleStyle = design.typography?.subtitle;
+	const font = (style: TextStyle | undefined, size: number, fallback: string) =>
+		`${style?.italic ? 'italic' : 'normal'} ${style?.weight ?? 400} ${size}px ${style ? fontStack(style.font) : fallback}`;
+	const loadedFonts = await Promise.all([
+		document.fonts.load(font(titleStyle, design.titleSize, '"Playfair Display"')),
+		document.fonts.load(font(subtitleStyle, design.subtitleSize, '"DM Sans"'))
 	]);
+
+	for (const [index, family] of [
+		titleStyle?.font ?? 'Playfair Display',
+		subtitleStyle?.font ?? 'DM Sans'
+	].entries()) {
+		if (!['Arial', 'Georgia'].includes(family) && !loadedFonts[index].length)
+			throw new Error(`Could not load ${family}. Retry before generating the image.`);
+	}
+
 	const canvas = document.createElement('canvas');
 	canvas.width = canvas.height = SIZE;
 	const ctx = canvas.getContext('2d');
@@ -114,6 +129,39 @@ export async function renderNamecard(image: HTMLImageElement | null, design: Nam
 	ctx.fillStyle = `rgba(0, 0, 0, ${design.darkness / 100})`;
 	ctx.fillRect(0, 0, SIZE, SIZE);
 
+	function transform(text: string, style?: TextStyle) {
+		if (style?.transform === 'uppercase') return text.toUpperCase();
+		if (style?.transform === 'lowercase') return text.toLowerCase();
+		if (style?.transform === 'capitalize')
+			return text.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+		return text;
+	}
+	function drawText(
+		text: string,
+		x: number,
+		y: number,
+		size: number,
+		spacing: number,
+		style?: TextStyle
+	) {
+		const width = measure(text, spacing);
+		let left = design.alignment === 'center' ? x - width / 2 : x;
+		ctx!.textAlign = 'left';
+		if (!spacing) ctx!.fillText(text, left, y);
+		else
+			for (const character of Array.from(text)) {
+				ctx!.fillText(character, left, y);
+				left += ctx!.measureText(character).width + spacing;
+			}
+		if (style?.decoration && style.decoration !== 'none') {
+			ctx!.fillRect(
+				design.alignment === 'center' ? x - width / 2 : x,
+				y + (style.decoration === 'underline' ? size * 0.45 : 0),
+				width,
+				Math.max(1, size / 24)
+			);
+		}
+	}
 	function measure(text: string, spacing: number) {
 		if (!spacing) return ctx!.measureText(text).width;
 		const characters = Array.from(text);
@@ -154,16 +202,26 @@ export async function renderNamecard(image: HTMLImageElement | null, design: Nam
 	let totalHeight = 0;
 	// Fit the full text block inside the card, including explicit line breaks.
 	for (let attempt = 0; attempt < 50; attempt++) {
-		ctx.font = `400 ${titleSize}px "Playfair Display", Georgia, serif`;
-		titleLines = wrap(design.title.trim(), SIZE - padding * 2);
-		ctx.font = `400 ${subtitleSize}px "DM Sans", sans-serif`;
+		ctx.font = font(titleStyle, titleSize, '"Playfair Display", Georgia, serif');
+		titleLines = wrap(
+			transform(design.title.trim(), titleStyle),
+			SIZE - padding * 2,
+			(titleStyle?.tracking ?? 0) * titleSize
+		);
+		ctx.font = font(subtitleStyle, subtitleSize, '"DM Sans", sans-serif');
 		subtitleLines = design.subtitle.trim()
-			? wrap(design.subtitle.trim(), SIZE - padding * 2, design.subtitleLetterSpacing)
+			? wrap(
+					transform(design.subtitle.trim(), subtitleStyle),
+					SIZE - padding * 2,
+					design.subtitleLetterSpacing
+				)
 			: [];
 		totalHeight =
 			titleLines.length * titleSize * design.titleLineHeight +
 			(subtitleLines.length
-				? design.titleGap + design.subtitleGap + subtitleLines.length * subtitleSize * 1.5
+				? design.titleGap +
+					design.subtitleGap +
+					subtitleLines.length * subtitleSize * (subtitleStyle?.lineHeight ?? 1.5)
 				: 0);
 		if (totalHeight <= SIZE - padding * 2) break;
 		titleSize *= 0.94;
@@ -177,9 +235,16 @@ export async function renderNamecard(image: HTMLImageElement | null, design: Nam
 	ctx.textBaseline = 'middle';
 	ctx.textAlign = design.alignment;
 	const textX = design.alignment === 'center' ? SIZE / 2 : padding;
-	ctx.font = `400 ${titleSize}px "Playfair Display", Georgia, serif`;
+	ctx.font = font(titleStyle, titleSize, '"Playfair Display", Georgia, serif');
 	for (const line of titleLines) {
-		ctx.fillText(line, textX, y + (titleSize * design.titleLineHeight) / 2);
+		drawText(
+			line,
+			textX,
+			y + (titleSize * design.titleLineHeight) / 2,
+			titleSize,
+			(titleStyle?.tracking ?? 0) * titleSize,
+			titleStyle
+		);
 		y += titleSize * design.titleLineHeight;
 	}
 	if (subtitleLines.length) {
@@ -194,19 +259,18 @@ export async function renderNamecard(image: HTMLImageElement | null, design: Nam
 			ctx.globalAlpha = 1;
 		}
 		y += design.titleGap + design.subtitleGap;
-		ctx.font = `400 ${subtitleSize}px "DM Sans", sans-serif`;
+		ctx.font = font(subtitleStyle, subtitleSize, '"DM Sans", sans-serif');
 		ctx.fillStyle = design.subtitleColor ?? design.textColor;
 		for (const line of subtitleLines) {
-			ctx.textAlign = 'left';
-			let x =
-				design.alignment === 'center'
-					? (SIZE - measure(line, design.subtitleLetterSpacing)) / 2
-					: padding;
-			for (const character of Array.from(line)) {
-				ctx.fillText(character, x, y + (subtitleSize * 1.5) / 2);
-				x += ctx.measureText(character).width + design.subtitleLetterSpacing;
-			}
-			y += subtitleSize * 1.5;
+			drawText(
+				line,
+				textX,
+				y + (subtitleSize * (subtitleStyle?.lineHeight ?? 1.5)) / 2,
+				subtitleSize,
+				design.subtitleLetterSpacing,
+				subtitleStyle
+			);
+			y += subtitleSize * (subtitleStyle?.lineHeight ?? 1.5);
 		}
 	}
 	return new Promise<Blob>((resolve, reject) => {

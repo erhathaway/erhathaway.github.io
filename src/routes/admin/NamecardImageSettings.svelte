@@ -9,6 +9,7 @@
 	} from '$lib/types/site-settings';
 	import NamecardCreator from './NamecardCreator.svelte';
 	import { fetchNamecardAdmin } from '$lib/utils/namecard-request';
+	import { DEFAULT_THEME, snapshotTypography } from '$lib/typography';
 	import { NAMECARD_PRESETS, type NamecardDesign } from '$lib/utils/namecard';
 	import NamecardPresetTile from './NamecardPresetTile.svelte';
 
@@ -48,6 +49,14 @@
 	let generatorError = $state('');
 	let baseline = $state('');
 	const selected = $derived(variants.find((variant) => variant.id === selectedId));
+	let editorValue = $state<{ imageUrl: string; description?: string; imageFormats?: string[] }>({
+		imageUrl: '',
+		description: ''
+	});
+	let positionX = $state(50);
+	let positionY = $state(50);
+	let zoom = $state(1);
+
 	const draftSignature = $derived(
 		JSON.stringify({ variantName, editorValue, positionX, positionY, zoom, draftRecipe })
 	);
@@ -75,7 +84,11 @@
 		openEditor();
 		sourceDefault = preset.name;
 		variantName = `${preset.name} customized`;
-		draftRecipe = { version: 1, background: null, design: { ...preset.design } };
+		draftRecipe = {
+			version: 1,
+			background: null,
+			design: { ...preset.design, typography: snapshotTypography(DEFAULT_THEME, preset.id) }
+		};
 		await openGenerator();
 	}
 
@@ -119,14 +132,6 @@
 			input.value = '';
 		}
 	}
-
-	let editorValue = $state<{ imageUrl: string; description?: string; imageFormats?: string[] }>({
-		imageUrl: '',
-		description: ''
-	});
-	let positionX = $state(50);
-	let positionY = $state(50);
-	let zoom = $state(1);
 
 	const hasImage = $derived(!!editorValue.imageUrl);
 	function matchesSetting(variant: NamecardVariant, active: NamecardImageSetting | null) {
@@ -408,6 +413,7 @@
 				{#each NAMECARD_PRESETS as preset (preset.id)}
 					<NamecardPresetTile
 						name={preset.name}
+						context={preset.id}
 						design={preset.design}
 						inUse={preset.id !== 'preview' && !active[preset.id]}
 						previewOnly={preset.id === 'preview'}
@@ -497,6 +503,10 @@
 								>{draftRecipe ? 'Regenerate image' : 'Generate image'}</button
 							>
 						</div>
+						{#if draftRecipe?.design.typography}<p class="hint">
+								Generated with {draftRecipe.design.typography.themeName} · {draftRecipe.design
+									.typography.context} typography. Regenerating uses the currently active theme.
+							</p>{/if}
 						{#if hasImage && !draftRecipe}<p class="hint">
 								This image has no saved design settings. Generate a new design to edit its text and
 								background.

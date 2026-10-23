@@ -225,13 +225,13 @@
           ></div>
           <div class="relative z-10 h-full p-7 flex flex-col justify-center gap-6 text-walnut">
             <span
-              class="namecard-vt text-[44px] font-normal leading-[1.05] block"
+              data-typo="landing-title" class="namecard-vt text-[44px] font-normal leading-[1.05] block"
               style="font-family: 'Playfair Display', Georgia, serif; view-transition-name: name-text"
             >
               Ethan<br />Hathaway
             </span>
             <p
-              class="namecard-vt text-[12px] tracking-[0.32em] uppercase text-ash/80"
+              data-typo="landing-subtitle" class="namecard-vt text-[12px] tracking-[0.32em] uppercase text-ash/80"
               style="view-transition-name: subtitle-text"
             >
               Things I Make
@@ -277,7 +277,7 @@
     style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08)); background-color: #f3e9e1;"
   >
     <div class="relative px-8 py-5 flex items-center justify-start min-[600px]:justify-center">
-      <div class="flex gap-6 text-[11px] tracking-[0.2em] uppercase text-ash/50" style="font-family: 'DM Sans', sans-serif; font-weight: 500;">
+      <div data-typo="social" class="flex gap-6 text-[11px] tracking-[0.2em] uppercase text-ash/50" style="font-family: 'DM Sans', sans-serif; font-weight: 500;">
         <a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">GitHub</a>
         <a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors duration-300">Instagram</a>
         <a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors duration-300">Contact</a>
@@ -289,7 +289,7 @@
   </div>
   {#if portfolio.selectedCategory !== 'all' && hiddenCount > 0}
     <div class="py-10 flex items-start justify-center px-8">
-      <p class="text-sm text-cream/70 tracking-wide">
+      <p data-typo="status" class="text-sm text-cream/70 tracking-wide">
         {hiddenCount} more items to see. remove {portfolio.selectedCategory} filter
       </p>
     </div>

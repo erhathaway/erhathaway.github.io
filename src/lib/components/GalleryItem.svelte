@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import type { PortfolioItem } from '$lib/data/items';
   import { page } from '$app/stores';
@@ -99,7 +100,7 @@
 </script>
 
 <a
-  href={hrefOverride ?? `/${item.slug}`}
+  href={resolve((hrefOverride ?? `/${item.slug}`) as import('$app/types').Pathname)}
   class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {isStatic ? '' : gridSpan} block {fadeInActive ? 'animate-fade-in' : ''} {isActive ? 'ring-2 ring-copper' : ''}"
   onpointerenter={handlePointerEnter}
   onanimationend={isStatic ? undefined : handleFadeInDone}
@@ -183,7 +184,7 @@
   {:else}
     <div class="placeholder-bg w-full h-full relative bg-gradient-to-br {item.gradientColors}"></div>
   {/if}
-  <span class="item-number absolute bottom-4 left-4 font-display text-sm {isActive ? 'text-copper' : 'text-white/60'} z-10">
+  <span data-typo="gallery-number" class="item-number absolute bottom-4 left-4 font-display text-sm {isActive ? 'text-copper' : 'text-white/60'} z-10">
     {displayNumber.toString().padStart(2, '0')}
   </span>
 

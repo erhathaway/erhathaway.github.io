@@ -55,6 +55,6 @@
 		<div class="absolute inset-0 pointer-events-none rounded-[0.35rem]" style="box-shadow: inset 0 0 12px rgba(0,0,0,0.15);"></div>
 	</div>
 	{#if data.description}
-		<figcaption class="text-xs text-ash">{data.description}</figcaption>
+		<figcaption data-typo="caption" class="text-xs text-ash">{data.description}</figcaption>
 	{/if}
 </figure>

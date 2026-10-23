@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { snapshotTypography, type TypographyContext } from '$lib/typography';
 	import { renderNamecardPreview, type NamecardDesign } from '$lib/utils/namecard';
 	let {
 		name,
+		context = 'landing',
 		design,
 		inUse,
 		previewOnly = false,
@@ -10,6 +13,7 @@
 		onclick
 	}: {
 		name: string;
+		context?: TypographyContext;
 		design: NamecardDesign;
 		inUse: boolean;
 		previewOnly?: boolean;
@@ -20,7 +24,14 @@
 	onMount(() => {
 		mounted = true;
 	});
-	const preview = $derived(mounted ? renderNamecardPreview(null, design) : null);
+	const preview = $derived(
+		mounted
+			? renderNamecardPreview(null, {
+					...design,
+					typography: snapshotTypography(page.data.typographyTheme, context)
+				})
+			: null
+	);
 </script>
 
 <button type="button" {disabled} {onclick} aria-label="Create a variant from {name}" class="preset">
