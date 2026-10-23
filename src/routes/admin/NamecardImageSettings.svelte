@@ -43,6 +43,7 @@
 	let statusType = $state<'success' | 'error'>('success');
 	let editing = $state(false);
 	let selectedId = $state<string | null>(null);
+	let sourceDefault = $state<string | null>(null);
 	let generatorOpen = $state(false);
 	let generatorError = $state('');
 	let baseline = $state('');
@@ -54,6 +55,7 @@
 
 	function openEditor(variant?: NamecardVariant) {
 		selectedId = variant?.id ?? null;
+		sourceDefault = null;
 		variantName = variant?.name ?? '';
 		loadDraft(variant ?? { imageUrl: '', positionX: 50, positionY: 50, zoom: 1 });
 		baseline = JSON.stringify({
@@ -71,6 +73,7 @@
 
 	async function openPreset(preset: (typeof NAMECARD_PRESETS)[number]) {
 		openEditor();
+		sourceDefault = preset.name;
 		variantName = `${preset.name} customized`;
 		draftRecipe = { version: 1, background: null, design: { ...preset.design } };
 		await openGenerator();
@@ -278,7 +281,7 @@
 					: [variant, ...variants];
 			openEditor(variant);
 			statusType = 'success';
-			statusMessage = `Saved “${variant.name}”. Choose where to promote this version below.`;
+			statusMessage = `${updating ? 'Updated' : 'Created'} “${variant.name}”. Choose where to promote this version below.`;
 		} catch (err) {
 			statusType = 'error';
 			statusMessage = err instanceof Error ? err.message : 'Could not save the variant.';
@@ -452,6 +455,13 @@
 						>{dirty ? 'Unsaved changes' : selected ? 'Saved' : 'Start with an image'}</span
 					>
 				</div>
+				<p class="px-6 pt-4 text-xs text-slate-500">
+					{#if selected}Editing this saved variant. Save changes updates it in place; Save as copy
+						creates a separate variant.
+					{:else if sourceDefault}{sourceDefault} is locked. Your changes will be saved as a new custom
+						variant.
+					{:else}Create a new variant from an uploaded image or generated design.{/if}
+				</p>
 				<fieldset disabled={busy} inert={busy} class="editor-grid">
 					<legend class="sr-only">Name card editor</legend>
 					<div class="image-column">
@@ -544,7 +554,13 @@
 							class="primary"
 							disabled={!hasImage || busy || (!dirty && !!selected)}
 							onclick={() => handleSave()}
-							>{saving ? 'Saving…' : selected ? 'Save changes' : 'Save variant'}</button
+							>{saving
+								? 'Saving…'
+								: selected
+									? 'Save changes'
+									: sourceDefault
+										? 'Save custom variant'
+										: 'Save variant'}</button
 						>{#if selected}<button
 								class="secondary"
 								disabled={!hasImage || busy}
@@ -595,7 +611,13 @@
 		<div class="modal-heading">
 			<div>
 				<h2 id="generator-title">{draftRecipe ? 'Regenerate name card' : 'Generate name card'}</h2>
-				<p>Design your image, then apply it to this variant.</p>
+				<p>
+					{selected
+						? 'Apply the regenerated image, then save changes to update this variant.'
+						: sourceDefault
+							? 'Customize this locked default to create your own variant.'
+							: 'Design your image, then apply it to this variant.'}
+				</p>
 			</div>
 			<button class="secondary" disabled={busy} onclick={() => (generatorOpen = false)}
 				>Cancel</button

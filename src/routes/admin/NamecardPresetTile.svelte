@@ -23,17 +23,17 @@
 	const preview = $derived(mounted ? renderNamecardPreview(null, design) : null);
 </script>
 
-<button type="button" {disabled} {onclick} aria-label="Customize {name}" class="preset">
+<button type="button" {disabled} {onclick} aria-label="Create a variant from {name}" class="preset">
 	<span class="picture">
 		{#await preview}<span>Rendering default…</span>
 		{:then image}{#if image}<img src={image.url} alt="" />{/if}
 		{:catch}<span>Open to customize this default</span>{/await}
 	</span>
 	<span class="details"
-		><strong>{name}</strong><span class="badge"
-			>Built-in · {inUse ? 'In use' : 'Editable starter'}</span
-		><span
-			>{previewOnly ? 'Starting design for a social preview' : 'Customize the built-in look'}</span
+		><strong>{name}</strong><span class="badge">Locked default{inUse ? ' · In use' : ''}</span><span
+			>{previewOnly
+				? 'Create a preview variant from this default'
+				: 'Create your own variant from this default'}</span
 		></span
 	>
 </button>
