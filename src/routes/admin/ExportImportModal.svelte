@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { ExportManifest, ConflictResolution } from '$lib/types/export-manifest';
 	import type { AdminCategory, AdminProject } from '$lib/stores/admin.svelte';
@@ -17,8 +18,8 @@
 	let activeTab = $state<'export' | 'import'>('export');
 
 	// --- Export state ---
-	let selectedCategoryNames = $state(new SvelteSet<string>());
-	let selectedProjectNames = $state(new SvelteSet<string>());
+	let selectedCategoryNames = $derived(new SvelteSet(categories.map((category) => category.name)));
+	let selectedProjectNames = $derived(new SvelteSet(projects.map((project) => project.name)));
 	let exportLoading = $state(false);
 	let exportError = $state('');
 
@@ -29,20 +30,18 @@
 	let importLoading = $state(false);
 	let importError = $state('');
 	let defaultResolution = $state<ConflictResolution>('merge');
+	let appearanceResolution = $state<ConflictResolution>('clobber');
 	let perProjectResolution = $state<Record<string, ConflictResolution>>({});
 	let perCategoryResolution = $state<Record<string, ConflictResolution>>({});
 	let fileInputEl = $state<HTMLInputElement | null>(null);
 	let dragOver = $state(false);
 
-	// Initialize selections when modal opens
-	$effect(() => {
-		if (open) {
-			selectedCategoryNames = new SvelteSet(categories.map((c) => c.name));
-			selectedProjectNames = new SvelteSet(projects.map((p) => p.name));
-			exportError = '';
-			importError = '';
-		}
-	});
+	function storeFileInput(node: HTMLInputElement) {
+		fileInputEl = node;
+		return () => {
+			fileInputEl = null;
+		};
+	}
 
 	// Compute conflicts
 	const conflicts = $derived.by(() => {
@@ -50,8 +49,12 @@
 		const existingCatNames = new Set(categories.map((c) => c.name));
 		const existingProjNames = new Set(projects.map((p) => p.name));
 		return {
-			categories: importManifest.categories.filter((c) => existingCatNames.has(c.name)).map((c) => c.name),
-			projects: importManifest.projects.filter((p) => existingProjNames.has(p.name)).map((p) => p.name)
+			categories: importManifest.categories
+				.filter((c) => existingCatNames.has(c.name))
+				.map((c) => c.name),
+			projects: importManifest.projects
+				.filter((p) => existingProjNames.has(p.name))
+				.map((p) => p.name)
 		};
 	});
 
@@ -135,10 +138,11 @@
 		try {
 			const JSZip = (await import('jszip')).default;
 			const zip = await JSZip.loadAsync(await file.arrayBuffer());
-			const manifestFile = zip.file('manifest.json');
+			const manifestFile = zip.file('manifest-with-hashes.json') ?? zip.file('manifest.json');
 			if (!manifestFile) throw new Error('Invalid package: no manifest.json found.');
 			const parsed = JSON.parse(await manifestFile.async('text'));
-			if (parsed.version !== 1) throw new Error(`Unsupported manifest version: ${parsed.version}`);
+			if (parsed.version !== 1 && parsed.version !== 2)
+				throw new Error(`Unsupported manifest version: ${parsed.version}`);
 			importManifest = parsed as ExportManifest;
 		} catch (err) {
 			importError = err instanceof Error ? err.message : 'Failed to parse ZIP.';
@@ -202,6 +206,7 @@
 				'conflicts',
 				JSON.stringify({
 					defaultResolution,
+					appearanceResolution,
 					perProject: perProjectResolution,
 					perCategory: perCategoryResolution
 				})
@@ -220,7 +225,10 @@
 
 			const result = await response.json();
 			const s = result.summary;
+			await invalidateAll();
 			const parts: string[] = [];
+			if (s.appearanceSettingsRestored)
+				parts.push(`${s.appearanceSettingsRestored} theme/name-card settings restored`);
 			if (s.projectsCreated) parts.push(`${s.projectsCreated} created`);
 			if (s.projectsMerged) parts.push(`${s.projectsMerged} merged`);
 			if (s.projectsClobbered) parts.push(`${s.projectsClobbered} replaced`);
@@ -255,34 +263,49 @@
 			aria-label="Close modal"
 			onclick={onClose}
 		></button>
-		<div class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+		<div
+			class="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+		>
 			<!-- Header -->
-			<div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100 shrink-0">
+			<div
+				class="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 pt-5 pb-4"
+			>
 				<h3 class="text-base font-semibold text-slate-900">Export / Import</h3>
 				<button
 					type="button"
-					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					class="rounded-xl p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-600"
 					aria-label="Close modal"
 					onclick={onClose}
 				>
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="1.5"
+							d="M6 18L18 6M6 6l12 12"
+						/>
 					</svg>
 				</button>
 			</div>
 
 			<!-- Tabs -->
-			<div class="flex border-b border-slate-100 px-6 shrink-0">
+			<div class="flex shrink-0 border-b border-slate-100 px-6">
 				<button
 					type="button"
-					class="px-4 py-2.5 text-sm font-medium transition-colors duration-150 border-b-2 -mb-px {activeTab === 'export' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}"
+					class="-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors duration-150 {activeTab ===
+					'export'
+						? 'border-slate-900 text-slate-900'
+						: 'border-transparent text-slate-400 hover:text-slate-600'}"
 					onclick={() => (activeTab = 'export')}
 				>
 					Export
 				</button>
 				<button
 					type="button"
-					class="px-4 py-2.5 text-sm font-medium transition-colors duration-150 border-b-2 -mb-px {activeTab === 'import' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}"
+					class="-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors duration-150 {activeTab ===
+					'import'
+						? 'border-slate-900 text-slate-900'
+						: 'border-transparent text-slate-400 hover:text-slate-600'}"
 					onclick={() => (activeTab = 'import')}
 				>
 					Import
@@ -294,14 +317,31 @@
 				{#if activeTab === 'export'}
 					<!-- Export Tab -->
 					<div class="space-y-5">
+						<p class="text-xs text-slate-500">
+							Every export includes all saved typography themes, the active theme, name-card
+							variants, generator recipes, backgrounds, and landing/project/preview promotions with
+							their images.
+						</p>
 						<!-- Categories -->
 						<div>
-							<div class="flex items-center justify-between mb-2">
-								<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Categories</p>
+							<div class="mb-2 flex items-center justify-between">
+								<p class="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
+									Categories
+								</p>
 								<div class="flex gap-2">
-									<button type="button" onclick={selectAllCategories} class="text-[11px] text-slate-400 hover:text-slate-600 transition-colors">All</button>
+									<button
+										type="button"
+										onclick={selectAllCategories}
+										class="text-[11px] text-slate-400 transition-colors hover:text-slate-600"
+										>All</button
+									>
 									<span class="text-[11px] text-slate-300">/</span>
-									<button type="button" onclick={deselectAllCategories} class="text-[11px] text-slate-400 hover:text-slate-600 transition-colors">None</button>
+									<button
+										type="button"
+										onclick={deselectAllCategories}
+										class="text-[11px] text-slate-400 transition-colors hover:text-slate-600"
+										>None</button
+									>
 								</div>
 							</div>
 							{#if categories.length === 0}
@@ -309,15 +349,17 @@
 							{:else}
 								<div class="grid gap-1">
 									{#each categories as cat (cat.id)}
-										<label class="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors duration-150 cursor-pointer">
+										<label
+											class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs text-slate-600 transition-colors duration-150 hover:bg-slate-50"
+										>
 											<input
 												type="checkbox"
 												checked={selectedCategoryNames.has(cat.name)}
 												onchange={() => toggleCategorySelection(cat.name)}
-												class="accent-slate-900 w-3.5 h-3.5"
+												class="h-3.5 w-3.5 accent-slate-900"
 											/>
 											<span class="font-medium">{cat.displayName || cat.name}</span>
-											<span class="text-[10px] font-mono text-slate-400 ml-auto">/{cat.name}</span>
+											<span class="ml-auto font-mono text-[10px] text-slate-400">/{cat.name}</span>
 										</label>
 									{/each}
 								</div>
@@ -326,12 +368,24 @@
 
 						<!-- Projects -->
 						<div>
-							<div class="flex items-center justify-between mb-2">
-								<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Projects</p>
+							<div class="mb-2 flex items-center justify-between">
+								<p class="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
+									Projects
+								</p>
 								<div class="flex gap-2">
-									<button type="button" onclick={selectAllProjects} class="text-[11px] text-slate-400 hover:text-slate-600 transition-colors">All</button>
+									<button
+										type="button"
+										onclick={selectAllProjects}
+										class="text-[11px] text-slate-400 transition-colors hover:text-slate-600"
+										>All</button
+									>
 									<span class="text-[11px] text-slate-300">/</span>
-									<button type="button" onclick={deselectAllProjects} class="text-[11px] text-slate-400 hover:text-slate-600 transition-colors">None</button>
+									<button
+										type="button"
+										onclick={deselectAllProjects}
+										class="text-[11px] text-slate-400 transition-colors hover:text-slate-600"
+										>None</button
+									>
 								</div>
 							</div>
 							{#if projects.length === 0}
@@ -339,15 +393,17 @@
 							{:else}
 								<div class="grid gap-1">
 									{#each projects as proj (proj.id)}
-										<label class="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors duration-150 cursor-pointer">
+										<label
+											class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs text-slate-600 transition-colors duration-150 hover:bg-slate-50"
+										>
 											<input
 												type="checkbox"
 												checked={selectedProjectNames.has(proj.name)}
 												onchange={() => toggleProjectSelection(proj.name)}
-												class="accent-slate-900 w-3.5 h-3.5"
+												class="h-3.5 w-3.5 accent-slate-900"
 											/>
 											<span class="font-medium">{proj.displayName || proj.name}</span>
-											<span class="text-[10px] font-mono text-slate-400 ml-auto">/{proj.name}</span>
+											<span class="ml-auto font-mono text-[10px] text-slate-400">/{proj.name}</span>
 										</label>
 									{/each}
 								</div>
@@ -360,22 +416,39 @@
 						{#if !importFile}
 							<!-- Drop zone -->
 							<div
-								class="border-2 border-dashed rounded-xl p-10 text-center transition-colors duration-150 {dragOver ? 'border-slate-400 bg-slate-50' : 'border-slate-200'}"
-								ondragover={(e) => { e.preventDefault(); dragOver = true; }}
+								class="rounded-xl border-2 border-dashed p-10 text-center transition-colors duration-150 {dragOver
+									? 'border-slate-400 bg-slate-50'
+									: 'border-slate-200'}"
+								ondragover={(e) => {
+									e.preventDefault();
+									dragOver = true;
+								}}
 								ondragleave={() => (dragOver = false)}
 								ondrop={handleFileDrop}
 								role="button"
 								tabindex="0"
 								onclick={() => fileInputEl?.click()}
-								onkeydown={(e) => { if (e.key === 'Enter') fileInputEl?.click(); }}
+								onkeydown={(e) => {
+									if (e.key === 'Enter') fileInputEl?.click();
+								}}
 							>
-								<svg class="w-8 h-8 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+								<svg
+									class="mx-auto mb-3 h-8 w-8 text-slate-300"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="1.5"
+										d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+									/>
 								</svg>
-								<p class="text-sm text-slate-500 mb-1">Drop a .zip export here</p>
+								<p class="mb-1 text-sm text-slate-500">Drop a .zip export here</p>
 								<p class="text-xs text-slate-400">or click to browse</p>
 								<input
-									bind:this={fileInputEl}
+									{@attach storeFileInput}
 									type="file"
 									accept=".zip"
 									class="hidden"
@@ -384,14 +457,31 @@
 							</div>
 						{:else}
 							<!-- File loaded -->
-							<div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3">
+							<div
+								class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3"
+							>
 								<div class="flex items-center gap-2.5">
-									<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+									<svg
+										class="h-4 w-4 text-slate-400"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+										/>
 									</svg>
 									<span class="text-xs font-medium text-slate-700">{importFile.name}</span>
 								</div>
-								<button type="button" onclick={clearFile} class="text-xs text-slate-400 hover:text-slate-600 transition-colors">Change</button>
+								<button
+									type="button"
+									onclick={clearFile}
+									class="text-xs text-slate-400 transition-colors hover:text-slate-600"
+									>Change</button
+								>
 							</div>
 
 							{#if importParsing}
@@ -400,31 +490,79 @@
 								<!-- Summary -->
 								<div class="rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3">
 									<p class="text-xs text-slate-500">
-										<span class="font-medium text-slate-700">{importManifest.categories.length}</span> categories,
-										<span class="font-medium text-slate-700">{importManifest.projects.length}</span> projects,
-										<span class="font-medium text-slate-700">{importManifest.projects.reduce((n, p) => n + p.artifacts.length, 0)}</span> artifacts
+										<span class="font-medium text-slate-700"
+											>{importManifest.categories.length}</span
+										>
+										categories,
+										<span class="font-medium text-slate-700">{importManifest.projects.length}</span>
+										projects,
+										<span class="font-medium text-slate-700"
+											>{importManifest.projects.reduce((n, p) => n + p.artifacts.length, 0)}</span
+										> artifacts
 									</p>
-									<p class="text-[10px] text-slate-400 mt-1">Exported {new Date(importManifest.exportedAt).toLocaleString()}</p>
+									<p class="mt-1 text-[10px] text-slate-400">
+										Exported {new Date(importManifest.exportedAt).toLocaleString()}
+									</p>
 								</div>
 
+								{#if importManifest.appearance}
+									<div class="rounded-xl border border-slate-200 px-4 py-3">
+										<label class="text-xs font-medium text-slate-700"
+											>Themes and name cards
+											<select
+												bind:value={appearanceResolution}
+												class="mt-2 block w-full rounded-lg border border-slate-200 p-2 text-xs"
+											>
+												<option value="clobber">Replace with backup</option>
+												<option value="merge">Merge saved themes and cards</option>
+												<option value="skip">Keep current themes and cards</option>
+											</select>
+										</label>
+										<p class="mt-2 text-xs text-slate-500">
+											{importManifest.appearance.settings.filter((row) =>
+												row.key.startsWith('typography-theme:')
+											).length} saved themes and {importManifest.appearance.settings.filter((row) =>
+												row.key.startsWith('namecard-variant:')
+											).length} name-card variants, plus active selections and images.
+										</p>
+										<p class="mt-2 text-xs text-slate-500">
+											{appearanceResolution === 'clobber'
+												? 'Restores the exact appearance library and promotions. Existing themes and variants absent from the backup are removed.'
+												: appearanceResolution === 'merge'
+													? 'Updates matching IDs, adds saved entries, and restores the backed-up active selections. Other entries remain.'
+													: 'Leaves all current appearance settings unchanged.'}
+										</p>
+									</div>
+								{:else}<p class="text-xs text-slate-500">
+										Legacy backup: only the included name-card images will be restored. Typography
+										themes and saved variants are unchanged.
+									</p>{/if}
 								<!-- Conflicts -->
 								{#if hasConflicts}
 									<div class="space-y-3">
 										<div>
-											<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Conflict Resolution</p>
-											<p class="text-xs text-slate-500 mb-3">
-												{conflicts.categories.length + conflicts.projects.length} items already exist. Choose how to handle them:
+											<p
+												class="mb-2 text-[11px] font-semibold tracking-widest text-slate-400 uppercase"
+											>
+												Conflict Resolution
+											</p>
+											<p class="mb-3 text-xs text-slate-500">
+												{conflicts.categories.length + conflicts.projects.length} items already exist.
+												Choose how to handle them:
 											</p>
 
 											<!-- Default resolution -->
-											<div class="flex items-center gap-3 mb-4">
+											<div class="mb-4 flex items-center gap-3">
 												<span class="text-xs text-slate-500">Default:</span>
-												<div class="flex rounded-lg border border-slate-200 overflow-hidden">
+												<div class="flex overflow-hidden rounded-lg border border-slate-200">
 													{#each resolutionOptions as opt (opt.value)}
 														<button
 															type="button"
 															onclick={() => (defaultResolution = opt.value)}
-															class="px-3 py-1.5 text-xs font-medium transition-colors duration-150 {defaultResolution === opt.value ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}"
+															class="px-3 py-1.5 text-xs font-medium transition-colors duration-150 {defaultResolution ===
+															opt.value
+																? 'bg-slate-900 text-white'
+																: 'text-slate-500 hover:bg-slate-50'}"
 														>
 															{opt.label}
 														</button>
@@ -434,17 +572,28 @@
 
 											<!-- Per-item overrides -->
 											{#if conflicts.categories.length > 0}
-												<p class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5">Categories</p>
-												<div class="grid gap-1 mb-3">
+												<p
+													class="mb-1.5 text-[10px] font-semibold tracking-widest text-slate-400 uppercase"
+												>
+													Categories
+												</p>
+												<div class="mb-3 grid gap-1">
 													{#each conflicts.categories as name (name)}
-														<div class="flex items-center justify-between rounded-lg px-2.5 py-1.5 hover:bg-slate-50">
-															<span class="text-xs text-slate-600 font-medium">{name}</span>
-															<div class="flex rounded-md border border-slate-200 overflow-hidden">
+														<div
+															class="flex items-center justify-between rounded-lg px-2.5 py-1.5 hover:bg-slate-50"
+														>
+															<span class="text-xs font-medium text-slate-600">{name}</span>
+															<div class="flex overflow-hidden rounded-md border border-slate-200">
 																{#each resolutionOptions as opt (opt.value)}
 																	<button
 																		type="button"
 																		onclick={() => setResolution('category', name, opt.value)}
-																		class="px-2 py-1 text-[10px] font-medium transition-colors duration-150 {getResolution('category', name) === opt.value ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-50'}"
+																		class="px-2 py-1 text-[10px] font-medium transition-colors duration-150 {getResolution(
+																			'category',
+																			name
+																		) === opt.value
+																			? 'bg-slate-800 text-white'
+																			: 'text-slate-400 hover:bg-slate-50'}"
 																	>
 																		{opt.label}
 																	</button>
@@ -456,17 +605,28 @@
 											{/if}
 
 											{#if conflicts.projects.length > 0}
-												<p class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5">Projects</p>
+												<p
+													class="mb-1.5 text-[10px] font-semibold tracking-widest text-slate-400 uppercase"
+												>
+													Projects
+												</p>
 												<div class="grid gap-1">
 													{#each conflicts.projects as name (name)}
-														<div class="flex items-center justify-between rounded-lg px-2.5 py-1.5 hover:bg-slate-50">
-															<span class="text-xs text-slate-600 font-medium">{name}</span>
-															<div class="flex rounded-md border border-slate-200 overflow-hidden">
+														<div
+															class="flex items-center justify-between rounded-lg px-2.5 py-1.5 hover:bg-slate-50"
+														>
+															<span class="text-xs font-medium text-slate-600">{name}</span>
+															<div class="flex overflow-hidden rounded-md border border-slate-200">
 																{#each resolutionOptions as opt (opt.value)}
 																	<button
 																		type="button"
 																		onclick={() => setResolution('project', name, opt.value)}
-																		class="px-2 py-1 text-[10px] font-medium transition-colors duration-150 {getResolution('project', name) === opt.value ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-50'}"
+																		class="px-2 py-1 text-[10px] font-medium transition-colors duration-150 {getResolution(
+																			'project',
+																			name
+																		) === opt.value
+																			? 'bg-slate-800 text-white'
+																			: 'text-slate-400 hover:bg-slate-50'}"
 																	>
 																		{opt.label}
 																	</button>
@@ -490,13 +650,14 @@
 			</div>
 
 			<!-- Footer -->
-			<div class="flex items-center gap-2.5 px-6 py-4 border-t border-slate-100 shrink-0">
+			<div class="flex shrink-0 items-center gap-2.5 border-t border-slate-100 px-6 py-4">
 				{#if activeTab === 'export'}
 					<button
 						type="button"
 						onclick={handleExport}
-						disabled={exportLoading || (selectedCategoryNames.size === 0 && selectedProjectNames.size === 0)}
-						class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+						disabled={exportLoading ||
+							(selectedCategoryNames.size === 0 && selectedProjectNames.size === 0)}
+						class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
 					>
 						{exportLoading ? 'Exporting...' : 'Export'}
 					</button>
@@ -508,7 +669,7 @@
 						type="button"
 						onclick={handleImport}
 						disabled={importLoading || !importManifest}
-						class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+						class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
 					>
 						{importLoading ? 'Importing...' : 'Import'}
 					</button>
@@ -519,7 +680,7 @@
 				<button
 					type="button"
 					onclick={onClose}
-					class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+					class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100"
 				>
 					Cancel
 				</button>

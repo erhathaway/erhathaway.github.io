@@ -178,3 +178,37 @@ bun run db:generate
 # Apply a generated migration to D1
 bunx wrangler d1 execute portfolio-db --file=./drizzle/<migration>.sql
 ```
+
+
+## Backing up themes and name cards
+
+Admin → Export / Import creates a version 2 ZIP. Every export includes all saved
+typography themes and the active theme, name-card variants and framing, generator
+recipes (including typography snapshots), background images, and the promoted
+landing, project, and social preview cards. Referenced PNG/JPEG/WebP/AVIF files
+are included and shared images are stored once. Unsaved browser preview drafts
+are not included; save those as themes first.
+
+On import, **Themes and name cards** can be replaced with the backup (default),
+merged by saved ID, or left unchanged. Replace restores the exact appearance
+library, including clearing promotions that were absent in the backup. Merge
+updates matching IDs and backed-up selections while retaining other saved entries.
+Project/category conflict choices are separate. Theme/card IDs remain stable,
+and restored images get new local URLs shared consistently by variants and
+promotions. All formats retain the same basename. Unrelated integration settings
+are not included or changed. Version 1 archives remain importable with their
+original, limited name-card coverage.
+
+Missing referenced images cause export to fail. Import validates the appearance
+manifest and all required files before database changes, uploads the images, then
+commits appearance settings in a single D1 batch. A failed image upload leaves
+existing appearance settings unchanged (uploaded but unreferenced files may remain).
+
+Backup regression tests:
+
+```sh
+bunx vitest run src/lib/server/appearance-backup.test.ts
+# Explicitly opt in to temporarily replacing LOCAL dev appearance data.
+# The test restores the original settings and removes its uploaded files in finally.
+RUN_DEV_BACKUP_RESTORE=1 bunx vitest run src/lib/server/appearance-backup.dev.test.ts
+```

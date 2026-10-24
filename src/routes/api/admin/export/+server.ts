@@ -1,3 +1,4 @@
+import { exportAppearance } from '$lib/server/appearance-backup';
 import type { RequestHandler } from './$types';
 import { error } from '@sveltejs/kit';
 import { eq, inArray } from 'drizzle-orm';
@@ -8,18 +9,15 @@ import {
 	projectCategories,
 	projectArtifacts,
 	projectAttributes,
-	projectCoverArtifact,
-	siteSettings
+	projectCoverArtifact
 } from '$lib/server/db/schema';
 import type {
 	ExportManifest,
 	ExportCategory,
 	ExportProject,
 	ExportArtifact,
-	ExportAttribute,
-	ExportSiteSettings
+	ExportAttribute
 } from '$lib/types/export-manifest';
-import type { NamecardImageSetting } from '$lib/types/site-settings';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
@@ -73,19 +71,13 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	// Fetch categories
 	const categoryRows =
 		categoryNames.length > 0
-			? await db
-					.select()
-					.from(categories)
-					.where(inArray(categories.name, categoryNames))
+			? await db.select().from(categories).where(inArray(categories.name, categoryNames))
 			: await db.select().from(categories);
 
 	// Fetch projects
 	const projectRows =
 		projectNames.length > 0
-			? await db
-					.select()
-					.from(projects)
-					.where(inArray(projects.name, projectNames))
+			? await db.select().from(projects).where(inArray(projects.name, projectNames))
 			: await db.select().from(projects);
 
 	const bucket = platform?.env?.ARTIFACTS;
@@ -147,9 +139,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 		for (const artifact of artifactRows) {
 			let dataBlob =
-				typeof artifact.dataBlob === 'string'
-					? JSON.parse(artifact.dataBlob)
-					: artifact.dataBlob;
+				typeof artifact.dataBlob === 'string' ? JSON.parse(artifact.dataBlob) : artifact.dataBlob;
 			dataBlob = { ...dataBlob };
 
 			const isCover = artifact.id === coverArtifactId;
@@ -160,7 +150,13 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 				isPublished: artifact.isPublished,
 				sortOrder: artifact.sortOrder,
 				isCover,
-				...(isCover && coverRow ? { coverPositionX: coverRow.positionX, coverPositionY: coverRow.positionY, coverZoom: coverRow.zoom } : {})
+				...(isCover && coverRow
+					? {
+							coverPositionX: coverRow.positionX,
+							coverPositionY: coverRow.positionY,
+							coverZoom: coverRow.zoom
+						}
+					: {})
 			};
 
 			// Queue images for streaming (don't fetch yet)
@@ -224,57 +220,21 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		isPublished: c.isPublished
 	}));
 
-	// --- Site Settings ---
-	let exportSiteSettings: ExportSiteSettings | undefined;
-
-	const processNamecardSetting = async (settingKey: string) => {
-		const [row] = await db
-			.select()
-			.from(siteSettings)
-			.where(eq(siteSettings.key, settingKey));
-
-		if (!row) return null;
-
-		const ncSetting = row.value as NamecardImageSetting;
-		const ncExport: NonNullable<ExportSiteSettings['namecardImage']> = {
-			imageUrl: ncSetting.imageUrl,
-			positionX: ncSetting.positionX,
-			positionY: ncSetting.positionY,
-			zoom: ncSetting.zoom
-		};
-
-		if (ncSetting.imageUrl && bucket) {
-			const key = extractR2Key(ncSetting.imageUrl);
-			if (key) {
-				const localPath = `images/${key.replace(/^artifacts\//, '')}`;
-				ncExport._localImagePath = localPath;
-				ncExport.imageUrl = localPath;
-
-				if (!addedR2Keys.has(key)) {
-					addedR2Keys.add(key);
-					imageEntries.push({ zipPath: localPath, r2Key: key });
-				}
-			}
+	const appearance = await exportAppearance(db);
+	for (const image of appearance.images) {
+		if (!bucket) throw error(500, 'Image storage is required to back up name cards.');
+		if (!addedR2Keys.has(image.key)) {
+			addedR2Keys.add(image.key);
+			imageEntries.push({ zipPath: image.path, r2Key: image.key });
 		}
-
-		return ncExport;
-	};
-
-	const namecardExport = await processNamecardSetting('namecard_image');
-	const projectNamecardExport = await processNamecardSetting('project_namecard_image');
-
-	if (namecardExport || projectNamecardExport) {
-		exportSiteSettings = {};
-		if (namecardExport) exportSiteSettings.namecardImage = namecardExport;
-		if (projectNamecardExport) exportSiteSettings.projectNamecardImage = projectNamecardExport;
 	}
 
 	const manifest: ExportManifest = {
-		version: 1,
+		version: 2,
 		exportedAt: new Date().toISOString(),
 		categories: exportCategories,
 		projects: exportProjects,
-		...(exportSiteSettings ? { siteSettings: exportSiteSettings } : {})
+		appearance
 	};
 
 	// --- Stream the zip response ---
@@ -286,11 +246,11 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	const zipStream = new Zip((err, data, final) => {
 		if (err) {
-			writer.abort(err);
+			void writer.abort(err).catch(() => {});
 			return;
 		}
-		writer.write(data);
-		if (final) writer.close();
+		void writer.write(data).catch(() => {});
+		if (final) void writer.close().catch(() => {});
 	});
 
 	// Run the streaming zip generation in the background
@@ -305,6 +265,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 				for (const entry of imageEntries) {
 					try {
 						const obj = await bucket.get(entry.r2Key);
+						if (!obj) throw new Error(`Backup image is missing: ${entry.r2Key}`);
 						if (obj) {
 							const buffer = await obj.arrayBuffer();
 
@@ -317,8 +278,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 							addFileToZip(zipStream, entry.zipPath, new Uint8Array(buffer));
 						}
-					} catch {
-						// Skip image if R2 fetch fails
+					} catch (err) {
+						throw err;
 					}
 				}
 			}
@@ -328,31 +289,13 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			for (const proj of manifest.projects) {
 				for (const art of proj.artifacts) {
 					if (art._localImagePath) {
-						const r2Key = [...addedR2Keys].find(k =>
-							`images/${k.replace(/^artifacts\//, '')}` === art._localImagePath
+						const r2Key = [...addedR2Keys].find(
+							(k) => `images/${k.replace(/^artifacts\//, '')}` === art._localImagePath
 						);
 						if (r2Key && imageHashMap.has(r2Key)) {
 							art.imageHash = imageHashMap.get(r2Key);
 						}
 					}
-				}
-			}
-			if (manifest.siteSettings?.namecardImage?._localImagePath) {
-				const nc = manifest.siteSettings.namecardImage;
-				const r2Key = [...addedR2Keys].find(k =>
-					`images/${k.replace(/^artifacts\//, '')}` === nc._localImagePath
-				);
-				if (r2Key && imageHashMap.has(r2Key)) {
-					nc.imageHash = imageHashMap.get(r2Key);
-				}
-			}
-			if (manifest.siteSettings?.projectNamecardImage?._localImagePath) {
-				const nc = manifest.siteSettings.projectNamecardImage;
-				const r2Key = [...addedR2Keys].find(k =>
-					`images/${k.replace(/^artifacts\//, '')}` === nc._localImagePath
-				);
-				if (r2Key && imageHashMap.has(r2Key)) {
-					nc.imageHash = imageHashMap.get(r2Key);
 				}
 			}
 
@@ -363,7 +306,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			// 4. Finalize zip
 			zipStream.end();
 		} catch (err) {
-			writer.abort(err instanceof Error ? err : new Error(String(err)));
+			void writer.abort(err instanceof Error ? err : new Error(String(err))).catch(() => {});
 		}
 	})();
 
