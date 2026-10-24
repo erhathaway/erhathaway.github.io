@@ -1,9 +1,10 @@
 export interface ExportManifest {
-	version: 1;
+	version: 1 | 2;
 	exportedAt: string;
 	categories: ExportCategory[];
 	projects: ExportProject[];
 	siteSettings?: ExportSiteSettings;
+	appearance?: AppearanceBackup;
 }
 
 export interface ExportSiteSettings {
@@ -68,6 +69,7 @@ export type ConflictResolution = 'clobber' | 'merge' | 'skip';
 
 export interface ImportConflicts {
 	defaultResolution: ConflictResolution;
+	appearanceResolution?: ConflictResolution;
 	perProject: Record<string, ConflictResolution>;
 	perCategory: Record<string, ConflictResolution>;
 }
@@ -83,5 +85,12 @@ export interface ImportSummary {
 	artifactsCreated: number;
 	artifactsSkipped: number;
 	imagesUploaded: number;
+	appearanceSettingsRestored?: number;
+	appearanceImagesRestored?: number;
 	warnings: string[];
+}
+
+export interface AppearanceBackup {
+	settings: { key: string; value: unknown }[];
+	images: { key: string; path: string }[];
 }

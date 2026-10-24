@@ -109,12 +109,12 @@
     <div class={innerClass} style={innerStyle}>
       <div class={projectHeaderClass} style={projectHeaderStyle}>
       <div class={tileTextWrapClass}>
-        <h3 class={titleClass} style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e; {titleStyle ?? ''}">
+        <h3 data-typo={isTile ? 'tile-title' : 'hover-title'} class={titleClass} style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e; {titleStyle ?? ''}">
           {item.name}
         </h3>
 
         {#if item.description?.trim()}
-          <p class={descriptionClass} style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; {isTile ? 'letter-spacing: 0.01em;' : ''} {descriptionStyle ?? ''}">
+          <p data-typo={isTile ? 'tile-description' : 'hover-description'} class={descriptionClass} style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; {isTile ? 'letter-spacing: 0.01em;' : ''} {descriptionStyle ?? ''}">
             {item.description}
           </p>
         {/if}
@@ -123,8 +123,8 @@
           <div class="flex vt-exclude-namecard {dockSide === 'right' ? 'justify-end text-right' : 'justify-start text-left'}" style="gap: {isTile ? 'clamp(0.75rem, 1.2vw, 1.5rem)' : '1.5rem'};">
             {#each Object.entries(item.metadata) as [key, value] (key)}
               <div class="flex flex-col {dockSide === 'right' ? 'items-end' : 'items-start'}" style="gap: {isTile ? 'clamp(0.2rem, 0.4vw, 0.375rem)' : '0.375rem'};">
-                <span class={metaKeyClass} style="color: #a08e7a; {metaKeyStyle ?? ''}">{key}</span>
-                <span class={metaValueClass} style="font-family: 'Cormorant Garamond', Georgia, serif; color: #3d2e1e; {metaValueStyle ?? ''}">{formatMetadata(key, value)}</span>
+                <span data-typo={isTile ? 'tile-label' : 'hover-label'} class={metaKeyClass} style="color: #a08e7a; {metaKeyStyle ?? ''}">{key}</span>
+                <span data-typo={isTile ? 'tile-value' : 'hover-value'} class={metaValueClass} style="font-family: 'Cormorant Garamond', Georgia, serif; color: #3d2e1e; {metaValueStyle ?? ''}">{formatMetadata(key, value)}</span>
               </div>
             {/each}
           </div>

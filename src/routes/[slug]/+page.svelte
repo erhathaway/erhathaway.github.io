@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import type { PageData } from './$types';
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import ArtifactView from '$lib/components/artifacts/ArtifactView.svelte';
   import { getImageSources, getResponsiveSrcset, replaceExtension } from '$lib/utils/image-formats';
   let { data }: { data: PageData } = $props();
@@ -39,7 +41,7 @@
 
   // Detect which dense-section pairIds are nested inside another pair
   function findNestedPairIds(items: Artifact[]): Set<number> {
-    const nested = new Set<number>();
+    const nested = new SvelteSet<number>();
     // First pass: find all dense-section markers and their positions
     const markers: { index: number; pairId: number }[] = [];
     for (let i = 0; i < items.length; i++) {
@@ -50,7 +52,7 @@
       }
     }
     // Group markers by pairId — valid pairs have exactly 2 markers
-    const pairMap = new Map<number, number[]>();
+    const pairMap = new SvelteMap<number, number[]>();
     for (const m of markers) {
       const arr = pairMap.get(m.pairId) ?? [];
       arr.push(m.index);
@@ -84,7 +86,7 @@
     let denseStack: { pairId: number; items: Artifact[] } | null = null;
 
     // Track which pairIds have valid pairs (exactly 2 markers)
-    const pairCounts = new Map<number, number>();
+    const pairCounts = new SvelteMap<number, number>();
     for (const a of items) {
       if (a.schema === 'dense-section-v1') {
         const blob = a.dataBlob as Record<string, unknown> | null;
@@ -251,7 +253,7 @@
 
     // Collect all image artifacts across all masonry segments
     const allItems = masonrySegments.flatMap(s => s.seg.items);
-    const ratios = new Map<number, number>();
+    const ratios = new SvelteMap<number, number>();
 
     await Promise.all(allItems.map((item) => {
       const url = getImageUrl(item);
@@ -273,7 +275,7 @@
       });
     }));
 
-    const next = new Map<number, Artifact[][]>();
+    const next = new SvelteMap<number, Artifact[][]>();
     for (const { seg, i } of masonrySegments) {
       const numCols = seg.type === 'dense-masonry' ? 4 : 2;
       next.set(i, distributeIntoColumns(seg.items, ratios, numCols));
@@ -282,7 +284,7 @@
     artifactRatios = ratios;
 
     // Mark the first ~4 image artifacts as eager-load
-    const eager = new Set<number>();
+    const eager = new SvelteSet<number>();
     for (const item of allItems) {
       if (eager.size >= 4) break;
       eager.add(item.id);
@@ -330,7 +332,7 @@
       const offset = e.key === 'ArrowLeft' ? -1 : 1;
       const nextIndex = currentIndex + offset;
       if (nextIndex >= 0 && nextIndex < portfolio.filteredItems.length) {
-        goto(`/${portfolio.filteredItems[nextIndex].slug}`);
+        goto(resolve('/[slug]', { slug: portfolio.filteredItems[nextIndex].slug }));
       }
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       if (!mainEl) return;
@@ -397,13 +399,13 @@
 {#if !item}
   <main class="h-screen flex flex-col items-center justify-center bg-charcoal gap-4">
     {#if portfolio.loading}
-      <p class="text-cream/50 text-sm">Loading...</p>
+      <p data-typo="status" class="text-cream/50 text-sm">Loading...</p>
     {:else}
-      <p class="text-cream/50 text-sm">Project not found</p>
+      <p data-typo="status" class="text-cream/50 text-sm">Project not found</p>
     {/if}
-    <a href="/" class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors text-sm" onclick={(event) => {
+    <a href={resolve('/')} class="inline-flex items-center gap-2 text-ash hover:text-copper transition-colors text-sm" onclick={(event) => {
       event.preventDefault();
-      goto('/');
+      goto(resolve('/'));
     }}>
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -418,9 +420,9 @@
     <div class="relative flex flex-col lg:flex-row min-h-screen lg:items-center">
       <!-- Left: project info -->
       <div class="lg:w-64 shrink-0 self-stretch flex flex-col p-8 pt-10 pb-4 lg:pb-8">
-        <a href="/" class="hidden lg:inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-10 text-sm" onclick={(event) => {
+        <a href={resolve('/')} class="hidden lg:inline-flex items-center gap-2 text-ash hover:text-copper transition-colors mb-10 text-sm" onclick={(event) => {
           event.preventDefault();
-          goto('/', { state: { hoverId: item.id } });
+          goto(resolve('/'), { state: { hoverId: item.id } });
         }}>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -429,14 +431,14 @@
         </a>
 
         <div class="flex-1 flex flex-col justify-center">
-          <p class="hidden lg:block text-[10px] font-medium tracking-widest uppercase mb-3 vt-exclude-namecard" style="color: #a08e7a;">
+          <p data-typo="project-category" class="hidden lg:block text-[10px] font-medium tracking-widest uppercase mb-3 vt-exclude-namecard" style="color: #a08e7a;">
             {item.categories.join(' · ') || 'Uncategorized'}
           </p>
-          <h1 class="text-3xl leading-tight mb-2 lg:mb-5 vt-exclude-namecard" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e;">
+          <h1 data-typo="project-title" class="text-3xl leading-tight mb-2 lg:mb-5 vt-exclude-namecard" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0.02em; color: #3d2e1e;">
             {item.name}
           </h1>
           {#if item.description}
-            <p class="text-sm leading-loose mb-8 pr-8 lg:pr-0 vt-exclude-namecard" style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; letter-spacing: 0.01em;">
+            <p data-typo="project-intro" class="text-sm leading-loose mb-8 pr-8 lg:pr-0 vt-exclude-namecard" style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; letter-spacing: 0.01em;">
               {item.description}
             </p>
           {/if}
@@ -444,8 +446,8 @@
             <div class="flex flex-row flex-wrap gap-x-6 gap-y-4 lg:flex-col lg:gap-4 vt-exclude-namecard">
               {#each Object.entries(item.metadata) as [key, value] (key)}
                 <div class="flex flex-col gap-1.5">
-                  <span class="text-[11px] tracking-[0.2em] uppercase" style="color: #a08e7a;">{key}</span>
-                  <span class="text-base" style="font-family: 'Cormorant Garamond', Georgia, serif; color: #3d2e1e;">{value}</span>
+                  <span data-typo="project-label" class="text-[11px] tracking-[0.2em] uppercase" style="color: #a08e7a;">{key}</span>
+                  <span data-typo="project-value" class="text-base" style="font-family: 'Cormorant Garamond', Georgia, serif; color: #3d2e1e;">{value}</span>
                 </div>
               {/each}
             </div>
@@ -507,7 +509,7 @@
         style="opacity: {showScrollHint ? 1 : 0}; transform: translateY({showScrollHint ? '0' : '12px'})"
       >
         <span
-          class="pointer-events-none text-xs tracking-widest uppercase {hasScrolled ? '' : 'scroll-hint-text'}"
+          data-typo="scroll-hint" class="pointer-events-none text-xs tracking-widest uppercase {hasScrolled ? '' : 'scroll-hint-text'}"
           style="font-family: 'DM Sans', sans-serif; {hasScrolled ? 'color: #88847F;' : ''}"
         >Scroll</span>
         <button
@@ -528,8 +530,8 @@
       <div class="max-w-6xl mx-auto p-8 mb-12">
         {#if nestingWarnings.length > 0}
           <div class="mb-4 rounded-lg border border-amber-200/30 bg-amber-900/10 px-4 py-3">
-            {#each nestingWarnings as warning}
-              <p class="text-xs text-amber-300/80">{warning}</p>
+            {#each nestingWarnings as warning (warning)}
+              <p data-typo="status" class="text-xs text-amber-300/80">{warning}</p>
             {/each}
           </div>
         {/if}
@@ -598,24 +600,24 @@
         <div class="flex justify-between items-start">
           {#if prevItem}
             <a
-              href="/{prevItem.slug}"
+              href={resolve('/[slug]', { slug: prevItem.slug })}
               class="group flex flex-col gap-1.5 text-left"
-              onclick={(e) => { e.preventDefault(); goto(`/${prevItem.slug}`); }}
+              onclick={(e) => { e.preventDefault(); goto(resolve('/[slug]', { slug: prevItem.slug })); }}
             >
-              <span class="text-[10px] font-medium tracking-widest uppercase text-cream/40 group-hover:text-copper/70 transition-colors">Previous</span>
-              <span class="text-xl text-cream/80 group-hover:text-copper transition-colors" style="font-family: 'Cormorant Garamond', Georgia, serif;">{prevItem.name}</span>
+              <span data-typo="previous-next-label" class="text-[10px] font-medium tracking-widest uppercase text-cream/40 group-hover:text-copper/70 transition-colors">Previous</span>
+              <span data-typo="previous-next-title" class="text-xl text-cream/80 group-hover:text-copper transition-colors" style="font-family: 'Cormorant Garamond', Georgia, serif;">{prevItem.name}</span>
             </a>
           {:else}
             <div></div>
           {/if}
           {#if nextItem}
             <a
-              href="/{nextItem.slug}"
+              href={resolve('/[slug]', { slug: nextItem.slug })}
               class="group flex flex-col gap-1.5 text-right ml-auto"
-              onclick={(e) => { e.preventDefault(); goto(`/${nextItem.slug}`); }}
+              onclick={(e) => { e.preventDefault(); goto(resolve('/[slug]', { slug: nextItem.slug })); }}
             >
-              <span class="text-[10px] font-medium tracking-widest uppercase text-cream/40 group-hover:text-copper/70 transition-colors">Next</span>
-              <span class="text-xl text-cream/80 group-hover:text-copper transition-colors" style="font-family: 'Cormorant Garamond', Georgia, serif;">{nextItem.name}</span>
+              <span data-typo="previous-next-label" class="text-[10px] font-medium tracking-widest uppercase text-cream/40 group-hover:text-copper/70 transition-colors">Next</span>
+              <span data-typo="previous-next-title" class="text-xl text-cream/80 group-hover:text-copper transition-colors" style="font-family: 'Cormorant Garamond', Georgia, serif;">{nextItem.name}</span>
             </a>
           {/if}
         </div>
@@ -629,16 +631,16 @@
     type="button"
     class="p-2.5 bg-white/80 backdrop-blur-sm rounded-full shadow-lg transition-all {hasPrev ? 'text-walnut opacity-100' : 'text-walnut opacity-20'}"
     disabled={!hasPrev}
-    onclick={() => hasPrev && goto(`/${portfolio.filteredItems[currentIndex - 1].slug}`)}
+    onclick={() => hasPrev && goto(resolve('/[slug]', { slug: portfolio.filteredItems[currentIndex - 1].slug }))}
     aria-label="Previous project"
   >
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
     </svg>
   </button>
-  <a href="/" class="inline-flex items-center px-4 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg text-walnut text-sm" onclick={(event) => {
+  <a href={resolve('/')} class="inline-flex items-center px-4 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg text-walnut text-sm" onclick={(event) => {
     event.preventDefault();
-    goto('/', item ? { state: { hoverId: item.id } } : undefined);
+    goto(resolve('/'), item ? { state: { hoverId: item.id } } : undefined);
   }}>
     Back
   </a>
@@ -646,7 +648,7 @@
     type="button"
     class="p-2.5 bg-white/80 backdrop-blur-sm rounded-full shadow-lg transition-all {hasNext ? 'text-walnut opacity-100' : 'text-walnut opacity-20'}"
     disabled={!hasNext}
-    onclick={() => hasNext && goto(`/${portfolio.filteredItems[currentIndex + 1].slug}`)}
+    onclick={() => hasNext && goto(resolve('/[slug]', { slug: portfolio.filteredItems[currentIndex + 1].slug }))}
     aria-label="Next project"
   >
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

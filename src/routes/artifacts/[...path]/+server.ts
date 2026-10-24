@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import { error } from '@sveltejs/kit';
-import { eq, sql, and } from 'drizzle-orm';
+import { eq, sql, and, inArray } from 'drizzle-orm';
 import { projectArtifacts, projects, siteSettings } from '$lib/server/db/schema';
 import { getDb } from '$lib/server/db';
 
@@ -55,11 +55,12 @@ export const GET: RequestHandler = async ({ request, params, platform, locals })
 			const settingResult = await db
 				.select({ key: siteSettings.key })
 				.from(siteSettings)
-				.where(
+				.where(and(
+					inArray(siteSettings.key, ['namecard_image', 'project_namecard_image', 'preview_namecard_image']),
 					uuidPattern
 						? sql`(json_extract(${siteSettings.value}, '$.imageUrl') = ${url} OR json_extract(${siteSettings.value}, '$.imageUrl') LIKE ${uuidPattern})`
 						: sql`json_extract(${siteSettings.value}, '$.imageUrl') = ${url}`
-				)
+				))
 				.limit(1)
 				.all();
 
