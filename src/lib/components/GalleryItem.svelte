@@ -91,7 +91,7 @@
   const shouldShowFallbackHover = $derived.by(() => {
     if (isStatic) return false;
     if (!hoverInfoInWall) return false;
-    if (!isHovered) return false;
+    if (dockHoverSourceId !== null ? !isDockSource : !isHovered) return false;
     if (dockHasTarget) return false;
     if (isDockSource && dockHoverTargetId !== null) return false;
     return true;
@@ -100,6 +100,7 @@
 </script>
 
 <a
+  data-gallery-project-id={isStatic ? undefined : item.id}
   href={resolve((hrefOverride ?? `/${item.slug}`) as import('$app/types').Pathname)}
   class="gallery-item group relative aspect-square overflow-hidden cursor-pointer {isStatic ? '' : gridSpan} block {fadeInActive ? 'animate-fade-in' : ''} {isActive ? 'ring-2 ring-copper' : ''}"
   onpointerenter={handlePointerEnter}

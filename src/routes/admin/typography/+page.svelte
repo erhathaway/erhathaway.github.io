@@ -1,17 +1,25 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
-	import { invalidate, beforeNavigate } from '$app/navigation';
+	import { untrack, onMount } from 'svelte';
+	import { invalidate, beforeNavigate, goto } from '$app/navigation';
 	import { useClerkContext } from 'svelte-clerk';
 	import { fetchNamecardAdmin } from '$lib/utils/namecard-request';
 	import {
 		ROLES,
-		FONTS,
 		DEFAULT_THEME,
 		resolveRole,
 		textStyleCss,
 		type TextStyle,
 		type TypographyTheme
 	} from '$lib/typography';
+	import { resolve } from '$app/paths';
+	import StyleControls from '$lib/typography/StyleControls.svelte';
+	import {
+		getTypographyPreview,
+		readReviewDraft,
+		clearReviewDraft
+	} from '$lib/typography/preview';
+	const preview = getTypographyPreview();
+	let launchingPreview = false;
 	let { data } = $props();
 	const ctx = useClerkContext();
 	let themes = $state<TypographyTheme[]>(untrack(() => data.typography.themes));
@@ -19,12 +27,13 @@
 	let draft = $state<TypographyTheme>(
 		untrack(() =>
 			structuredClone(
-				data.typography.themes.find((theme) => theme.id === data.typography.activeId) ??
+				$state.snapshot(preview.draft) ??
+					data.typography.themes.find((theme) => theme.id === data.typography.activeId) ??
 					DEFAULT_THEME
 			)
 		)
 	);
-	let baseline = $state(untrack(() => JSON.stringify(draft)));
+	let baseline = $state(untrack(() => (preview.draft ? preview.baseline : JSON.stringify(draft))));
 	let roleId = $state('project-title');
 	let busy = $state(false);
 	let message = $state('');
@@ -34,12 +43,7 @@
 	const role = $derived(ROLES.find((item) => item.id === roleId)!);
 	const resolved = $derived(resolveRole(draft, roleId));
 	const groups = [...new Set(ROLES.map((role) => role.group))];
-	const numericFields = [
-		{ key: 'size', label: 'Desktop size (px)', min: 6, max: 160, step: 1 },
-		{ key: 'mobileSize', label: 'Mobile size (px)', min: 6, max: 160, step: 1 },
-		{ key: 'lineHeight', label: 'Line height', min: 0.8, max: 3, step: 0.05 },
-		{ key: 'tracking', label: 'Letter spacing (em)', min: -0.1, max: 1, step: 0.01 }
-	] as const;
+
 	async function request(path: string, method = 'GET', body?: unknown) {
 		const response = await fetchNamecardAdmin(
 			async () => (await ctx.clerk?.session?.getToken()) ?? null,
@@ -54,8 +58,13 @@
 		if (!response.ok) throw new Error(result.message ?? 'Could not update typography.');
 		return result;
 	}
+	function clearHandoff() {
+		preview.review = null;
+		clearReviewDraft();
+	}
 	function select(theme: TypographyTheme) {
 		if (dirty && !window.confirm('Discard unsaved typography changes?')) return;
+		clearHandoff();
 		draft = structuredClone($state.snapshot(theme));
 		baseline = JSON.stringify(draft);
 		message = '';
@@ -92,6 +101,7 @@
 			themes = [...themes.filter((theme) => theme.id !== saved.id), saved];
 			draft = saved;
 			baseline = JSON.stringify(saved);
+			clearHandoff();
 			await invalidate('app:typography');
 			message =
 				activeId === saved.id
@@ -120,8 +130,46 @@
 			busy = false;
 		}
 	}
+	onMount(() => {
+		const restored = preview.review ?? readReviewDraft();
+		if (restored) {
+			draft = structuredClone($state.snapshot(restored.draft));
+			if (draft.id === 'default') {
+				draft.id = '';
+				draft.name = `${draft.name} copy`;
+			}
+			baseline = restored.baseline;
+			if (ROLES.some((role) => role.id === restored.roleId)) roleId = restored.roleId!;
+			message = 'Preview changes restored. Save changes to keep this draft.';
+		}
+		preview.draft = null;
+		preview.hoverItemId = null;
+	});
+
+	async function previewSite() {
+		preview.draft = structuredClone($state.snapshot(draft));
+		if (preview.draft.id === 'default') {
+			preview.draft.id = '';
+			preview.draft.name = 'Original typography copy';
+		}
+		preview.baseline = baseline;
+		clearHandoff();
+		preview.enabled = true;
+		preview.keepHoverOpen = true;
+		launchingPreview = true;
+		try {
+			await goto(resolve('/'));
+		} finally {
+			launchingPreview = false;
+		}
+	}
 	beforeNavigate(({ cancel }) => {
-		if (dirty && !window.confirm('Discard unsaved typography changes?')) cancel();
+		if (launchingPreview) return;
+		if (dirty && !window.confirm('Discard unsaved typography changes?')) {
+			cancel();
+			return;
+		}
+		clearHandoff();
 	});
 </script>
 
@@ -153,6 +201,7 @@
 			class="ml-2 rounded-lg border border-slate-200 px-3 py-2 text-sm"
 		/></label
 	>
+	<button class="secondary" disabled={busy} onclick={previewSite}>Preview on site</button>
 	<button class="secondary" disabled={busy} onclick={copy}>Create copy</button>
 	<button class="primary" disabled={locked || busy || !dirty || !draft.name.trim()} onclick={save}
 		>Save changes</button
@@ -201,68 +250,7 @@
 				? `Inherits from ${ROLES.find((item) => item.id === role.parent)?.label}. Reset a field to restore its inherited/default value.`
 				: 'Shared foundation for all typography.'}
 		</p>
-		<fieldset disabled={locked || busy} class="grid gap-4 sm:grid-cols-2">
-			<legend class="sr-only">Style controls</legend>
-			<label class="field"
-				>Font family <select
-					value={resolved.font}
-					onchange={(event) => change('font', event.currentTarget.value as TextStyle['font'])}
-					>{#each FONTS as font (font)}<option>{font}</option>{/each}</select
-				><button type="button" onclick={() => reset('font')}>Reset font</button></label
-			>
-			<label class="field"
-				>Weight <select
-					value={resolved.weight}
-					onchange={(event) => change('weight', Number(event.currentTarget.value))}
-					>{#each [300, 400, 500, 600, 700] as weight (weight)}<option value={weight}
-							>{weight}</option
-						>{/each}</select
-				><button type="button" onclick={() => reset('weight')}>Reset weight</button></label
-			>
-			{#each numericFields as field (field.key)}<label class="field"
-					>{field.label}<input
-						type="number"
-						min={field.min}
-						max={field.max}
-						step={field.step}
-						value={resolved[field.key]}
-						oninput={(event) => {
-							const value = event.currentTarget.valueAsNumber;
-							if (Number.isFinite(value)) change(field.key, value);
-						}}
-					/><button type="button" onclick={() => reset(field.key)}
-						>Reset {field.label.toLowerCase()}</button
-					></label
-				>{/each}
-			<label class="field"
-				>Style <select
-					value={resolved.italic ? 'italic' : 'normal'}
-					onchange={(event) => change('italic', event.currentTarget.value === 'italic')}
-					><option value="normal">Normal</option><option value="italic">Italic</option></select
-				><button type="button" onclick={() => reset('italic')}>Reset style</button></label
-			>
-			<label class="field"
-				>Capitalization <select
-					value={resolved.transform}
-					onchange={(event) =>
-						change('transform', event.currentTarget.value as TextStyle['transform'])}
-					>{#each ['none', 'uppercase', 'lowercase', 'capitalize'] as value (value)}<option
-							>{value}</option
-						>{/each}</select
-				><button type="button" onclick={() => reset('transform')}>Reset capitalization</button
-				></label
-			>
-			<label class="field"
-				>Decoration <select
-					value={resolved.decoration}
-					onchange={(event) =>
-						change('decoration', event.currentTarget.value as TextStyle['decoration'])}
-					>{#each ['none', 'underline', 'line-through'] as value (value)}<option>{value}</option
-						>{/each}</select
-				><button type="button" onclick={() => reset('decoration')}>Reset decoration</button></label
-			>
-			<button class="secondary self-center" onclick={() => reset()}>Reset this section</button>
-		</fieldset>
+		<StyleControls {resolved} disabled={locked || busy} {change} {reset} />
 		<div class="mt-6 space-y-5 border-t border-slate-200 pt-5">
 			<div>
 				<p class="mb-2 text-xs text-slate-400">Desktop preview</p>
@@ -304,26 +292,6 @@
 	button:disabled {
 		opacity: 0.4;
 		cursor: not-allowed;
-	}
-	.field {
-		display: grid;
-		gap: 0.5rem;
-		font-size: 0.75rem;
-		color: #475569;
-	}
-	.field input,
-	.field select {
-		border: 1px solid #cbd5e1;
-		border-radius: 0.5rem;
-		padding: 0.5rem;
-		background: white;
-		font-size: 0.875rem;
-	}
-	.field button {
-		text-align: left;
-		font-size: 0.7rem;
-		text-decoration: underline;
-		color: #64748b;
 	}
 	button:focus-visible {
 		outline: 2px solid #64748b;

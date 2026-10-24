@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { getTypographyPreview } from '$lib/typography/preview';
+  const typographyPreview = getTypographyPreview();
   import { resolve } from '$app/paths';
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { page } from '$app/stores';
@@ -11,7 +13,11 @@
   let innerWidth = $state(browser ? window.innerWidth : 1200);
   const isMobile = $derived(innerWidth < 1024);
 
-  const hoveredItem = $derived(portfolio.hoveredItem);
+  const hoveredItem = $derived(
+    typographyPreview.draft && typographyPreview.keepHoverOpen !== false && $page.route.id === '/(home)'
+      ? portfolio.filteredItems.find(item => item.id === typographyPreview.hoverItemId) ?? portfolio.filteredItems[0] ?? null
+      : portfolio.hoveredItem
+  );
   let itemEls = $state<Record<number, HTMLElement | null>>({});
   let itemScales = $state<Record<number, number>>({});
 

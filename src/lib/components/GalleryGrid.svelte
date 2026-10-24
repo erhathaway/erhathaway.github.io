@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { getTypographyPreview } from '$lib/typography/preview';
+  const typographyPreview = getTypographyPreview();
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import GalleryItem from './GalleryItem.svelte';
   import { env } from '$env/dynamic/public';
@@ -73,7 +75,11 @@
     | { target: 'filler'; dockSide: 'left' | 'right' }
     | null;
 
-  const hoveredItem = $derived(portfolio.hoveredItem);
+  const hoveredItem = $derived(
+    typographyPreview.draft && typographyPreview.keepHoverOpen !== false && $page.route.id === '/(home)'
+      ? portfolio.filteredItems.find(item => item.id === typographyPreview.hoverItemId) ?? portfolio.filteredItems[0] ?? null
+      : portfolio.hoveredItem
+  );
 
   const hoveredFilteredIndex = $derived.by(() => {
     if (!hoveredItem) return -1;

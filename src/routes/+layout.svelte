@@ -2,6 +2,10 @@
   import { resolve } from '$app/paths';
 	import '../app.css';
 	import TypographyStyles from '$lib/typography/TypographyStyles.svelte';
+	import TypographyPreviewPanel from '$lib/typography/TypographyPreviewPanel.svelte';
+	import { setTypographyPreview, type TypographyPreview } from '$lib/typography/preview';
+	const typographyPreview = $state<TypographyPreview>({ draft: null, baseline: '', enabled: true });
+	setTypographyPreview(typographyPreview);
 	import favicon from '$lib/assets/favicon.svg';
 	import LeftPanel from '$lib/components/LeftPanel.svelte';
 	import CategoryPills from '$lib/components/CategoryPills.svelte';
@@ -460,12 +464,15 @@
 	});
 </script>
 
-<TypographyStyles theme={data.typographyTheme} enabled={!isAdminPage && !isErrorPage} />
+<TypographyStyles theme={typographyPreview.enabled && typographyPreview.draft ? typographyPreview.draft : data.typographyTheme} enabled={!isAdminPage && !isErrorPage} />
 
 <svelte:window onkeydown={(e: KeyboardEvent) => { if (e.key === 'Escape' && nameCardExpanded) collapseNameCard(); }} />
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <ClerkProvider>
+	{#if typographyPreview.draft && !isAdminPage}
+		<TypographyPreviewPanel />
+	{/if}
 	<PostHogIdentify />
 	{#if isAdminPage}
 		<div class="min-h-screen bg-cream text-walnut">
