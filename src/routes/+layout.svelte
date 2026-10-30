@@ -1,5 +1,11 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
 	import '../app.css';
+	import TypographyStyles from '$lib/typography/TypographyStyles.svelte';
+	import TypographyPreviewPanel from '$lib/typography/TypographyPreviewPanel.svelte';
+	import { setTypographyPreview, type TypographyPreview } from '$lib/typography/preview';
+	const typographyPreview = $state<TypographyPreview>({ draft: null, baseline: '', enabled: true });
+	setTypographyPreview(typographyPreview);
 	import favicon from '$lib/assets/favicon.svg';
 	import LeftPanel from '$lib/components/LeftPanel.svelte';
 	import CategoryPills from '$lib/components/CategoryPills.svelte';
@@ -14,7 +20,7 @@
 	import { env } from '$env/dynamic/public';
 	import { initPostHog } from '$lib/posthog';
 
-	let { children } = $props();
+	let { children, data } = $props();
 	const isProjectPage = $derived($page.route.id === '/[slug]');
 	const isAdminPage = $derived($page.route.id?.includes('/admin'));
 	const isHomePage = $derived($page.url.pathname === '/');
@@ -458,10 +464,15 @@
 	});
 </script>
 
+<TypographyStyles theme={typographyPreview.enabled && typographyPreview.draft ? typographyPreview.draft : data.typographyTheme} enabled={!isAdminPage && !isErrorPage} />
+
 <svelte:window onkeydown={(e: KeyboardEvent) => { if (e.key === 'Escape' && nameCardExpanded) collapseNameCard(); }} />
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <ClerkProvider>
+	{#if typographyPreview.draft && !isAdminPage}
+		<TypographyPreviewPanel />
+	{/if}
 	<PostHogIdentify />
 	{#if isAdminPage}
 		<div class="min-h-screen bg-cream text-walnut">
@@ -506,7 +517,7 @@
 		{#if stickyBottomUiEnabled && panelTransitionNames && !isErrorPage}
 			<div class="fixed bottom-4 left-3/4 -translate-x-1/2 z-50 xl:bottom-4 max-xl:top-4 pointer-events-none vt-exclude-namecard" style="view-transition-name: social-links">
 				<div class="px-5 py-3 bg-charcoal/40 backdrop-blur-md pointer-events-auto">
-					<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
+					<div data-typo="expanded-social" class="flex gap-8 text-sm tracking-[0.18em] uppercase text-cream/60">
 						<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
 						<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-instagram">Instagram</a>
 						<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors" style="view-transition-name: social-link-contact">Contact</a>
@@ -517,11 +528,11 @@
 		{#if stickyBottomUiEnabled && !isErrorPage}
 			<div class="fixed bottom-6 left-20 right-0 flex justify-center z-40 pointer-events-none lg:left-0 vt-exclude-namecard" style="view-transition-name: bottom-bar">
 				{#if isProjectPage}
-					<a href="/" class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
+					<a href={resolve('/')} class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
 						event.preventDefault();
 						const slug = $page.params?.slug;
 						const projectItem = slug ? portfolio.allItems.find(i => i.slug === slug) : null;
-						goto('/', projectItem ? { state: { hoverId: projectItem.id } } : undefined);
+						goto(resolve('/'), projectItem ? { state: { hoverId: projectItem.id } } : undefined);
 					}}>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -537,8 +548,8 @@
 		{/if}
 		{#if nameCardCloseMaskPhase !== 'hidden'}
 			<div
-				class="fixed inset-0 z-[297] pointer-events-none bg-white/85 backdrop-blur-sm transition-opacity duration-[120ms]"
-				class:opacity-0={nameCardCloseMaskPhase === 'fading'}
+				class="fixed inset-0 z-[297] pointer-events-none bg-white/85 backdrop-blur-sm transition-opacity duration-[120ms] {nameCardCloseMaskPhase === 'fading' ? 'opacity-0' : ''}"
+
 				aria-hidden="true"
 			></div>
 		{/if}
@@ -563,7 +574,7 @@
 								draggable="false"
 							/>
 							<div class="absolute inset-x-0 bottom-0 p-6 flex justify-center">
-								<div class="flex gap-8 text-sm tracking-[0.18em] uppercase text-walnut/60">
+								<div data-typo="expanded-social" class="flex gap-8 text-sm tracking-[0.18em] uppercase text-walnut/60">
 									<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
 									<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-instagram">Instagram</a>
 									<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors" style="view-transition-name: social-link-contact">Contact</a>
@@ -573,13 +584,13 @@
 					{:else}
 						<div class="w-[min(500px,90vw)] pointer-events-auto rounded-sm" style="view-transition-name: name-card-bg; background: radial-gradient(circle at bottom right, rgba(253,218,130,0.3), rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1)); border: 1px solid rgba(138,128,120,0.15); backdrop-filter: blur(12px);">
 							<div class="p-10 pt-12 pb-8 flex flex-col items-center text-center">
-								<span class="text-[48px] font-normal text-walnut leading-[1.2] mb-4 block" style="font-family: 'Playfair Display', Georgia, serif; view-transition-name: name-text">
+								<span data-typo="expanded-title" class="text-[48px] font-normal text-walnut leading-[1.2] mb-4 block" style="font-family: 'Playfair Display', Georgia, serif; view-transition-name: name-text">
 									Ethan<br>Hathaway
 								</span>
-								<p class="text-[11px] tracking-[0.32em] uppercase text-ash/80 mb-10" style="view-transition-name: subtitle-text">
+								<p data-typo="expanded-subtitle" class="text-[11px] tracking-[0.32em] uppercase text-ash/80 mb-10" style="view-transition-name: subtitle-text">
 									Things I Make
 								</p>
-								<div class="flex flex-col gap-4 text-sm tracking-[0.18em] uppercase text-walnut/60">
+								<div data-typo="expanded-social" class="flex flex-col gap-4 text-sm tracking-[0.18em] uppercase text-walnut/60">
 									<a href="https://github.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-github">GitHub</a>
 									<a href="https://instagram.com/erhathaway" target="_blank" rel="noopener noreferrer" class="hover:text-copper transition-colors" style="view-transition-name: social-link-instagram">Instagram</a>
 									<a href="mailto:erhathaway@gmail.com" class="hover:text-copper transition-colors" style="view-transition-name: social-link-contact">Contact</a>

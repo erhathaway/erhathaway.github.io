@@ -1,8 +1,9 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { projectArtifacts, projects, siteSettings } from '$lib/server/db/schema';
+import { projectArtifacts, projects } from '$lib/server/db/schema';
 import { getDb } from '$lib/server/db';
+import { getNamecardImageReferences } from '$lib/server/namecard-variants';
 
 interface R2ImageItem {
 	key: string;
@@ -115,24 +116,9 @@ export const GET: RequestHandler = async ({ platform }) => {
 		}
 	}
 
-	// Query site_settings for namecard images
-	const NAMECARD_SETTINGS: Array<{ key: string; label: string }> = [
-		{ key: 'namecard_image', label: 'Namecard (Landing)' },
-		{ key: 'project_namecard_image', label: 'Namecard (Project)' }
-	];
-
 	const keyToSetting = new Map<string, { settingKey: string; settingLabel: string }>();
-
-	for (const setting of NAMECARD_SETTINGS) {
-		const [row] = await db
-			.select({ value: siteSettings.value })
-			.from(siteSettings)
-			.where(eq(siteSettings.key, setting.key))
-			.limit(1)
-			.all();
-
-		if (!row) continue;
-		const val = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+	for (const setting of await getNamecardImageReferences(db)) {
+		const val = setting.value;
 		if (!val || typeof val.imageUrl !== 'string') continue;
 
 		const r2Key = val.imageUrl.startsWith('/') ? val.imageUrl.slice(1) : val.imageUrl;
@@ -242,17 +228,9 @@ export const DELETE: RequestHandler = async ({ request, platform }) => {
 		}
 	}
 
-	// Also check site settings
-	const NAMECARD_KEYS = ['namecard_image', 'project_namecard_image'];
-	for (const settingKey of NAMECARD_KEYS) {
-		const [row] = await db
-			.select({ value: siteSettings.value })
-			.from(siteSettings)
-			.where(eq(siteSettings.key, settingKey))
-			.limit(1)
-			.all();
-		if (!row) continue;
-		const val = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+	// Saved variants retain their images even when they are not active.
+	for (const setting of await getNamecardImageReferences(db)) {
+		const val = setting.value;
 		if (!val || typeof val.imageUrl !== 'string') continue;
 		const key = val.imageUrl.startsWith('/') ? val.imageUrl.slice(1) : val.imageUrl;
 		if (key.startsWith('artifacts/')) {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import CategoryPills from './CategoryPills.svelte';
   import ItemList from './ItemList.svelte';
   import { portfolio } from '$lib/stores/portfolio.svelte';
@@ -81,7 +82,7 @@
         type="button"
         class="namecard-vt absolute {isProjectPage ? 'top-3' : 'top-0'} left-0 {isProjectPage ? 'w-full' : 'w-[280px]'} h-[220px] overflow-hidden z-20 cursor-pointer"
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
-        onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
+        onclick={() => isProjectPage ? goto(resolve('/')) : onNameClick?.()}
         aria-label="Go home"
       >
         <img
@@ -94,13 +95,12 @@
           draggable="false"
         />
       </button>
-      <!-- Spacer to match the flow-space the header text would occupy -->
-      <div
-        class="h-[130px] shrink-0 cursor-pointer"
-        onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
-        role="button"
+      <!-- Reserve the full project card height so the list keeps its intended gap. -->
+      <button type="button" aria-label="Go home"
+        class="{isProjectPage ? 'h-[220px]' : 'h-[130px]'} shrink-0 cursor-pointer"
+        onclick={() => isProjectPage ? goto(resolve('/')) : onNameClick?.()}
         tabindex="-1"
-      ></div>
+      ></button>
     {:else}
       <!-- Fixed Header - Always on top -->
       <div
@@ -114,27 +114,27 @@
         <button
           type="button"
           class="p-8 pt-10 pb-0 relative bg-transparent cursor-pointer text-left w-full"
-          onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
+          onclick={() => isProjectPage ? goto(resolve('/')) : onNameClick?.()}
           aria-label="Go home"
         >
           <span
-            class="namecard-vt text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block {slideUpActive ? 'animate-slide-up' : ''}"
+            data-typo={isProjectPage ? 'project-card-title' : 'landing-title'} class="namecard-vt text-[38px] font-normal text-walnut no-underline leading-[1.2] mb-3 block {slideUpActive ? 'animate-slide-up' : ''}"
             style="animation-delay: 0.1s; font-family: 'Playfair Display', Georgia, serif;"
             style:view-transition-name={hasTransitionNames ? 'name-text' : undefined}
           >
             Ethan<br>Hathaway
           </span>
         </button>
-        <p
-          class="namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 px-8 pt-4 pb-11 relative border-b border-black/5 {slideUpActive ? 'animate-slide-up' : ''} cursor-pointer"
+        <button type="button"
+          data-typo={isProjectPage ? 'project-card-subtitle' : 'landing-subtitle'} class="block w-full text-left namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 px-8 pt-4 pb-11 relative border-b border-black/5 {slideUpActive ? 'animate-slide-up' : ''} cursor-pointer"
           style="animation-delay: 0.2s;"
           style:view-transition-name={hasTransitionNames ? 'subtitle-text' : undefined}
-          onclick={() => isProjectPage ? goto('/') : onNameClick?.()}
-          role="button"
-          tabindex="0"
+          onclick={() => isProjectPage ? goto(resolve('/')) : onNameClick?.()}
+
+
         >
           Things I Make
-        </p>
+        </button>
       </div>
     {/if}
   {/if}
@@ -159,19 +159,19 @@
           type="button"
           class="p-1.5 rounded-lg transition-all duration-150 {hasPrev ? 'text-ash hover:text-copper cursor-pointer opacity-100' : 'text-ash cursor-default opacity-20'}"
           disabled={!hasPrev}
-          onclick={() => hasPrev && goto(`/${portfolio.filteredItems[currentIndex - 1].slug}`)}
+          onclick={() => hasPrev && goto(resolve('/[slug]', { slug: portfolio.filteredItems[currentIndex - 1].slug }))}
           aria-label="Previous project"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <span class="text-[10px] tracking-widest uppercase text-ash/40">{currentIndex + 1} / {portfolio.filteredItems.length}</span>
+        <span data-typo="counter" class="text-[10px] tracking-widest uppercase text-ash/40">{currentIndex + 1} / {portfolio.filteredItems.length}</span>
         <button
           type="button"
           class="p-1.5 rounded-lg transition-all duration-150 {hasNext ? 'text-ash hover:text-copper cursor-pointer opacity-100' : 'text-ash cursor-default opacity-20'}"
           disabled={!hasNext}
-          onclick={() => hasNext && goto(`/${portfolio.filteredItems[currentIndex + 1].slug}`)}
+          onclick={() => hasNext && goto(resolve('/[slug]', { slug: portfolio.filteredItems[currentIndex + 1].slug }))}
           aria-label="Next project"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { SignedIn, SignedOut, useClerkContext } from 'svelte-clerk';
+	import NamecardOverview from './NamecardOverview.svelte';
 	import CategoryManager from './CategoryManager.svelte';
 	import ProjectManager from './ProjectManager.svelte';
 	import { adminStore } from '$lib/stores/admin.svelte';
@@ -11,6 +12,7 @@
 		isPublished: boolean;
 	};
 
+	let { data } = $props();
 	const ctx = useClerkContext();
 
 	const categories = $derived(adminStore.categories);
@@ -32,11 +34,12 @@
 	}
 </script>
 
-<header class="mb-8 pb-5 border-b border-slate-200">
-	<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Dashboard</p>
+<header class="mb-8 border-b border-slate-200 pb-5">
+	<p class="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">Dashboard</p>
 </header>
 
 <SignedIn>
+	<NamecardOverview cards={data.namecards} error={data.namecardError} />
 	<CategoryManager
 		{categories}
 		{categoriesLoaded}
@@ -49,8 +52,18 @@
 
 <SignedOut>
 	<div class="mt-8 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-		<svg class="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+		<svg
+			class="mt-0.5 h-4 w-4 shrink-0 text-red-500"
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+		>
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="2"
+				d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+			/>
 		</svg>
 		<p class="text-sm text-red-700">You need to be signed in to access this page.</p>
 	</div>

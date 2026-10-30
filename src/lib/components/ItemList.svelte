@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getTypographyPreview } from '$lib/typography/preview';
+  const typographyPreview = getTypographyPreview();
+  import { resolve } from '$app/paths';
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import { page } from '$app/stores';
   import HoverInfo from './HoverInfo.svelte';
@@ -10,7 +13,11 @@
   let innerWidth = $state(browser ? window.innerWidth : 1200);
   const isMobile = $derived(innerWidth < 1024);
 
-  const hoveredItem = $derived(portfolio.hoveredItem);
+  const hoveredItem = $derived(
+    typographyPreview.draft && typographyPreview.keepHoverOpen !== false && $page.route.id === '/(home)'
+      ? portfolio.filteredItems.find(item => item.id === typographyPreview.hoverItemId) ?? portfolio.filteredItems[0] ?? null
+      : portfolio.hoveredItem
+  );
   let itemEls = $state<Record<number, HTMLElement | null>>({});
   let itemScales = $state<Record<number, number>>({});
 
@@ -160,10 +167,10 @@
     {@const scale = itemScales[item.id] || 1}
     <li class="w-full" {@attach storeEl(item.id)}>
       <a
-        href="/{item.slug}"
-        class="item-link hover:text-copper transition-colors duration-200 view-transition-item w-full block {isActive ? 'text-copper font-medium' : 'text-walnut'} {isHovered ? '' : 'pb-0.5'}"
-        class:active={isActive || isHovered}
-        class:active-project={isActive}
+        href={resolve('/[slug]', { slug: item.slug })}
+        class="{isActive || isHovered ? 'active' : ''} {isActive ? 'active-project' : ''} item-link hover:text-copper transition-colors duration-200 view-transition-item w-full block {isActive ? 'text-copper font-medium' : 'text-walnut'} {isHovered ? '' : 'pb-0.5'}"
+
+
         aria-current={isActive ? 'page' : undefined}
         onclick={() => onItemClick?.()}
       >
@@ -172,9 +179,9 @@
             <HoverInfo item={item} variant="inline" />
           {:else}
             <span
-              class="item-label block px-8"
-              class:active-project={isActive}
-              style="font-family: 'Playfair Display', Georgia, serif; font-size: {isActive ? (isMobile ? 1.35 : 1.05) * scale : (isMobile ? 1.1 : 0.85) * scale}rem; opacity: {isActive ? Math.pow(scale, 3) : Math.pow(scale, 3) * 0.7};{isActive ? ' margin-bottom: 2px;' : ''}"
+              data-typo={isActive ? 'project-list-active' : 'project-list'} class="item-label block px-8 {isActive ? 'active-project' : ''}"
+
+              style="--typo-scale: {scale}; font-family: 'Playfair Display', Georgia, serif; font-size: {isActive ? (isMobile ? 1.35 : 1.05) * scale : (isMobile ? 1.1 : 0.85) * scale}rem; opacity: {isActive ? Math.pow(scale, 3) : Math.pow(scale, 3) * 0.7};{isActive ? ' margin-bottom: 2px;' : ''}"
             >
               {item.name}
             </span>

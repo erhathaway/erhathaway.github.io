@@ -11,7 +11,8 @@ export type TransformResult =
 export async function transformToModernFormats(
 	bucket: R2Bucket,
 	originalKey: string,
-	origin: string
+	origin: string,
+	preserveOriginal = false
 ): Promise<TransformResult> {
 	// Extract UUID from key: artifacts/{uuid}.{ext}
 	const match = originalKey.match(/^artifacts\/([^.]+)\.(.+)$/);
@@ -70,7 +71,7 @@ export async function transformToModernFormats(
 	}
 
 	// Delete original if it's not already one of the new formats
-	if (ext !== 'avif' && ext !== 'webp') {
+	if (!preserveOriginal && ext !== 'avif' && ext !== 'webp') {
 		try {
 			await bucket.delete(originalKey);
 		} catch {

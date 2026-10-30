@@ -1,3 +1,4 @@
+import { validateAppearance, restoreAppearance } from '$lib/server/appearance-backup';
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
@@ -137,10 +138,18 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		throw error(400, 'Invalid manifest.json');
 	}
 
-	if (manifest.version !== 1) {
+	if (manifest.version !== 1 && manifest.version !== 2) {
 		throw error(400, `Unsupported manifest version: ${manifest.version}`);
 	}
 
+	if (manifest.version === 2 && !manifest.appearance)
+		throw error(400, 'Backup is missing appearance settings.');
+	if (manifest.appearance) validateAppearance(manifest.appearance, zip, bucket);
+	if (
+		conflicts.appearanceResolution &&
+		!['merge', 'clobber', 'skip'].includes(conflicts.appearanceResolution)
+	)
+		throw error(400, 'Invalid appearance restore mode.');
 	const summary: ImportSummary = {
 		categoriesCreated: 0,
 		categoriesUpdated: 0,
@@ -225,15 +234,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			await createProject(db, proj, categoryNameToIdMap, zip, bucket, summary);
 			summary.projectsClobbered++;
 		} else {
-			await mergeProject(
-				db,
-				existing.id,
-				proj,
-				categoryNameToIdMap,
-				zip,
-				bucket,
-				summary
-			);
+			await mergeProject(db, existing.id, proj, categoryNameToIdMap, zip, bucket, summary);
 			summary.projectsMerged++;
 		}
 	}
@@ -265,8 +266,22 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	};
 
 	await importNamecardSetting(manifest.siteSettings?.namecardImage, 'namecard_image');
-	await importNamecardSetting(manifest.siteSettings?.projectNamecardImage, 'project_namecard_image');
+	await importNamecardSetting(
+		manifest.siteSettings?.projectNamecardImage,
+		'project_namecard_image'
+	);
 
+	if (manifest.appearance)
+		Object.assign(
+			summary,
+			await restoreAppearance(
+				db,
+				manifest.appearance,
+				zip,
+				bucket,
+				conflicts.appearanceResolution ?? conflicts.defaultResolution
+			)
+		);
 	return json({ success: true, summary }, { headers: corsHeaders });
 };
 
@@ -370,13 +385,16 @@ async function createProject(
 			dataBlob.imageHash = artifact.imageHash;
 		}
 
-		const [created] = await db.insert(projectArtifacts).values({
-			projectId,
-			schema: artifact.schema,
-			dataBlob,
-			isPublished: artifact.isPublished,
-			sortOrder: artifact.sortOrder ?? 0
-		}).returning();
+		const [created] = await db
+			.insert(projectArtifacts)
+			.values({
+				projectId,
+				schema: artifact.schema,
+				dataBlob,
+				isPublished: artifact.isPublished,
+				sortOrder: artifact.sortOrder ?? 0
+			})
+			.returning();
 		summary.artifactsCreated++;
 
 		if (artifact.isCover) {
@@ -483,9 +501,7 @@ async function mergeProject(
 	const existingHashMap = new Map<string, number>();
 	for (const existing of existingArtifacts) {
 		const blob =
-			typeof existing.dataBlob === 'string'
-				? JSON.parse(existing.dataBlob)
-				: existing.dataBlob;
+			typeof existing.dataBlob === 'string' ? JSON.parse(existing.dataBlob) : existing.dataBlob;
 		if (blob?.imageHash) {
 			existingHashMap.set(blob.imageHash, existing.id);
 		}
@@ -503,7 +519,7 @@ async function mergeProject(
 				coverArtifactId = artifact.id;
 				coverPositionX = artifact.coverPositionX ?? 50;
 				coverPositionY = artifact.coverPositionY ?? 50;
-			coverZoom = artifact.coverZoom ?? 1;
+				coverZoom = artifact.coverZoom ?? 1;
 			}
 			continue;
 		}
@@ -516,7 +532,7 @@ async function mergeProject(
 					coverArtifactId = matchedId;
 					coverPositionX = artifact.coverPositionX ?? 50;
 					coverPositionY = artifact.coverPositionY ?? 50;
-			coverZoom = artifact.coverZoom ?? 1;
+					coverZoom = artifact.coverZoom ?? 1;
 				}
 				continue;
 			}
@@ -524,16 +540,11 @@ async function mergeProject(
 			let foundByR2Hash = false;
 			for (const existing of existingArtifacts) {
 				const blob =
-					typeof existing.dataBlob === 'string'
-						? JSON.parse(existing.dataBlob)
-						: existing.dataBlob;
+					typeof existing.dataBlob === 'string' ? JSON.parse(existing.dataBlob) : existing.dataBlob;
 				if (blob?.imageHash) continue;
 				if (existing.schema !== 'image-v1' || !blob?.imageUrl) continue;
 
-				const existingHash = await computeR2ImageHash(
-					String(blob.imageUrl),
-					bucket
-				);
+				const existingHash = await computeR2ImageHash(String(blob.imageUrl), bucket);
 				if (existingHash) {
 					existingHashMap.set(existingHash, existing.id);
 					await db
@@ -547,7 +558,7 @@ async function mergeProject(
 							coverArtifactId = existing.id;
 							coverPositionX = artifact.coverPositionX ?? 50;
 							coverPositionY = artifact.coverPositionY ?? 50;
-			coverZoom = artifact.coverZoom ?? 1;
+							coverZoom = artifact.coverZoom ?? 1;
 						}
 						foundByR2Hash = true;
 						break;
@@ -561,23 +572,13 @@ async function mergeProject(
 
 		if (artifact.schema === 'image-v1') {
 			if (artifact._localImagePath) {
-				const newUrl = await uploadImage(
-					zip,
-					artifact._localImagePath,
-					bucket,
-					summary
-				);
+				const newUrl = await uploadImage(zip, artifact._localImagePath, bucket, summary);
 				if (newUrl) {
 					dataBlob.imageUrl = newUrl;
 				}
 			}
 			if (artifact._localHoverImagePath) {
-				const newUrl = await uploadImage(
-					zip,
-					artifact._localHoverImagePath,
-					bucket,
-					summary
-				);
+				const newUrl = await uploadImage(zip, artifact._localHoverImagePath, bucket, summary);
 				if (newUrl) {
 					dataBlob.hoverImageUrl = newUrl;
 				}
@@ -612,14 +613,12 @@ async function mergeProject(
 		await db
 			.delete(projectCoverArtifact)
 			.where(eq(projectCoverArtifact.projectId, existingProjectId));
-		await db
-			.insert(projectCoverArtifact)
-			.values({
-				projectId: existingProjectId,
-				artifactId: coverArtifactId,
-				positionX: coverPositionX,
-				positionY: coverPositionY,
-				zoom: coverZoom
-			});
+		await db.insert(projectCoverArtifact).values({
+			projectId: existingProjectId,
+			artifactId: coverArtifactId,
+			positionX: coverPositionX,
+			positionY: coverPositionY,
+			zoom: coverZoom
+		});
 	}
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import { resolve } from '$app/paths';
 	import { useClerkContext } from 'svelte-clerk';
 	import { adminStore } from '$lib/stores/admin.svelte';
 	import { artifactSchemas } from '$lib/schemas/artifacts';
@@ -426,7 +427,7 @@
 		<aside class="w-72 shrink-0 border-r border-slate-200 bg-white px-5 py-5 flex flex-col gap-5 overflow-y-auto">
 			<!-- Brand -->
 			<div class="pb-4 border-b border-slate-100">
-				<a href="/admin" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-slate-600 transition-colors duration-150">
+				<a href={resolve('/admin')} class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-slate-600 transition-colors duration-150">
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
 					</svg>
@@ -491,11 +492,11 @@
 						{:else}
 							<ul class="space-y-0.5">
 								{#each adminStore.categories as category (category.id)}
-									<li
-										class="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors duration-150 cursor-pointer select-none"
+									<li><button type="button"
+										class="w-full flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors duration-150 cursor-pointer select-none"
 										ondblclick={() => startEditCategory(category)}
-										role="button"
-										tabindex="0"
+
+
 										onkeydown={(event) => {
 											if (event.key === 'Enter') startEditCategory(category);
 										}}
@@ -505,7 +506,7 @@
 											<span class="text-[10px] font-mono text-slate-400">/{category.name}</span>
 											<span class={`inline-block h-1.5 w-1.5 rounded-full ${category.isPublished ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
 										</div>
-									</li>
+									</button></li>
 								{/each}
 							</ul>
 						{/if}
@@ -525,7 +526,7 @@
 								{#each adminStore.projects as project (project.id)}
 									<li>
 										<a
-											href={`/admin/projects/${project.id}`}
+											href={resolve('/admin/projects/[id]', { id: String(project.id) })}
 											class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
 												activeProjectId === project.id
 													? 'bg-slate-900 text-white'
@@ -552,7 +553,7 @@
 					<ul class="space-y-0.5">
 						<li>
 							<a
-								href="/admin/integrations/google-photos"
+								href={resolve('/admin/integrations/google-photos')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
 									$page.url.pathname === '/admin/integrations/google-photos'
 										? 'bg-slate-900 text-white'
@@ -572,26 +573,33 @@
 					<ul class="space-y-0.5">
 						<li>
 							<a
-								href="/admin/namecards/landing"
+								href={resolve('/admin/namecards')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
-									$page.url.pathname === '/admin/namecards/landing'
+									$page.url.pathname === '/admin/namecards'
 										? 'bg-slate-900 text-white'
 										: 'text-slate-600 hover:bg-slate-50'
 								}`}
 							>
-								<span class="font-medium">Landing Page</span>
+								<span class="font-medium">All variants</span>
 							</a>
 						</li>
+					</ul>
+				</div>
+
+				<!-- Themes -->
+				<div>
+					<p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Themes</p>
+					<ul class="space-y-0.5">
 						<li>
 							<a
-								href="/admin/namecards/project"
+								href={resolve('/admin/typography')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
-									$page.url.pathname === '/admin/namecards/project'
+									$page.url.pathname === '/admin/typography'
 										? 'bg-slate-900 text-white'
 										: 'text-slate-600 hover:bg-slate-50'
 								}`}
 							>
-								<span class="font-medium">Project Page</span>
+								<span class="font-medium">Typography themes</span>
 							</a>
 						</li>
 					</ul>
@@ -604,7 +612,7 @@
 						{#each artifactSchemas as schema (schema.name)}
 							<li>
 								<a
-									href={`/admin/schemas/${schema.name}`}
+									href={resolve('/admin/schemas/[name]', { name: schema.name })}
 									class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
 										$page.url.pathname === '/admin/schemas/' + schema.name
 											? 'bg-slate-900 text-white'
@@ -625,7 +633,7 @@
 					<ul class="space-y-0.5">
 						<li>
 							<a
-								href="/admin/images"
+								href={resolve('/admin/images')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
 									$page.url.pathname === '/admin/images'
 										? 'bg-slate-900 text-white'
@@ -644,7 +652,7 @@
 					<ul class="space-y-0.5">
 						<li>
 							<a
-								href="/admin/bots"
+								href={resolve('/admin/bots')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
 									$page.url.pathname.startsWith('/admin/bots')
 										? 'bg-slate-900 text-white'
@@ -660,7 +668,7 @@
 
 			<!-- Back to site -->
 			<a
-				href="/"
+				href={resolve('/')}
 				class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors duration-150"
 			>
 				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -715,6 +723,7 @@
 				<h3 class="text-base font-semibold text-slate-900">New Category</h3>
 				<button
 					type="button"
+					aria-label="Close modal"
 					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
 					onclick={() => (showCategoryModal = false)}
 				>
@@ -793,6 +802,7 @@
 				<h3 class="text-base font-semibold text-slate-900">New Project</h3>
 				<button
 					type="button"
+					aria-label="Close modal"
 					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
 					onclick={() => (showProjectModal = false)}
 				>
@@ -1016,6 +1026,7 @@
 				<h3 class="text-base font-semibold text-red-600">Clear All Data</h3>
 				<button
 					type="button"
+					aria-label="Close modal"
 					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
 					onclick={() => { showClearAllModal = false; clearConfirmText = ''; }}
 				>
@@ -1077,6 +1088,7 @@
 				<h3 class="text-base font-semibold text-slate-900">Edit Category</h3>
 				<button
 					type="button"
+					aria-label="Close modal"
 					class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
 					onclick={cancelEditCategory}
 				>
