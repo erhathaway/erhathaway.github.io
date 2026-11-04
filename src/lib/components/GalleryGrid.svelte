@@ -63,7 +63,7 @@
     });
   }
 
-  function handleNamecardTileEnter(e: PointerEvent) {
+  function clearHoverOnEnter(e: PointerEvent) {
     if (e.pointerType === 'touch') return;
     portfolio.setHoveredItem(null);
   }
@@ -190,7 +190,7 @@
     {#if homeNamecardInGallery}
       <div
         class="gallery-item group relative aspect-square overflow-hidden block cursor-pointer"
-        onpointerenter={handleNamecardTileEnter}
+        onpointerenter={clearHoverOnEnter}
         onclick={triggerWave}
         onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerWave(); } }}
         role="button"
@@ -276,7 +276,7 @@
       />
     {/each}
     {#if fillerSpan > 0}
-      <div data-empty-card class="gallery-item relative overflow-hidden {fillerClass}" aria-hidden="true" style:grid-column={fillerGridColumn}>
+      <div data-empty-card class="gallery-item relative overflow-hidden {fillerClass}" aria-hidden="true" style:grid-column={fillerGridColumn} onpointerenter={clearHoverOnEnter}>
         <EmptyCardFill fill={emptyCardTheme.fill} effects={emptyCardTheme.effects} sizes={fillerSizes} />
         {#if hoveredItem && dockTarget?.target === 'filler'}
           <div class="absolute inset-0 z-20 pointer-events-none">
@@ -288,6 +288,8 @@
   </div>
   <div
     class="relative overflow-hidden border backdrop-blur-md"
+    onpointerenter={clearHoverOnEnter}
+    role="contentinfo"
     style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08)); background-color: #f3e9e1;"
   >
     <div class="relative px-8 py-5 flex items-center justify-start min-[600px]:justify-center">
