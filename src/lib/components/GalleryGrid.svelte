@@ -5,7 +5,7 @@
   import GalleryItem from './GalleryItem.svelte';
   import { env } from '$env/dynamic/public';
   import { browser } from '$app/environment';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import HoverInfo from './HoverInfo.svelte';
   import AuthButton from './AuthButton.svelte';
   import { getImageSources, getResponsiveSrcset, GALLERY_SIZES } from '$lib/utils/image-formats';
@@ -76,7 +76,7 @@
     | null;
 
   const hoveredItem = $derived(
-    typographyPreview.draft && typographyPreview.keepHoverOpen !== false && $page.route.id === '/(home)'
+    typographyPreview.draft && typographyPreview.keepHoverOpen !== false && page.route.id === '/(home)'
       ? portfolio.filteredItems.find(item => item.id === typographyPreview.hoverItemId) ?? portfolio.filteredItems[0] ?? null
       : portfolio.hoveredItem
   );
@@ -177,7 +177,7 @@
 <svelte:window bind:innerWidth />
 
 <main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-hide" style="height: 100dvh;" onpointerleave={handleGalleryLeave}>
-  <div class="grid gap-0.5 p-0.5 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
+  <div data-home-spacing class="grid min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
     {#if homeNamecardInGallery}
       <div
         class="gallery-item group relative aspect-square overflow-hidden block cursor-pointer"

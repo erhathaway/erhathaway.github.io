@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { useClerkContext } from 'svelte-clerk';
 	import { adminStore } from '$lib/stores/admin.svelte';
@@ -11,7 +11,7 @@
 	let { children, data } = $props();
 	const ctx = useClerkContext();
 	const isSignedIn = $derived(ctx.auth.userId !== null);
-	const activeProjectId = $derived(Number($page.params?.id ?? 0));
+	const activeProjectId = $derived(Number(page.params?.id ?? 0));
 
 	let showCategoryModal = $state(false);
 	let showProjectModal = $state(false);
@@ -555,7 +555,7 @@
 							<a
 								href={resolve('/admin/integrations/google-photos')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
-									$page.url.pathname === '/admin/integrations/google-photos'
+									page.url.pathname === '/admin/integrations/google-photos'
 										? 'bg-slate-900 text-white'
 										: 'text-slate-600 hover:bg-slate-50'
 								}`}
@@ -575,7 +575,7 @@
 							<a
 								href={resolve('/admin/namecards')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
-									$page.url.pathname === '/admin/namecards'
+									page.url.pathname === '/admin/namecards'
 										? 'bg-slate-900 text-white'
 										: 'text-slate-600 hover:bg-slate-50'
 								}`}
@@ -594,12 +594,23 @@
 							<a
 								href={resolve('/admin/typography')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
-									$page.url.pathname === '/admin/typography'
+									page.url.pathname === '/admin/typography'
 										? 'bg-slate-900 text-white'
 										: 'text-slate-600 hover:bg-slate-50'
 								}`}
 							>
 								<span class="font-medium">Typography themes</span>
+							</a>
+						</li><li>
+							<a
+								href={resolve('/admin/spacing')}
+								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
+									page.url.pathname === '/admin/spacing'
+										? 'bg-slate-900 text-white'
+										: 'text-slate-600 hover:bg-slate-50'
+								}`}
+							>
+								<span class="font-medium">Spacing themes</span>
 							</a>
 						</li>
 					</ul>
@@ -614,13 +625,13 @@
 								<a
 									href={resolve('/admin/schemas/[name]', { name: schema.name })}
 									class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
-										$page.url.pathname === '/admin/schemas/' + schema.name
+										page.url.pathname === '/admin/schemas/' + schema.name
 											? 'bg-slate-900 text-white'
 											: 'text-slate-600 hover:bg-slate-50'
 									}`}
 								>
 									<span class="font-medium">{schema.label}</span>
-									<span class={`text-[10px] font-mono ${$page.url.pathname === '/admin/schemas/' + schema.name ? 'text-white/50' : 'text-slate-400'}`}>{schema.name}</span>
+									<span class={`text-[10px] font-mono ${page.url.pathname === '/admin/schemas/' + schema.name ? 'text-white/50' : 'text-slate-400'}`}>{schema.name}</span>
 								</a>
 							</li>
 						{/each}
@@ -635,7 +646,7 @@
 							<a
 								href={resolve('/admin/images')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
-									$page.url.pathname === '/admin/images'
+									page.url.pathname === '/admin/images'
 										? 'bg-slate-900 text-white'
 										: 'text-slate-600 hover:bg-slate-50'
 								}`}
@@ -654,7 +665,7 @@
 							<a
 								href={resolve('/admin/bots')}
 								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
-									$page.url.pathname.startsWith('/admin/bots')
+									page.url.pathname.startsWith('/admin/bots')
 										? 'bg-slate-900 text-white'
 										: 'text-slate-600 hover:bg-slate-50'
 								}`}

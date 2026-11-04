@@ -1,4 +1,10 @@
 <script lang="ts">
+ import SpacingStyles from '$lib/spacing/SpacingStyles.svelte';
+ import SpacingPreviewPanel from '$lib/spacing/SpacingPreviewPanel.svelte';
+ import { setSpacingPreview, type SpacingPreview } from '$lib/spacing/preview';
+ const spacingPreview = $state<SpacingPreview>({ draft: null, baseline: '', enabled: true });
+ setSpacingPreview(spacingPreview);
+
   import { resolve } from '$app/paths';
 	import '../app.css';
 	import TypographyStyles from '$lib/typography/TypographyStyles.svelte';
@@ -13,18 +19,18 @@
 	import AuthButton from '$lib/components/AuthButton.svelte';
 	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
 	import { portfolio } from '$lib/stores/portfolio.svelte';
-	import { onNavigate, goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { onNavigate, afterNavigate, goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { onMount, tick } from 'svelte';
 	import { env } from '$env/dynamic/public';
 	import { initPostHog } from '$lib/posthog';
 
 	let { children, data } = $props();
-	const isProjectPage = $derived($page.route.id === '/[slug]');
-	const isAdminPage = $derived($page.route.id?.includes('/admin'));
-	const isHomePage = $derived($page.url.pathname === '/');
-	const isErrorPage = $derived(!!$page.error);
+	const isProjectPage = $derived(page.route.id === '/[slug]');
+	const isAdminPage = $derived(page.route.id?.includes('/admin'));
+	const isHomePage = $derived(page.url.pathname === '/');
+	const isErrorPage = $derived(!!page.error);
 
 	let appliedHoverId: number | null = null;
 	let showLoginModal = $state(false);
@@ -278,24 +284,21 @@
 		const handleAuthOpen = () => { showLoginModal = true; };
 		window.addEventListener('auth:open-login', handleAuthOpen);
 
-		const isTouch = window.matchMedia('(pointer: coarse)').matches;
-		const unsubscribe = page.subscribe(($page) => {
-			const hoverId = $page.state?.hoverId as number | undefined;
-			if (hoverId && hoverId !== appliedHoverId) {
-				if (!isTouch) {
-					portfolio.lockHover(hoverId);
-				}
-				appliedHoverId = hoverId;
-			}
-		});
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
 			window.removeEventListener('namecard:open', handleNameCardOpen);
 			window.removeEventListener('auth:open-login', handleAuthOpen);
-			unsubscribe();
 		};
 	});
+
+ afterNavigate(() => {
+  const hoverId = (page.state as { hoverId?: number }).hoverId;
+  if (hoverId && hoverId !== appliedHoverId) {
+   if (!window.matchMedia('(pointer: coarse)').matches) portfolio.lockHover(hoverId);
+   appliedHoverId = hoverId;
+  }
+ });
 
 	// Enable View Transitions API for home↔project navigation
 	onNavigate((navigation) => {
@@ -464,6 +467,8 @@
 	});
 </script>
 
+<SpacingStyles theme={spacingPreview.enabled && spacingPreview.draft ? spacingPreview.draft : data.spacingTheme} />
+{#if spacingPreview.draft && !isAdminPage}<SpacingPreviewPanel />{/if}
 <TypographyStyles theme={typographyPreview.enabled && typographyPreview.draft ? typographyPreview.draft : data.typographyTheme} enabled={!isAdminPage && !isErrorPage} />
 
 <svelte:window onkeydown={(e: KeyboardEvent) => { if (e.key === 'Escape' && nameCardExpanded) collapseNameCard(); }} />
@@ -530,7 +535,7 @@
 				{#if isProjectPage}
 					<a href={resolve('/')} class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
 						event.preventDefault();
-						const slug = $page.params?.slug;
+						const slug = page.params?.slug;
 						const projectItem = slug ? portfolio.allItems.find(i => i.slug === slug) : null;
 						goto(resolve('/'), projectItem ? { state: { hoverId: projectItem.id } } : undefined);
 					}}>
