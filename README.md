@@ -183,15 +183,16 @@ bunx wrangler d1 execute portfolio-db --file=./drizzle/<migration>.sql
 ## Backing up themes and name cards
 
 Admin → Export / Import creates a version 2 ZIP. Every export includes all saved
-typography themes and the active theme, name-card variants and framing, generator
+typography, spacing, and empty card themes and the active theme of each, name-card variants and framing, generator
 recipes (including typography snapshots), background images, and the promoted
-landing, project, and social preview cards. Referenced PNG/JPEG/WebP/AVIF files
+landing, project, and social preview cards. Referenced PNG/JPEG/WebP/AVIF/GIF files
 are included and shared images are stored once. Unsaved browser preview drafts
 are not included; save those as themes first.
 
 On import, **Themes and name cards** can be replaced with the backup (default),
 merged by saved ID, or left unchanged. Replace restores the exact appearance
-library, including clearing promotions that were absent in the backup. Merge
+library, including clearing promotions that were absent in the backup. Backups made before
+spacing and empty card themes were included leave those themes unchanged. Merge
 updates matching IDs and backed-up selections while retaining other saved entries.
 Project/category conflict choices are separate. Theme/card IDs remain stable,
 and restored images get new local URLs shared consistently by variants and
@@ -218,3 +219,7 @@ RUN_DEV_BACKUP_RESTORE=1 bunx vitest run src/lib/server/appearance-backup.dev.te
 Admin → Themes → Spacing themes controls home gallery row/column gaps and its four outer margins. Desktop (900px and above) and mobile values are independent. The locked default uses 8px gaps and 7px margins on desktop, and 2px on mobile; create a copy, adjust values, then save and activate it. Saving an already-active theme updates the public home page.
 
 Preview on site opens a private live editor with apply/compare, highlight, minimize, and move controls. Review & save in admin carries the draft back without publishing it. Themes are stored in existing site settings (`spacing-theme:*` and `spacing-active`); no database migration is needed.
+
+## Empty card themes
+
+Admin → Themes → Empty card themes controls what fills the leftover space when projects don't complete the home gallery's last row. A theme can be blank (the locked default), a color, a gradient, or an uploaded image with an adjustable focal point. Blur, transparency, fade, and wash out can soften any non-blank card. Preview on site opens a private live editor on the home page; Review & save in admin carries the draft back without publishing it. Themes are stored in existing site settings (`empty-card-theme:*` and `empty-card-active`); no database migration is needed. They are included in appearance backups, along with their images.

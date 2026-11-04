@@ -612,6 +612,17 @@
 							>
 								<span class="font-medium">Spacing themes</span>
 							</a>
+						</li><li>
+							<a
+								href={resolve('/admin/empty-card')}
+								class={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
+									page.url.pathname === '/admin/empty-card'
+										? 'bg-slate-900 text-white'
+										: 'text-slate-600 hover:bg-slate-50'
+								}`}
+							>
+								<span class="font-medium">Empty card themes</span>
+							</a>
 						</li>
 					</ul>
 				</div>

@@ -12,6 +12,8 @@ import { isAppearanceKey, exportAppearance } from './appearance-backup';
 import { POST as exportRoute } from '../../routes/api/admin/export/+server';
 import { POST as importRoute } from '../../routes/api/admin/import/+server';
 import { saveTypography, activateTypography, activeTypography } from './typography';
+import { saveSpacing, activateSpacing, activeSpacing } from './spacing';
+import { saveEmptyCard, activateEmptyCard, activeEmptyCard } from './empty-card';
 import {
 	saveNamecardVariant,
 	promoteNamecardVariant,
@@ -131,6 +133,23 @@ it.skipIf(process.env.RUN_DEV_BACKUP_RESTORE !== '1')(
 			});
 			for (const target of ['landing', 'project', 'preview'])
 				await promoteNamecardVariant(db, variant.id, target);
+			const spacing = await saveSpacing(db, {
+				name: 'Backup spacing fixture',
+				values: { desktop: { rowGap: 21, left: 33 }, mobile: { rowGap: 5 } }
+			});
+			await activateSpacing(db, spacing.id);
+			const emptyCard = await saveEmptyCard(db, {
+				name: 'Backup empty card fixture',
+				fill: {
+					type: 'image',
+					imageUrl: `/${stem}.png`,
+					imageFormats: ['webp', 'avif'],
+					positionX: 12,
+					positionY: 88
+				},
+				effects: { blur: 9, transparency: 15, fade: 40, wash: 25 }
+			});
+			await activateEmptyCard(db, emptyCard.id);
 			const snapshot = await exportAppearance(db);
 			const archive = await exportZip();
 			await writeFile(join(directory, 'round-trip.zip'), archive);
@@ -157,6 +176,8 @@ it.skipIf(process.env.RUN_DEV_BACKUP_RESTORE !== '1')(
 			expect(result.success).toBe(true);
 			expect(result.summary.appearanceSettingsRestored).toBe(snapshot.settings.length);
 			expect((await activeTypography(db)).id).toBe(theme.id);
+			expect(await activeSpacing(db)).toEqual(spacing);
+			expect((await activeEmptyCard(db)).id).toBe(emptyCard.id);
 			const restored = await exportAppearance(db);
 			const restoredRows = new Map(restored.settings.map((row) => [row.key, row.value]));
 			// Compare every field recursively; only image URLs may change, and their bytes must match.

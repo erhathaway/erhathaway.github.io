@@ -4,6 +4,10 @@
  import { setSpacingPreview, type SpacingPreview } from '$lib/spacing/preview';
  const spacingPreview = $state<SpacingPreview>({ draft: null, baseline: '', enabled: true });
  setSpacingPreview(spacingPreview);
+ import EmptyCardPreviewPanel from '$lib/empty-card/EmptyCardPreviewPanel.svelte';
+ import { setEmptyCardPreview, type EmptyCardPreview } from '$lib/empty-card/preview';
+ const emptyCardPreview = $state<EmptyCardPreview>({ draft: null, baseline: '', enabled: true });
+ setEmptyCardPreview(emptyCardPreview);
 
   import { resolve } from '$app/paths';
 	import '../app.css';
@@ -469,6 +473,7 @@
 
 <SpacingStyles theme={spacingPreview.enabled && spacingPreview.draft ? spacingPreview.draft : data.spacingTheme} />
 {#if spacingPreview.draft && !isAdminPage}<SpacingPreviewPanel />{/if}
+{#if emptyCardPreview.draft && !isAdminPage}<EmptyCardPreviewPanel />{/if}
 <TypographyStyles theme={typographyPreview.enabled && typographyPreview.draft ? typographyPreview.draft : data.typographyTheme} enabled={!isAdminPage && !isErrorPage} />
 
 <svelte:window onkeydown={(e: KeyboardEvent) => { if (e.key === 'Escape' && nameCardExpanded) collapseNameCard(); }} />

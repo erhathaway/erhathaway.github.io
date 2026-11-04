@@ -9,6 +9,9 @@
   import HoverInfo from './HoverInfo.svelte';
   import AuthButton from './AuthButton.svelte';
   import { getImageSources, getResponsiveSrcset, GALLERY_SIZES } from '$lib/utils/image-formats';
+  import { DEFAULT_THEME as DEFAULT_EMPTY_CARD, type EmptyCardTheme } from '$lib/empty-card';
+  import EmptyCardFill from '$lib/empty-card/EmptyCardFill.svelte';
+  import { getEmptyCardPreview } from '$lib/empty-card/preview';
   import { onMount } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
 
@@ -103,14 +106,20 @@
   });
   const fillerStartDisplayIndex = $derived.by(() => displayTileCount);
   const fillerClass = $derived.by(() => {
-    if (fillerSpan === 0) return '';
-    if (fillerSpan === 1) return 'col-span-1 aspect-square';
-    return `aspect-[${fillerSpan}/1]`;
+    // Wider fillers stretch to the row height; an aspect ratio would ignore the column gap.
+    return fillerSpan === 1 ? 'col-span-1 aspect-square' : '';
   });
   const fillerGridColumn = $derived.by(() => {
     if (fillerSpan <= 1) return undefined;
     return `span ${fillerSpan}`;
   });
+
+  const emptyCardPreview = getEmptyCardPreview();
+  const emptyCardTheme = $derived(
+    (emptyCardPreview.enabled && emptyCardPreview.draft) ||
+      ((page.data.emptyCardTheme as EmptyCardTheme | undefined) ?? DEFAULT_EMPTY_CARD)
+  );
+  const fillerSizes = $derived(fillerSpan > 1 ? '67vw' : GALLERY_SIZES);
 
   const isTouchDevice = $derived(browser && window.matchMedia('(pointer: coarse)').matches);
 
@@ -267,7 +276,8 @@
       />
     {/each}
     {#if fillerSpan > 0}
-      <div class="gallery-item relative overflow-hidden border {fillerClass}" aria-hidden="true" style="border-color: rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); {fillerGridColumn ? `grid-column: ${fillerGridColumn};` : ''}">
+      <div data-empty-card class="gallery-item relative overflow-hidden {fillerClass}" aria-hidden="true" style:grid-column={fillerGridColumn}>
+        <EmptyCardFill fill={emptyCardTheme.fill} effects={emptyCardTheme.effects} sizes={fillerSizes} />
         {#if hoveredItem && dockTarget?.target === 'filler'}
           <div class="absolute inset-0 z-20 pointer-events-none">
             <HoverInfo item={hoveredItem} variant="tile" dockSide={dockSide} />

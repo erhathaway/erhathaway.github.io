@@ -37,13 +37,36 @@ const theme = {
 	updatedAt: '2026-10-23',
 	roles: { 'tile-title': { size: 42, weight: 600 } }
 };
+const spacingTheme = {
+	id: 'spacing-1',
+	name: 'Airy',
+	updatedAt: '2026-10-23',
+	values: { desktop: { rowGap: 24, left: 40 }, mobile: { rowGap: 8 } }
+};
+const emptyCardTheme = {
+	id: 'empty-1',
+	name: 'Plaster',
+	updatedAt: '2026-10-23',
+	fill: {
+		type: 'image',
+		imageUrl: '/artifacts/backdrop.png',
+		imageFormats: ['webp'],
+		positionX: 25,
+		positionY: 75
+	},
+	effects: { blur: 12, transparency: 20, fade: 60, wash: 30 }
+};
 const original = [
 	{ key: 'namecard-variant:card-1', value: variant },
 	{ key: 'namecard_image', value: card },
 	{ key: 'project_namecard_image', value: { ...card, positionX: 80 } },
 	{ key: 'preview_namecard_image', value: { ...card, zoom: 0.8 } },
 	{ key: 'typography-theme:theme-1', value: theme },
-	{ key: 'typography-active', value: 'theme-1' }
+	{ key: 'typography-active', value: 'theme-1' },
+	{ key: 'spacing-theme:spacing-1', value: spacingTheme },
+	{ key: 'spacing-active', value: 'spacing-1' },
+	{ key: 'empty-card-theme:empty-1', value: emptyCardTheme },
+	{ key: 'empty-card-active', value: 'empty-1' }
 ];
 beforeEach(async () => {
 	client = createClient({ url: ':memory:' });
@@ -54,7 +77,15 @@ beforeEach(async () => {
 	await db.insert(siteSettings).values(original);
 	await db.insert(siteSettings).values({ key: 'unrelated-secret', value: 'do-not-export' });
 	zip = new JSZip();
-	for (const name of ['card.png', 'card.webp', 'card.avif', 'paper.jpg', 'paper.webp'])
+	for (const name of [
+		'card.png',
+		'card.webp',
+		'card.avif',
+		'paper.jpg',
+		'paper.webp',
+		'backdrop.png',
+		'backdrop.webp'
+	])
 		zip.file(`images/${name}`, `bytes:${name}`);
 	uploaded = new Map();
 	bucket = {
@@ -72,11 +103,17 @@ async function settings() {
 describe('appearance backup', () => {
 	it('includes themes, active theme, every promotion, variant recipes, backgrounds and all formats, deduplicated', async () => {
 		const backup = await exportAppearance(db);
-		expect(backup.settings).toHaveLength(6);
+		expect(backup.settings).toHaveLength(10);
 		expect(backup.images.map((image) => image.key).sort()).toEqual(
-			['card.avif', 'card.png', 'card.webp', 'paper.jpg', 'paper.webp'].map(
-				(name) => `artifacts/${name}`
-			)
+			[
+				'backdrop.png',
+				'backdrop.webp',
+				'card.avif',
+				'card.png',
+				'card.webp',
+				'paper.jpg',
+				'paper.webp'
+			].map((name) => `artifacts/${name}`)
 		);
 		expect(backup.settings.find((row) => row.key.startsWith('namecard-variant:'))?.value).toEqual(
 			variant
@@ -92,7 +129,7 @@ describe('appearance backup', () => {
 		const result = await restoreAppearance(db, backup, zip, bucket, 'clobber');
 		const rows = await settings();
 		const restored = rows['namecard-variant:card-1'] as typeof variant;
-		expect(result).toEqual({ appearanceSettingsRestored: 6, appearanceImagesRestored: 5 });
+		expect(result).toEqual({ appearanceSettingsRestored: 10, appearanceImagesRestored: 7 });
 		expect(rows['typography-theme:extra']).toBeUndefined();
 		expect(rows['unrelated-secret']).toBe('keep');
 		expect(rows['typography-theme:theme-1']).toEqual(theme);
@@ -122,7 +159,43 @@ describe('appearance backup', () => {
 					uploaded.get(restored.imageUrl.slice(1).replace(/\.png$/, `.${ext}`))
 				)
 			).toBe(`bytes:card.${ext}`);
-		expect(uploaded.size).toBe(5);
+		expect(uploaded.size).toBe(7);
+	});
+	it('restores spacing and empty card themes, their active selections, and image files', async () => {
+		const backup = await exportAppearance(db);
+		await db.delete(siteSettings);
+		await db.insert(siteSettings).values({ key: 'spacing-theme:extra', value: { id: 'extra' } });
+		await restoreAppearance(db, backup, zip, bucket, 'clobber');
+		const rows = await settings();
+		const restored = rows['empty-card-theme:empty-1'] as typeof emptyCardTheme;
+		expect(rows['spacing-theme:extra']).toBeUndefined();
+		expect(rows['spacing-theme:spacing-1']).toEqual(spacingTheme);
+		expect(rows['spacing-active']).toBe('spacing-1');
+		expect(rows['empty-card-active']).toBe('empty-1');
+		expect(restored).toEqual({
+			...emptyCardTheme,
+			fill: { ...emptyCardTheme.fill, imageUrl: restored.fill.imageUrl }
+		});
+		expect(restored.fill.imageUrl).not.toBe(emptyCardTheme.fill.imageUrl);
+		for (const ext of ['png', 'webp'])
+			expect(
+				new TextDecoder().decode(
+					uploaded.get(restored.fill.imageUrl.slice(1).replace(/\.png$/, `.${ext}`))
+				)
+			).toBe(`bytes:backdrop.${ext}`);
+	});
+	it('keeps spacing and empty card themes when replacing from an older backup without them', async () => {
+		const before = await settings();
+		await restoreAppearance(db, { settings: [], images: [] }, zip, bucket, 'clobber');
+		const rows = await settings();
+		expect(rows['typography-theme:theme-1']).toBeUndefined();
+		for (const key of [
+			'spacing-theme:spacing-1',
+			'spacing-active',
+			'empty-card-theme:empty-1',
+			'empty-card-active'
+		])
+			expect(rows[key]).toEqual(before[key]);
 	});
 	it('merges matching IDs without deleting other themes and variants', async () => {
 		const backup = await exportAppearance(db);
@@ -138,7 +211,13 @@ describe('appearance backup', () => {
 		expect(uploaded.size).toBe(0);
 	});
 	it('empty replacement resets all appearance defaults and leaves unrelated settings', async () => {
-		await restoreAppearance(db, { settings: [], images: [] }, zip, bucket, 'clobber');
+		await restoreAppearance(
+			db,
+			{ coversAllThemes: true, settings: [], images: [] },
+			zip,
+			bucket,
+			'clobber'
+		);
 		expect(await settings()).toEqual({ 'unrelated-secret': 'do-not-export' });
 	});
 	it('rejects missing images before changing any data', async () => {
@@ -195,6 +274,29 @@ describe('appearance backup', () => {
 				.value as typeof theme
 		).roles['tile-title'].size = 900;
 		expect(() => validateAppearance(badTheme, zip, bucket)).toThrow();
+		const badSpacing = structuredClone(backup);
+		(
+			badSpacing.settings.find((row) => row.key === 'spacing-theme:spacing-1')!
+				.value as typeof spacingTheme
+		).values.desktop.rowGap = 999;
+		expect(() => validateAppearance(badSpacing, zip, bucket)).toThrow();
+		const badFill = structuredClone(backup);
+		(
+			badFill.settings.find((row) => row.key === 'empty-card-theme:empty-1')!
+				.value as typeof emptyCardTheme
+		).fill.imageUrl = 'https://evil.test/a.png';
+		expect(() => validateAppearance(badFill, zip, bucket)).toThrow();
+		for (const key of ['spacing-active', 'empty-card-active']) {
+			const badActive = structuredClone(backup);
+			badActive.settings.find((row) => row.key === key)!.value = 'missing';
+			expect(() => validateAppearance(badActive, zip, bucket)).toThrow();
+		}
+		const badEffects = structuredClone(backup);
+		(
+			badEffects.settings.find((row) => row.key === 'empty-card-theme:empty-1')!
+				.value as typeof emptyCardTheme
+		).effects.blur = 500;
+		expect(() => validateAppearance(badEffects, zip, bucket)).toThrow();
 		const badCard = structuredClone(backup);
 		(badCard.settings.find((row) => row.key === 'namecard_image')!.value as typeof card).zoom = -1;
 		await expect(
