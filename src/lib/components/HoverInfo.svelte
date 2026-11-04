@@ -101,10 +101,7 @@
 {#if item}
   <div class={wrapperClass}>
     {#if isTile}
-      <div
-        class="absolute inset-0"
-        style="background: rgba(253, 245, 230, 0.95); clip-path: {tileClipPath};"
-      ></div>
+      <div class="tile-glass absolute inset-0" style:clip-path={tileClipPath}></div>
     {/if}
     <div class={innerClass} style={innerStyle}>
       <div class={projectHeaderClass} style={projectHeaderStyle}>
@@ -114,7 +111,7 @@
         </h3>
 
         {#if item.description?.trim()}
-          <p data-typo={isTile ? 'tile-description' : 'hover-description'} class={descriptionClass} style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; {isTile ? 'letter-spacing: 0.01em;' : ''} {descriptionStyle ?? ''}">
+          <p data-typo={isTile ? 'tile-description' : 'hover-description'} class={descriptionClass} style="font-family: 'DM Sans', sans-serif; color: {isTile ? '#4a3d32' : '#6b5c4f'}; {isTile ? 'letter-spacing: 0.01em;' : ''} {descriptionStyle ?? ''}">
             {item.description}
           </p>
         {/if}
@@ -123,7 +120,7 @@
           <div class="flex vt-exclude-namecard {dockSide === 'right' ? 'justify-end text-right' : 'justify-start text-left'}" style="gap: {isTile ? 'clamp(0.75rem, 1.2vw, 1.5rem)' : '1.5rem'};">
             {#each Object.entries(item.metadata) as [key, value] (key)}
               <div class="flex flex-col {dockSide === 'right' ? 'items-end' : 'items-start'}" style="gap: {isTile ? 'clamp(0.2rem, 0.4vw, 0.375rem)' : '0.375rem'};">
-                <span data-typo={isTile ? 'tile-label' : 'hover-label'} class={metaKeyClass} style="color: #a08e7a; {metaKeyStyle ?? ''}">{key}</span>
+                <span data-typo={isTile ? 'tile-label' : 'hover-label'} class={metaKeyClass} style="color: {isTile ? '#5f5044' : '#a08e7a'}; {metaKeyStyle ?? ''}">{key}</span>
                 <span data-typo={isTile ? 'tile-value' : 'hover-value'} class={metaValueClass} style="font-family: 'Cormorant Garamond', Georgia, serif; color: #3d2e1e; {metaValueStyle ?? ''}">{formatMetadata(key, value)}</span>
               </div>
             {/each}
@@ -134,3 +131,24 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .tile-glass {
+    background: rgba(245, 232, 210, 0.38);
+    -webkit-backdrop-filter: blur(20px) saturate(140%) brightness(1.12);
+    backdrop-filter: blur(20px) saturate(140%) brightness(1.12);
+  }
+  /* Keep the text readable where the blur is unavailable or transparency is unwanted. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .tile-glass {
+      background: rgba(253, 245, 230, 0.94);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .tile-glass {
+      background: rgb(253, 245, 230);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+</style>
