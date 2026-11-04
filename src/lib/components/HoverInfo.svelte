@@ -1,22 +1,34 @@
 <script lang="ts">
   import type { PortfolioItem } from '$lib/data/items';
+  import { page } from '$app/state';
+  import { DEFAULT_THEME, panelClipPath, panelTextWidth, type HoverCardTheme } from '$lib/hover-card';
+  import { getHoverCardPreview } from '$lib/hover-card/preview';
 
   let {
     item,
     variant = 'inline',
-    dockSide = 'left'
-  }: { item: PortfolioItem; variant?: 'inline' | 'tile'; dockSide?: 'left' | 'right' } = $props();
+    dockSide = 'left',
+    theme = undefined
+  }: {
+    item: PortfolioItem;
+    variant?: 'inline' | 'tile';
+    dockSide?: 'left' | 'right';
+    theme?: HoverCardTheme;
+  } = $props();
+  const hoverCardPreview = getHoverCardPreview();
+  const hoverCard = $derived(
+    theme ??
+      (hoverCardPreview.enabled ? hoverCardPreview.draft : null) ??
+      (page.data.hoverCardTheme as HoverCardTheme | undefined) ??
+      DEFAULT_THEME
+  );
 
   function formatMetadata(key: string, value: string): string {
     return value;
   }
 
   const isTile = $derived(variant === 'tile');
-  const tileClipPath = $derived.by(() =>
-    dockSide === 'right'
-      ? 'polygon(40% 0%, 100% 0%, 100% 100%, 56% 100%)'
-      : 'polygon(0% 0%, 60% 0%, 44% 100%, 0% 100%)'
-  );
+  const tileClipPath = $derived(panelClipPath(hoverCard, dockSide));
 
   const wrapperClass = $derived.by(() => {
     if (variant === 'tile') {
@@ -46,8 +58,8 @@
   });
   const projectHeaderStyle = $derived.by(() => {
     if (!isTile) return undefined;
-    // Keep the text width inside the trapezoid on small tiles.
-    return 'width: min(240px, 40%); max-width: min(240px, 40%);';
+    const width = panelTextWidth(hoverCard);
+    return `width: ${width}; max-width: ${width};`;
   });
 
   const titleClass = $derived.by(() =>
@@ -94,12 +106,13 @@
 
   const tileTextWrapClass = $derived.by(() => {
     if (!isTile) return '';
-    return dockSide === 'right' ? 'relative z-10 max-w-[72%] ml-auto' : 'relative z-10 max-w-[72%]';
+    const maxWidth = hoverCard.shape === 'full' ? 'max-w-full' : 'max-w-[72%]';
+    return dockSide === 'right' ? `relative z-10 ${maxWidth} ml-auto` : `relative z-10 ${maxWidth}`;
   });
 </script>
 
 {#if item}
-  <div class={wrapperClass}>
+  <div class={wrapperClass} style:container-type={isTile ? 'size' : undefined}>
     {#if isTile}
       <div class="tile-glass absolute inset-0" style:clip-path={tileClipPath}></div>
     {/if}

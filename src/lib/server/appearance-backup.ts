@@ -8,6 +8,7 @@ import { ROLES } from '$lib/typography';
 import { validateStyle } from './typography';
 import { validateValues } from './spacing';
 import { validateEffects, validateFill } from './empty-card';
+import { validateHoverCard } from './hover-card';
 import { validateNamecardRecipe } from './namecard-recipe';
 import type { AppearanceBackup, ConflictResolution } from '$lib/types/export-manifest';
 
@@ -15,18 +16,21 @@ const destinations = ['namecard_image', 'project_namecard_image', 'preview_namec
 const THEME_PREFIX_BY_ACTIVE_KEY: Record<string, string> = {
 	'typography-active': 'typography-theme:',
 	'spacing-active': 'spacing-theme:',
-	'empty-card-active': 'empty-card-theme:'
+	'empty-card-active': 'empty-card-theme:',
+	'hover-card-active': 'hover-card-theme:'
 };
 export function isAppearanceKey(key: string) {
 	return (
 		destinations.includes(key) ||
 		key in THEME_PREFIX_BY_ACTIVE_KEY ||
-		/^(namecard-variant|typography-theme|spacing-theme|empty-card-theme):[\w-]+$/.test(key)
+		/^(namecard-variant|typography-theme|spacing-theme|empty-card-theme|hover-card-theme):[\w-]+$/.test(key)
 	);
 }
-/** Backups made before these themes existed must not clear them on replace. */
-function isRecentThemeKey(key: string) {
-	return key.startsWith('spacing-') || key.startsWith('empty-card-');
+/** Replacing clears these only when the backup covers them, so older backups can't wipe them. */
+const OPTIONAL_THEME_KINDS = ['spacing', 'empty-card', 'hover-card'];
+function backupCoversKey(backup: AppearanceBackup, key: string) {
+	const kind = OPTIONAL_THEME_KINDS.find((item) => key.startsWith(`${item}-`));
+	return !kind || !!backup.themeKinds?.includes(kind);
 }
 function validateThemeName(value: Record<string, unknown>) {
 	if (
@@ -86,7 +90,7 @@ export async function exportAppearance(db: Db): Promise<AppearanceBackup> {
 		.filter((row) => isAppearanceKey(row.key))
 		.map(({ key, value }) => ({ key, value }));
 	return {
-		coversAllThemes: true,
+		themeKinds: OPTIONAL_THEME_KINDS,
 		settings,
 		images: [...referencedKeys(settings)].map((key) => ({
 			key,
@@ -98,6 +102,8 @@ export async function exportAppearance(db: Db): Promise<AppearanceBackup> {
 /** Validate all references before any database writes or destructive restore work. */
 export function validateAppearance(backup: AppearanceBackup, zip: JSZip, bucket?: R2Bucket) {
 	if (!backup || !Array.isArray(backup.settings) || !Array.isArray(backup.images))
+		throw error(400, 'Invalid appearance backup.');
+	if (backup.themeKinds !== undefined && !Array.isArray(backup.themeKinds))
 		throw error(400, 'Invalid appearance backup.');
 	const keys = new Set<string>();
 	for (const row of backup.settings) {
@@ -142,6 +148,9 @@ export function validateAppearance(backup: AppearanceBackup, zip: JSZip, bucket?
 				validateThemeName(value);
 				validateFill(value.fill);
 				validateEffects(value.effects);
+			} else if (row.key.startsWith('hover-card-theme:')) {
+				validateThemeName(value);
+				validateHoverCard(value);
 			} else {
 				if (typeof value.imageUrl !== 'string') throw error(400, 'Missing name card image.');
 				for (const [field, min, max] of [
@@ -238,9 +247,7 @@ export async function restoreAppearance(
 	);
 	if (resolution === 'clobber') {
 		const old = (await db.select({ key: siteSettings.key }).from(siteSettings))
-			.filter(
-				(row) => isAppearanceKey(row.key) && (backup.coversAllThemes || !isRecentThemeKey(row.key))
-			)
+			.filter((row) => isAppearanceKey(row.key) && backupCoversKey(backup, row.key))
 			.map((row) => row.key);
 		// D1 batch commits all settings together, including clearing absent promotions.
 		await db.batch([db.delete(siteSettings).where(inArray(siteSettings.key, old)), ...writes]);

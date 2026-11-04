@@ -12,6 +12,7 @@
   import { DEFAULT_THEME as DEFAULT_EMPTY_CARD, type EmptyCardTheme } from '$lib/empty-card';
   import EmptyCardFill from '$lib/empty-card/EmptyCardFill.svelte';
   import { getEmptyCardPreview } from '$lib/empty-card/preview';
+  import { getHoverCardPreview } from '$lib/hover-card/preview';
   import { onMount } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
 
@@ -78,9 +79,13 @@
     | { target: 'filler'; dockSide: 'left' | 'right' }
     | null;
 
+  const hoverCardPreview = getHoverCardPreview();
+  const heldHoverPreview = $derived(
+    [typographyPreview, hoverCardPreview].find((preview) => preview.draft && preview.keepHoverOpen !== false)
+  );
   const hoveredItem = $derived(
-    typographyPreview.draft && typographyPreview.keepHoverOpen !== false && page.route.id === '/(home)'
-      ? portfolio.filteredItems.find(item => item.id === typographyPreview.hoverItemId) ?? portfolio.filteredItems[0] ?? null
+    heldHoverPreview && page.route.id === '/(home)'
+      ? portfolio.filteredItems.find(item => item.id === heldHoverPreview.hoverItemId) ?? portfolio.filteredItems[0] ?? null
       : portfolio.hoveredItem
   );
 

@@ -14,6 +14,7 @@ import { POST as importRoute } from '../../routes/api/admin/import/+server';
 import { saveTypography, activateTypography, activeTypography } from './typography';
 import { saveSpacing, activateSpacing, activeSpacing } from './spacing';
 import { saveEmptyCard, activateEmptyCard, activeEmptyCard } from './empty-card';
+import { saveHoverCard, activateHoverCard, activeHoverCard } from './hover-card';
 import {
 	saveNamecardVariant,
 	promoteNamecardVariant,
@@ -150,6 +151,13 @@ it.skipIf(process.env.RUN_DEV_BACKUP_RESTORE !== '1')(
 				effects: { blur: 9, transparency: 15, fade: 40, wash: 25 }
 			});
 			await activateEmptyCard(db, emptyCard.id);
+			const hoverCard = await saveHoverCard(db, {
+				name: 'Backup hover card fixture',
+				shape: 'partial',
+				width: 67,
+				angle: -14
+			});
+			await activateHoverCard(db, hoverCard.id);
 			const snapshot = await exportAppearance(db);
 			const archive = await exportZip();
 			await writeFile(join(directory, 'round-trip.zip'), archive);
@@ -178,6 +186,7 @@ it.skipIf(process.env.RUN_DEV_BACKUP_RESTORE !== '1')(
 			expect((await activeTypography(db)).id).toBe(theme.id);
 			expect(await activeSpacing(db)).toEqual(spacing);
 			expect((await activeEmptyCard(db)).id).toBe(emptyCard.id);
+			expect(await activeHoverCard(db)).toEqual(hoverCard);
 			const restored = await exportAppearance(db);
 			const restoredRows = new Map(restored.settings.map((row) => [row.key, row.value]));
 			// Compare every field recursively; only image URLs may change, and their bytes must match.

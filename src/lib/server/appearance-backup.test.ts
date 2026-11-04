@@ -56,6 +56,14 @@ const emptyCardTheme = {
 	},
 	effects: { blur: 12, transparency: 20, fade: 60, wash: 30 }
 };
+const hoverCardTheme = {
+	id: 'hover-1',
+	name: 'Full glass',
+	updatedAt: '2026-10-23',
+	shape: 'full',
+	width: 60,
+	angle: -12
+};
 const original = [
 	{ key: 'namecard-variant:card-1', value: variant },
 	{ key: 'namecard_image', value: card },
@@ -66,7 +74,9 @@ const original = [
 	{ key: 'spacing-theme:spacing-1', value: spacingTheme },
 	{ key: 'spacing-active', value: 'spacing-1' },
 	{ key: 'empty-card-theme:empty-1', value: emptyCardTheme },
-	{ key: 'empty-card-active', value: 'empty-1' }
+	{ key: 'empty-card-active', value: 'empty-1' },
+	{ key: 'hover-card-theme:hover-1', value: hoverCardTheme },
+	{ key: 'hover-card-active', value: 'hover-1' }
 ];
 beforeEach(async () => {
 	client = createClient({ url: ':memory:' });
@@ -103,7 +113,7 @@ async function settings() {
 describe('appearance backup', () => {
 	it('includes themes, active theme, every promotion, variant recipes, backgrounds and all formats, deduplicated', async () => {
 		const backup = await exportAppearance(db);
-		expect(backup.settings).toHaveLength(10);
+		expect(backup.settings).toHaveLength(12);
 		expect(backup.images.map((image) => image.key).sort()).toEqual(
 			[
 				'backdrop.png',
@@ -129,7 +139,7 @@ describe('appearance backup', () => {
 		const result = await restoreAppearance(db, backup, zip, bucket, 'clobber');
 		const rows = await settings();
 		const restored = rows['namecard-variant:card-1'] as typeof variant;
-		expect(result).toEqual({ appearanceSettingsRestored: 10, appearanceImagesRestored: 7 });
+		expect(result).toEqual({ appearanceSettingsRestored: 12, appearanceImagesRestored: 7 });
 		expect(rows['typography-theme:extra']).toBeUndefined();
 		expect(rows['unrelated-secret']).toBe('keep');
 		expect(rows['typography-theme:theme-1']).toEqual(theme);
@@ -172,6 +182,8 @@ describe('appearance backup', () => {
 		expect(rows['spacing-theme:spacing-1']).toEqual(spacingTheme);
 		expect(rows['spacing-active']).toBe('spacing-1');
 		expect(rows['empty-card-active']).toBe('empty-1');
+		expect(rows['hover-card-theme:hover-1']).toEqual(hoverCardTheme);
+		expect(rows['hover-card-active']).toBe('hover-1');
 		expect(restored).toEqual({
 			...emptyCardTheme,
 			fill: { ...emptyCardTheme.fill, imageUrl: restored.fill.imageUrl }
@@ -193,7 +205,9 @@ describe('appearance backup', () => {
 			'spacing-theme:spacing-1',
 			'spacing-active',
 			'empty-card-theme:empty-1',
-			'empty-card-active'
+			'empty-card-active',
+			'hover-card-theme:hover-1',
+			'hover-card-active'
 		])
 			expect(rows[key]).toEqual(before[key]);
 	});
@@ -213,7 +227,7 @@ describe('appearance backup', () => {
 	it('empty replacement resets all appearance defaults and leaves unrelated settings', async () => {
 		await restoreAppearance(
 			db,
-			{ coversAllThemes: true, settings: [], images: [] },
+			{ themeKinds: ['spacing', 'empty-card', 'hover-card'], settings: [], images: [] },
 			zip,
 			bucket,
 			'clobber'
@@ -286,7 +300,13 @@ describe('appearance backup', () => {
 				.value as typeof emptyCardTheme
 		).fill.imageUrl = 'https://evil.test/a.png';
 		expect(() => validateAppearance(badFill, zip, bucket)).toThrow();
-		for (const key of ['spacing-active', 'empty-card-active']) {
+		const badHover = structuredClone(backup);
+		(
+			badHover.settings.find((row) => row.key === 'hover-card-theme:hover-1')!
+				.value as typeof hoverCardTheme
+		).angle = 90;
+		expect(() => validateAppearance(badHover, zip, bucket)).toThrow();
+		for (const key of ['spacing-active', 'empty-card-active', 'hover-card-active']) {
 			const badActive = structuredClone(backup);
 			badActive.settings.find((row) => row.key === key)!.value = 'missing';
 			expect(() => validateAppearance(badActive, zip, bucket)).toThrow();

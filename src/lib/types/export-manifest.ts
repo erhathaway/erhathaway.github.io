@@ -91,8 +91,8 @@ export interface ImportSummary {
 }
 
 export interface AppearanceBackup {
-	/** Set on backups that include spacing and empty card themes. */
-	coversAllThemes?: boolean;
+	/** Newer theme kinds this backup includes. Replacing leaves other kinds unchanged. */
+	themeKinds?: string[];
 	settings: { key: string; value: unknown }[];
 	images: { key: string; path: string }[];
 }

@@ -318,7 +318,7 @@
 					<!-- Export Tab -->
 					<div class="space-y-5">
 						<p class="text-xs text-slate-500">
-							Every export includes all saved typography, spacing, and empty card themes, the active
+							Every export includes all saved typography, spacing, empty card, and hover card themes, the active
 							theme of each, name-card variants, generator recipes, backgrounds, and
 							landing/project/preview promotions with their images.
 						</p>
@@ -520,16 +520,14 @@
 										</label>
 										<p class="mt-2 text-xs text-slate-500">
 											{importManifest.appearance.settings.filter((row) =>
-												/^(typography|spacing|empty-card)-theme:/.test(row.key)
+												/^(typography|spacing|empty-card|hover-card)-theme:/.test(row.key)
 											).length} saved themes and {importManifest.appearance.settings.filter((row) =>
 												row.key.startsWith('namecard-variant:')
 											).length} name-card variants, plus active selections and images.
 										</p>
 										<p class="mt-2 text-xs text-slate-500">
 											{appearanceResolution === 'clobber'
-												? importManifest.appearance.coversAllThemes
-													? 'Restores the exact appearance library and promotions. Existing themes and variants absent from the backup are removed.'
-													: 'Restores the typography themes, name cards, and promotions in this older backup, removing others of those kinds. Spacing and empty card themes are not in this backup and stay unchanged.'
+												? 'Restores the exact appearance library and promotions. Existing themes and variants absent from the backup are removed, except theme types added after this backup was made.'
 												: appearanceResolution === 'merge'
 													? 'Updates matching IDs, adds saved entries, and restores the backed-up active selections. Other entries remain.'
 													: 'Leaves all current appearance settings unchanged.'}
