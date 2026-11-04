@@ -43,7 +43,7 @@ export async function activeSpacing(db: Db | undefined | null): Promise<SpacingT
 	return themes.find((theme) => theme.id === activeId)!;
 }
 export async function saveSpacing(db: Db, input: unknown, id?: string) {
-	if (id === DEFAULT_THEME.id) throw error(400, 'Duplicate the original theme to edit it.');
+	if (id === DEFAULT_THEME.id) throw error(400, 'Duplicate the default theme to edit it.');
 	if (!input || typeof input !== 'object') throw error(400, 'A theme is required.');
 	const body = input as Record<string, unknown>;
 	if (typeof body.name !== 'string' || !body.name.trim() || body.name.length > 100)

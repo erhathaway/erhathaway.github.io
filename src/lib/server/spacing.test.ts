@@ -58,9 +58,12 @@ describe('spacing theme lifecycle', () => {
 			...DEFAULT_THEME,
 			values: { desktop: { rowGap: 0, left: 40 }, mobile: { left: 8 } }
 		};
-		expect(resolveSpacing(theme, 'desktop')).toMatchObject({ rowGap: 0, left: 40, top: 2 });
+		expect(resolveSpacing(theme, 'desktop')).toMatchObject({ rowGap: 0, left: 40, top: 7 });
 		expect(resolveSpacing(theme, 'mobile')).toMatchObject({ rowGap: 2, left: 8 });
 		expect(themeCss(theme)).toContain('@media(max-width:899px){[data-home-spacing]');
-		expect(themeCss(theme)).toContain('padding:2px 2px 2px 40px');
+		expect(themeCss(theme)).toContain('padding:7px 7px 7px 40px');
+		expect(themeCss(DEFAULT_THEME)).toBe(
+			'[data-home-spacing]{row-gap:8px;column-gap:8px;padding:7px 7px 7px 7px}@media(max-width:899px){[data-home-spacing]{row-gap:2px;column-gap:2px;padding:2px 2px 2px 2px}}'
+		);
 	});
 });

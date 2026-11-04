@@ -32,7 +32,7 @@
 		>
 	</label>
 	<p>
-		Values are in pixels. Outer margins frame the home gallery. Reset restores the original 2px
+		Values are in pixels. Outer margins frame the home gallery. Reset restores the default
 		spacing.
 	</p>
 	{#each FIELDS as field (field.id)}

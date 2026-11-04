@@ -123,7 +123,7 @@
 		preview.draft = structuredClone($state.snapshot(draft));
 		if (preview.draft.id === 'default') {
 			preview.draft.id = '';
-			preview.draft.name = 'Original spacing copy';
+			preview.draft.name = 'Default spacing copy';
 		}
 		preview.baseline = baseline;
 		clearHandoff();
@@ -185,7 +185,7 @@
 	>
 </div>
 {#if locked}<p class="mb-5 text-xs text-slate-500">
-		The original theme is locked. Create a copy to customize it.
+		The default theme is locked. Create a copy to customize it.
 	</p>{/if}
 {#if message}<p
 		role={failed ? 'alert' : 'status'}

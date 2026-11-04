@@ -215,6 +215,6 @@ RUN_DEV_BACKUP_RESTORE=1 bunx vitest run src/lib/server/appearance-backup.dev.te
 
 ## Spacing themes
 
-Admin → Themes → Spacing themes controls home gallery row/column gaps and its four outer margins. Desktop (900px and above) and mobile values are independent. The locked original preserves 2px spacing; create a copy, adjust values, then save and activate it. Saving an already-active theme updates the public home page.
+Admin → Themes → Spacing themes controls home gallery row/column gaps and its four outer margins. Desktop (900px and above) and mobile values are independent. The locked default uses 8px gaps and 7px margins on desktop, and 2px on mobile; create a copy, adjust values, then save and activate it. Saving an already-active theme updates the public home page.
 
 Preview on site opens a private live editor with apply/compare, highlight, minimize, and move controls. Review & save in admin carries the draft back without publishing it. Themes are stored in existing site settings (`spacing-theme:*` and `spacing-active`); no database migration is needed.
