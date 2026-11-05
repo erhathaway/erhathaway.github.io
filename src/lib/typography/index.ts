@@ -173,7 +173,7 @@ export const ROLES: RoleDefinition[] = [
 	role('narrative-emphasis', 'Narrative emphasis', 'Project content', 'narrative', {
 		italic: true
 	}),
-	role('caption', 'Image caption', 'Project content', 'body', { size: 12, mobileSize: 12 }),
+	role('caption', 'Image caption', 'Project content', 'body', { size: 16, mobileSize: 15 }),
 	role('social', 'Social links', 'Navigation', 'label'),
 	role('expanded-social', 'Expanded social links', 'Navigation', 'social', {
 		size: 14,
