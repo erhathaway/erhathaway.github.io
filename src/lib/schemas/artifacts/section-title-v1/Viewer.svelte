@@ -70,9 +70,11 @@
 		/* 16px frame inset + 32px text inset leaves 16px of frame padding beyond the text. */
 		right: max(16px, calc(100% - var(--text-width, 100%) - 48px));
 		border-color: rgba(61, 46, 30, 0.14);
-		background: rgba(250, 243, 230, 0.45);
-		-webkit-backdrop-filter: blur(24px) saturate(110%);
-		backdrop-filter: blur(24px) saturate(110%);
+		background: rgba(252, 240, 224, 0.5);
+		/* A soft inner glow, warming the glass to match the side nav. */
+		box-shadow: inset 0 0 28px rgba(240, 190, 130, 0.07);
+		-webkit-backdrop-filter: blur(40px) saturate(115%);
+		backdrop-filter: blur(40px) saturate(115%);
 	}
 	.section-frame.ready {
 		transition:
@@ -81,7 +83,7 @@
 	}
 	.section-frame.stuck {
 		right: 16px;
-		background: rgba(250, 243, 230, 0.72);
+		background: rgba(251, 241, 227, 0.88);
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.section-frame.ready {
