@@ -45,8 +45,9 @@
 </script>
 
 <div
-	class={['sticky -top-px z-10 -mx-8 mb-7 px-8 py-8', className]}
+	class={['sticky -top-px z-10 -mx-8 px-8 py-8', className]}
 	style:margin-top={followsDivider ? `${-(DIVIDER_TO_FRAME + FRAME_PADDING + textHeight / 2)}px` : undefined}
+	style:margin-bottom="calc(1.75rem + var(--section-title-stop, 0px))"
 	{@attach trackStuck}
 >
 	<div
@@ -83,7 +84,7 @@
 	}
 	.section-frame.stuck {
 		right: 16px;
-		background: rgba(251, 241, 227, 0.88);
+		background: rgba(251, 241, 227, 0.94);
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.section-frame.ready {

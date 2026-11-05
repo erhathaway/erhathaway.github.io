@@ -197,20 +197,52 @@
 
   // Group segments into sections: each section-title break starts a new group.
   // segIdx is preserved so segmentColumns2 lookups still work.
-  type SectionGroup = { segments: { segment: Segment; segIdx: number }[] };
+  // Breaks after a section's last image go in `trailing`, outside the measured group. That leaves
+  // out the closing cover image, which follows the final divider rather than belonging to a section.
+  type SectionGroup = { title?: Artifact; segments: { segment: Segment; segIdx: number }[]; trailing: Artifact[] };
+  const breaksOf = (all: SectionGroup['segments']) =>
+    all.flatMap(({ segment }) => (segment.type === 'break' ? [segment.artifact] : []));
+  function toSectionGroup(all: SectionGroup['segments']): SectionGroup {
+    const end = all.findLastIndex(({ segment }) => segment.type !== 'break');
+    const first = all[0].segment;
+    const title = end !== -1 && first.type === 'break' && first.artifact.schema === 'section-title-v1' ? first.artifact : undefined;
+    return { title, segments: all.slice(title ? 1 : 0, end + 1), trailing: breaksOf(all.slice(end + 1)) };
+  }
+
+  // Sticky elements stop when their bottom margin reaches the end of their container, so a large
+  // margin stops the title early. This sets how much extra margin ends it at the top of the
+  // section's last image, and the section body subtracts the same amount to keep the layout unchanged.
+  const TITLE_MARGIN = 28;
+  function trackLastImage(node: HTMLElement) {
+    const update = () => {
+      const tops = [...node.querySelectorAll('figure')].map((figure) => figure.getBoundingClientRect().top);
+      if (tops.length === 0) return;
+      const stop = node.getBoundingClientRect().bottom - Math.max(...tops) - TITLE_MARGIN;
+      node.style.setProperty('--section-title-stop', `${Math.max(0, stop)}px`);
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    // Capture is required because load events don't bubble.
+    node.addEventListener('load', update, true);
+    return () => {
+      observer.disconnect();
+      node.removeEventListener('load', update, true);
+    };
+  }
+
   const sectionGroups = $derived.by(() => {
     const groups: SectionGroup[] = [];
-    let current: SectionGroup = { segments: [] };
+    let current: SectionGroup['segments'] = [];
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
       const isSectionTitle = seg.type === 'break' && seg.artifact.schema === 'section-title-v1';
-      if (isSectionTitle && current.segments.length > 0) {
-        groups.push(current);
-        current = { segments: [] };
+      if (isSectionTitle && current.length > 0) {
+        groups.push(toSectionGroup(current));
+        current = [];
       }
-      current.segments.push({ segment: seg, segIdx: i });
+      current.push({ segment: seg, segIdx: i });
     }
-    if (current.segments.length > 0) groups.push(current);
+    if (current.length > 0) groups.push(toSectionGroup(current));
     return groups;
   });
 
@@ -536,7 +568,12 @@
           </div>
         {/if}
         {#each sectionGroups as group, groupIdx (groupIdx)}
-          <div>
+          {#if group.segments.length > 0}
+          <div {@attach trackLastImage}>
+            {#if group.title}
+              <ArtifactView schema={group.title.schema} data={group.title.dataBlob} />
+            {/if}
+            <div style:margin-top={group.title ? 'calc(-1 * var(--section-title-stop, 0px))' : undefined}>
             {#each group.segments as { segment, segIdx } (segIdx)}
               {#if segment.type === 'break'}
                 <ArtifactView schema={segment.artifact.schema} data={segment.artifact.dataBlob} />
@@ -586,7 +623,16 @@
                 </div>
               {/if}
             {/each}
+            </div>
           </div>
+          {/if}
+          {#if group.trailing.length > 0}
+            <div>
+              {#each group.trailing as artifact (artifact.id)}
+                <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+              {/each}
+            </div>
+          {/if}
         {/each}
       </div>
     {/if}
