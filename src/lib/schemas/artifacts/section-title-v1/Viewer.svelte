@@ -8,17 +8,10 @@
 
 	let { data, className = '' }: Props = $props();
 
-	// Pixels from the divider line down to the resting frame's top edge, and from that edge to the text.
-	const DIVIDER_TO_FRAME = 28;
-	const FRAME_PADDING = 20;
 	let stuck = $state(false);
-	let followsDivider = $state(false);
 
 	// Sitting at top: -1px, the heading is clipped by 1px only while stuck at the top of the page.
 	function trackStuck(node: HTMLElement) {
-		followsDivider = !!node.parentElement?.previousElementSibling?.lastElementChild?.hasAttribute(
-			'data-section-divider'
-		);
 		const observer = new IntersectionObserver(
 			([entry]) => {
 				stuck = entry.intersectionRatio < 1 && entry.boundingClientRect.top <= 0;
@@ -30,14 +23,11 @@
 		return () => observer.disconnect();
 	}
 
-	// The resting frame hugs the text, so it needs the text's size to animate from and to center
-	// itself on the divider line above.
+	// The resting frame hugs the text, so it and the divider need the text's width to line up with.
 	let textWidth = $state<number | null>(null);
-	let textHeight = $state(0);
 	function trackTextSize(node: HTMLElement) {
 		const observer = new ResizeObserver(() => {
 			textWidth = node.offsetWidth;
-			textHeight = node.offsetHeight;
 		});
 		observer.observe(node);
 		return () => observer.disconnect();
@@ -46,7 +36,6 @@
 
 <div
 	class={['sticky -top-px z-10 -mx-8 px-8 py-8', className]}
-	style:margin-top={followsDivider ? `${-(DIVIDER_TO_FRAME + FRAME_PADDING + textHeight / 2)}px` : undefined}
 	style:margin-bottom="calc(1.75rem + var(--section-title-stop, 0px))"
 	{@attach trackStuck}
 >
@@ -54,6 +43,13 @@
 		class={['section-frame absolute top-3 bottom-3 left-4 -z-10 border', { stuck, ready: textWidth !== null }]}
 		style:--text-width={textWidth === null ? undefined : `${textWidth}px`}
 	></div>
+	{#if data.showDivider && textWidth !== null}
+		<!-- Starts at the resting frame's right edge: 48px of insets plus the text. -->
+		<div
+			class={['section-line pointer-events-none absolute top-1/2 right-8 h-px bg-black/10', { stuck }]}
+			style:left={`${textWidth + 48}px`}
+		></div>
+	{/if}
 	<div class="w-fit max-w-full" {@attach trackTextSize}>
 		<h2 data-typo="section-title" class="text-xl text-walnut" style="font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: 0.02em;">
 			{data.title}
@@ -86,8 +82,18 @@
 		right: 16px;
 		background: rgba(251, 241, 227, 0.94);
 	}
+	/* The frame grows over the line when stuck, so the line hides first and returns after it shrinks. */
+	.section-line {
+		transition: opacity 0.2s ease 0.15s;
+	}
+	.section-line.stuck {
+		opacity: 0;
+		transition: opacity 0.1s ease;
+	}
 	@media (prefers-reduced-motion: reduce) {
-		.section-frame.ready {
+		.section-frame.ready,
+		.section-line,
+		.section-line.stuck {
 			transition: none;
 		}
 	}

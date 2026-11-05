@@ -43,6 +43,13 @@
       "when": 1770549536154,
       "tag": "0005_melted_grandmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793855219337,
+      "tag": "0006_section_title_divider_on",
+      "breakpoints": true
     }
   ]
 }

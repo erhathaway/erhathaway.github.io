@@ -7,11 +7,14 @@ export const sectionTitleV1Schema = {
 export type SectionTitleV1Data = {
 	title: string;
 	subtitle?: string;
+	/** Draws a line from the card's right edge to the end of the content column. */
+	showDivider: boolean;
 };
 
 export const createSectionTitleV1Draft = (): SectionTitleV1Data => ({
 	title: '',
-	subtitle: ''
+	subtitle: '',
+	showDivider: true
 });
 
 export type SectionTitleV1ValidationResult =
@@ -36,6 +39,11 @@ export const validateSectionTitleV1 = (payload: unknown): SectionTitleV1Validati
 		errors.push('subtitle must be a string');
 	}
 
+	const showDivider = data.showDivider;
+	if (showDivider !== undefined && typeof showDivider !== 'boolean') {
+		errors.push('showDivider must be a boolean');
+	}
+
 	if (errors.length > 0) {
 		return { ok: false, errors };
 	}
@@ -46,7 +54,8 @@ export const validateSectionTitleV1 = (payload: unknown): SectionTitleV1Validati
 			title: (title as string).trim(),
 			...(typeof subtitle === 'string' && subtitle.trim()
 				? { subtitle: subtitle.trim() }
-				: {})
+				: {}),
+			showDivider: showDivider !== false
 		}
 	};
 };
