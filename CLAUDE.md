@@ -329,6 +329,8 @@ bun run deploy        # or: bunx wrangler deploy
 
 This runs `vite build` (configured in `wrangler.toml [build]`), then uploads the Worker + static assets to Cloudflare.
 
+Cloudflare Workers Builds also watches the GitHub repo: pushes to `master` deploy, and pushes to other branches upload preview versions. Its production deploy command should be `bun run db:migrate:remote && bunx wrangler deploy` so pending migrations apply before the Worker goes live; the migration scripts only need Bun and Wrangler.
+
 - **Production URL:** `erhathaway.com`
 - **Route:** `erhathaway.com/*` (defined in `wrangler.toml`)
 

@@ -124,7 +124,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if isOpen}
-	<div class="modal-enter fixed inset-0 z-[10001]">
+	<div class="fixed inset-0 z-[10001]">
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
@@ -133,7 +133,7 @@
 		>
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div
-				class="modal-card relative w-full max-w-[420px]"
+				class="modal-card modal-enter relative w-full max-w-[420px]"
 				role="dialog"
 				tabindex="-1"
 				aria-modal="true"
@@ -402,6 +402,7 @@
 	}
 
 	/* Animations */
+	/* Fade only the card: an ancestor below full opacity stops the backdrop's blur reaching the page. */
 	.modal-enter {
 		animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}

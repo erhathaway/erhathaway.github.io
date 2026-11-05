@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { storedAspectRatio } from '$lib/utils/image-size';
   import { resolve } from '$app/paths';
   import type { PageData } from './$types';
   import { portfolio } from '$lib/stores/portfolio.svelte';
@@ -196,34 +197,87 @@
   const segments = $derived(buildSegments(additionalArtifacts));
 
   // Group segments into sections: each section-title break starts a new group.
-  // segIdx is preserved so segmentColumns2 lookups still work.
-  type SectionGroup = { segments: { segment: Segment; segIdx: number }[] };
+  // segIdx is preserved so segmentColumns lookups still work.
+  // Breaks after a section's last image go in `trailing`, outside the measured group. That leaves
+  // out the closing cover image, which follows the final divider rather than belonging to a section.
+  type SectionGroup = { title?: Artifact; segments: { segment: Segment; segIdx: number }[]; trailing: Artifact[] };
+  const breaksOf = (all: SectionGroup['segments']) =>
+    all.flatMap(({ segment }) => (segment.type === 'break' ? [segment.artifact] : []));
+  function toSectionGroup(all: SectionGroup['segments']): SectionGroup {
+    const end = all.findLastIndex(({ segment }) => segment.type !== 'break');
+    const first = all[0].segment;
+    const title = end !== -1 && first.type === 'break' && first.artifact.schema === 'section-title-v1' ? first.artifact : undefined;
+    return { title, segments: all.slice(title ? 1 : 0, end + 1), trailing: breaksOf(all.slice(end + 1)) };
+  }
+
+  // Sticky elements stop when their bottom margin reaches the end of their container, so a large
+  // margin stops the title early. This sets how much extra margin ends it at the top of the
+  // section's last image, and the section body subtracts the same amount to keep the layout unchanged.
+  const TITLE_MARGIN = 28;
+  function trackLastImage(node: HTMLElement) {
+    const update = () => {
+      const tops = [...node.querySelectorAll('figure')].map((figure) => figure.getBoundingClientRect().top);
+      if (tops.length === 0) return;
+      const stop = node.getBoundingClientRect().bottom - Math.max(...tops) - TITLE_MARGIN;
+      node.style.setProperty('--section-title-stop', `${Math.max(0, stop)}px`);
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    // Capture is required because load events don't bubble.
+    node.addEventListener('load', update, true);
+    return () => {
+      observer.disconnect();
+      node.removeEventListener('load', update, true);
+    };
+  }
+
   const sectionGroups = $derived.by(() => {
     const groups: SectionGroup[] = [];
-    let current: SectionGroup = { segments: [] };
+    let current: SectionGroup['segments'] = [];
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
       const isSectionTitle = seg.type === 'break' && seg.artifact.schema === 'section-title-v1';
-      if (isSectionTitle && current.segments.length > 0) {
-        groups.push(current);
-        current = { segments: [] };
+      if (isSectionTitle && current.length > 0) {
+        groups.push(toSectionGroup(current));
+        current = [];
       }
-      current.segments.push({ segment: seg, segIdx: i });
+      current.push({ segment: seg, segIdx: i });
     }
-    if (current.segments.length > 0) groups.push(current);
+    if (current.length > 0) groups.push(toSectionGroup(current));
     return groups;
   });
 
   // Masonry: preload images to get aspect ratios, then distribute into shortest column
-  let segmentColumns2 = $state<Map<number, Artifact[][]>>(new Map());
-  let artifactRatios = $state<Map<number, number>>(new Map());
-  let eagerIds = $state<Set<number>>(new Set());
-
   function getImageUrl(artifact: Artifact): string | null {
     if (artifact.schema !== 'image-v1') return null;
     const blob = artifact.dataBlob as Record<string, unknown> | null;
     return typeof blob?.imageUrl === 'string' ? blob.imageUrl : null;
   }
+
+  // Each image's height per unit of width. Stored sizes make the layout instant; an image without
+  // one is measured after it loads, which shifts the layout once, so uploads record their size.
+  const measuredRatios = new SvelteMap<number, number>();
+  const measuring = new Set<number>();
+  const artifactRatios = $derived.by(() => {
+    const ratios = new Map<number, number>();
+    for (const artifact of additionalArtifacts) {
+      const ratio = storedAspectRatio(artifact.dataBlob) ?? measuredRatios.get(artifact.id);
+      if (ratio !== undefined) ratios.set(artifact.id, ratio);
+    }
+    return ratios;
+  });
+
+  $effect(() => {
+    for (const artifact of additionalArtifacts) {
+      const url = getImageUrl(artifact);
+      if (!url || storedAspectRatio(artifact.dataBlob) !== undefined || measuring.has(artifact.id)) continue;
+      measuring.add(artifact.id);
+      const img = new Image();
+      img.onload = () => measuredRatios.set(artifact.id, img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1);
+      img.onerror = () => measuredRatios.set(artifact.id, 1);
+      img.src = url;
+    }
+  });
 
   function distributeIntoColumns(items: Artifact[], ratios: Map<number, number>, numCols: number): Artifact[][] {
     const MAX_RATIO = 1.4;
@@ -240,60 +294,54 @@
     return cols;
   }
 
-  async function computeAllMasonry(segs: Segment[]) {
-    const masonrySegments = segs
-      .map((seg, i) => ({ seg, i }))
-      .filter((s): s is { seg: Extract<Segment, { type: 'masonry' }> | Extract<Segment, { type: 'dense-masonry' }>; i: number } =>
-        s.seg.type === 'masonry' || s.seg.type === 'dense-masonry');
+  // On phones, a section's last image often ends up below both columns with nothing beside it.
+  // Rather than fill half the width, it leaves the columns and spans the whole row.
+  let innerWidth = $state(0);
+  const widensLoneTail = $derived(innerWidth > 0 && innerWidth < 768);
 
-    if (masonrySegments.length === 0) {
-      segmentColumns2 = new Map();
-      return;
+  // Moves trailing images that nothing sits beside out of `cols`, in their original order.
+  function takeLoneTail(items: Artifact[], cols: Artifact[][], ratios: Map<number, number>): Artifact[] {
+    const ratio = (a: Artifact) => ratios.get(a.id) ?? 1;
+    const height = (col: Artifact[]) => col.reduce((sum, a) => sum + ratio(a), 0);
+    const tail: Artifact[] = [];
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      const own = cols.find((col) => col[col.length - 1] === item);
+      if (!own) break;
+      const top = height(own) - ratio(item);
+      if (cols.some((col) => col !== own && height(col) > top + 0.01)) break;
+      own.pop();
+      tail.unshift(item);
     }
-
-    // Collect all image artifacts across all masonry segments
-    const allItems = masonrySegments.flatMap(s => s.seg.items);
-    const ratios = new SvelteMap<number, number>();
-
-    await Promise.all(allItems.map((item) => {
-      const url = getImageUrl(item);
-      if (!url) {
-        ratios.set(item.id, 1);
-        return;
-      }
-      return new Promise<void>((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          ratios.set(item.id, img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1);
-          resolve();
-        };
-        img.onerror = () => {
-          ratios.set(item.id, 1);
-          resolve();
-        };
-        img.src = url;
-      });
-    }));
-
-    const next = new SvelteMap<number, Artifact[][]>();
-    for (const { seg, i } of masonrySegments) {
-      const numCols = seg.type === 'dense-masonry' ? 4 : 2;
-      next.set(i, distributeIntoColumns(seg.items, ratios, numCols));
-    }
-    segmentColumns2 = next;
-    artifactRatios = ratios;
-
-    // Mark the first ~4 image artifacts as eager-load
-    const eager = new SvelteSet<number>();
-    for (const item of allItems) {
-      if (eager.size >= 4) break;
-      eager.add(item.id);
-    }
-    eagerIds = eager;
+    return tail;
   }
 
-  $effect(() => {
-    computeAllMasonry(segments);
+  // Columns per masonry segment, keyed by segment index, plus any images shown full width after them.
+  type SegmentLayout = { cols: Artifact[][]; tail: Artifact[] };
+  const segmentColumns = $derived.by(() => {
+    const next = new Map<number, SegmentLayout>();
+    segments.forEach((seg, i) => {
+      if (seg.type === 'masonry') {
+        const cols = distributeIntoColumns(seg.items, artifactRatios, 2);
+        next.set(i, { cols, tail: widensLoneTail ? takeLoneTail(seg.items, cols, artifactRatios) : [] });
+      } else if (seg.type === 'dense-masonry') {
+        next.set(i, { cols: distributeIntoColumns(seg.items, artifactRatios, 4), tail: [] });
+      }
+    });
+    return next;
+  });
+
+  // The first few images load eagerly.
+  const eagerIds = $derived.by(() => {
+    const eager = new Set<number>();
+    for (const seg of segments) {
+      if (seg.type !== 'masonry' && seg.type !== 'dense-masonry') continue;
+      for (const item of seg.items) {
+        if (eager.size >= 4) return eager;
+        eager.add(item.id);
+      }
+    }
+    return eager;
   });
 
   // Reload artifacts whenever the project changes
@@ -368,6 +416,8 @@
     };
   });
 </script>
+
+<svelte:window bind:innerWidth />
 
 <svelte:head>
   {#if data.meta}
@@ -536,7 +586,12 @@
           </div>
         {/if}
         {#each sectionGroups as group, groupIdx (groupIdx)}
-          <div>
+          {#if group.segments.length > 0}
+          <div {@attach trackLastImage}>
+            {#if group.title}
+              <ArtifactView schema={group.title.schema} data={group.title.dataBlob} />
+            {/if}
+            <div style:margin-top={group.title ? 'calc(-1 * var(--section-title-stop, 0px))' : undefined}>
             {#each group.segments as { segment, segIdx } (segIdx)}
               {#if segment.type === 'break'}
                 <ArtifactView schema={segment.artifact.schema} data={segment.artifact.dataBlob} />
@@ -549,11 +604,12 @@
                       schema={segment.artifact.schema}
                       data={segment.artifact.dataBlob}
                       eager={eagerIds.has(segment.artifact.id)}
+                      aspectRatio={artifactRatios.get(segment.artifact.id)}
                     />
                   </div>
                 </div>
               {:else if segment.type === 'dense-masonry'}
-                {@const cols = segmentColumns2.get(segIdx) ?? [[], [], [], []]}
+                {@const cols = segmentColumns.get(segIdx)?.cols ?? [[], [], [], []]}
                 <div class="grid grid-cols-4 gap-2 items-start">
                   {#each cols as col, colIdx (colIdx)}
                     <div class="flex flex-col gap-2">
@@ -569,24 +625,45 @@
                   {/each}
                 </div>
               {:else}
-                {@const cols = segmentColumns2.get(segIdx) ?? [[], []]}
-                <div class="grid grid-cols-2 gap-4 items-start">
-                  {#each cols as col, colIdx (colIdx)}
-                    <div class="flex flex-col gap-4">
-                      {#each col as artifact (artifact.id)}
-                        <ArtifactView
-                          schema={artifact.schema}
-                          data={artifact.dataBlob}
-                          eager={eagerIds.has(artifact.id)}
-                          aspectRatio={artifactRatios.get(artifact.id)}
-                        />
+                {@const layout = segmentColumns.get(segIdx) ?? { cols: [[], []], tail: [] }}
+                <div class="flex flex-col gap-4">
+                  {#if layout.cols.some((col) => col.length > 0)}
+                    <div class="grid grid-cols-2 gap-4 items-start">
+                      {#each layout.cols as col, colIdx (colIdx)}
+                        <div class="flex flex-col gap-4">
+                          {#each col as artifact (artifact.id)}
+                            <ArtifactView
+                              schema={artifact.schema}
+                              data={artifact.dataBlob}
+                              eager={eagerIds.has(artifact.id)}
+                              aspectRatio={artifactRatios.get(artifact.id)}
+                            />
+                          {/each}
+                        </div>
                       {/each}
                     </div>
+                  {/if}
+                  {#each layout.tail as artifact (artifact.id)}
+                    <ArtifactView
+                      schema={artifact.schema}
+                      data={artifact.dataBlob}
+                      eager={eagerIds.has(artifact.id)}
+                      aspectRatio={artifactRatios.get(artifact.id)}
+                    />
                   {/each}
                 </div>
               {/if}
             {/each}
+            </div>
           </div>
+          {/if}
+          {#if group.trailing.length > 0}
+            <div>
+              {#each group.trailing as artifact (artifact.id)}
+                <ArtifactView schema={artifact.schema} data={artifact.dataBlob} />
+              {/each}
+            </div>
+          {/if}
         {/each}
       </div>
     {/if}

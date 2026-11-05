@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { measureImage } from '$lib/utils/image-size';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -1213,7 +1214,7 @@
 
 			const { url } = await uploadResponse.json();
 
-			const dataBlob: Record<string, unknown> = { imageUrl: url };
+			const dataBlob: Record<string, unknown> = { imageUrl: url, ...((await measureImage(url)) ?? {}) };
 			if (!defaultSkipDescription) {
 				dataBlob.description = imageUrl.split('/').pop()?.split('?')[0] || 'image';
 			}
