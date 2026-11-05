@@ -67,7 +67,7 @@
 		/* 16px frame inset + 32px text inset leaves 16px of frame padding beyond the text. */
 		right: max(16px, calc(100% - var(--text-width, 100%) - 48px));
 		border-color: rgba(61, 46, 30, 0.14);
-		background: rgba(252, 240, 224, 0.5);
+		background: #fff9ed;
 		/* A soft inner glow, warming the glass to match the side nav. */
 		box-shadow: inset 0 0 28px rgba(240, 190, 130, 0.07);
 		-webkit-backdrop-filter: blur(40px) saturate(115%);
