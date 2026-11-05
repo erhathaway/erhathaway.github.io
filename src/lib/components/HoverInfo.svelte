@@ -114,7 +114,7 @@
 {#if item}
   <div class={wrapperClass} style:container-type={isTile ? 'size' : undefined}>
     {#if isTile}
-      <div class="warm-glass absolute inset-0" style:clip-path={tileClipPath}></div>
+      <div class="soft-glass absolute inset-0" style:clip-path={tileClipPath}></div>
     {/if}
     <div class={innerClass} style={innerStyle}>
       <div class={projectHeaderClass} style={projectHeaderStyle}>
