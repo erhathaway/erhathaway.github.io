@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { useClerkContext } from 'svelte-clerk';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	interface Props {
 		isOpen: boolean;
@@ -77,7 +78,7 @@
 
 			if (result.status === 'complete') {
 				await clerk.setActive({ session: result.createdSessionId });
-				await goto('/admin');
+				await goto(resolve('/admin'));
 				onClose();
 			} else {
 				error = 'Unable to sign in. Please try again.';
@@ -123,41 +124,50 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if isOpen}
-	<div class="fixed inset-0 z-[100] modal-enter">
-		<!-- Warm stucco backdrop -->
-		<div class="absolute inset-0 backdrop-blur-xl" style="background: rgba(243, 233, 225, 0.4);"></div>
-		<div class="absolute inset-0 stucco-gradient"></div>
-
+	<div class="modal-enter fixed inset-0 z-[10001]">
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="relative flex items-center justify-center h-full" onclick={() => { if (!isLoading) { onClose(); resetState(); } }}>
+		<div
+			class="modal-backdrop flex h-full items-center justify-center p-4"
+			onclick={() => { if (!isLoading) { onClose(); resetState(); } }}
+		>
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div class="modal-card w-full max-w-md relative" onclick={(e) => e.stopPropagation()}>
+			<div
+				class="modal-card relative w-full max-w-[420px]"
+				role="dialog"
+				tabindex="-1"
+				aria-modal="true"
+				aria-labelledby="login-title"
+				onclick={(e) => e.stopPropagation()}
+			>
 				<button
+					type="button"
 					onclick={() => { onClose(); resetState(); }}
-					class="absolute top-4 left-4 text-ash/40 hover:text-walnut transition-colors duration-300"
-					style="font-family: 'DM Sans', sans-serif;"
+					class="modal-close"
 					aria-label="Close"
 				>
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="1.5"/>
+					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="square" stroke-width="1.25" d="M6 18L18 6M6 6l12 12" />
 					</svg>
 				</button>
-				<p class="text-ash/40 text-[13px] tracking-[0.25em] uppercase mb-10 text-center" style="font-family: 'DM Sans', sans-serif; font-weight: 500;">Admin</p>
+
+				<header class="modal-header">
+					<p class="modal-eyebrow">Ethan Hathaway</p>
+					<h2 id="login-title" class="modal-title">Admin</h2>
+				</header>
 
 				{#if !showCodeInput}
-					<form onsubmit={handleEmailSubmit} class="space-y-6">
+					<form onsubmit={handleEmailSubmit} class="modal-body">
 						<div>
+							<label class="modal-label" for="email">Email</label>
 							<input
 								id="email"
 								type="email"
 								bind:value={email}
 								required
 								disabled={isLoading}
-								class="modal-input"
-								class:modal-input-error={showEmailError || error}
-								placeholder="Email"
+								class={['modal-input', { 'modal-input-error': showEmailError || error }]}
+								autocomplete="email"
 								onfocus={() => { emailTouched = true; }}
 								onblur={() => { emailTouched = true; }}
 							/>
@@ -167,88 +177,66 @@
 						</div>
 
 						{#if error}
-							<p class="field-error text-center shake">{error}</p>
+							<p class="field-error shake" role="alert">{error}</p>
 						{/if}
 
-						{#if canSubmitEmail}
-							<button
-								type="submit"
-								disabled={isLoading}
-								class="modal-button button-enter"
-							>
-								{#if sendingState === 'sending'}
-									<span class="inline-flex items-center gap-2.5">
-										<span class="sending-dot"></span>
-										<span class="sending-dot" style="animation-delay: 0.15s"></span>
-										<span class="sending-dot" style="animation-delay: 0.3s"></span>
-									</span>
-								{:else if sendingState === 'sent'}
-									<span class="inline-flex items-center gap-2">
-										<svg width="16" height="16" viewBox="0 0 14 14" fill="none" class="sent-check">
-											<path d="M2 7.5L5.5 11L12 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-										</svg>
-										Sent
-									</span>
-								{:else}
-									Send Code
-								{/if}
-							</button>
-						{/if}
+						<button type="submit" disabled={!canSubmitEmail} class="modal-button">
+							{#if sendingState === 'sending'}
+								<span class="inline-flex items-center gap-2.5" aria-label="Sending">
+									<span class="sending-dot"></span>
+									<span class="sending-dot" style="animation-delay: 0.15s"></span>
+									<span class="sending-dot" style="animation-delay: 0.3s"></span>
+								</span>
+							{:else if sendingState === 'sent'}
+								<span class="inline-flex items-center gap-2">
+									<svg width="16" height="16" viewBox="0 0 14 14" fill="none" class="sent-check">
+										<path d="M2 7.5L5.5 11L12 3" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/>
+									</svg>
+									Sent
+								</span>
+							{:else}
+								Send Code
+							{/if}
+						</button>
 					</form>
 				{:else}
-					<div class="step-enter">
-						<form onsubmit={handleCodeSubmit} class="space-y-6">
-							<p class="text-center text-ash/60 text-[13px] tracking-[0.2em] uppercase mb-8" style="font-family: 'DM Sans', sans-serif; font-weight: 500;">
-								Code sent to {email}
-							</p>
-
-							<div>
-								<input
-									id="code"
-									type="text"
-									bind:value={code}
-									required
-									disabled={isLoading}
-									class="modal-input text-center tracking-[0.3em]"
-									class:modal-input-error={!!error}
-									placeholder="000000"
-									maxlength="6"
-								/>
-							</div>
-
-							{#if error}
-								<p class="field-error text-center shake">{error}</p>
-							{/if}
-
-							{#if canSubmitCode}
-								<button
-									type="submit"
-									disabled={isLoading}
-									class="modal-button button-enter"
-								>
-									{#if isLoading}
-										<span class="inline-flex items-center gap-2.5">
-											<span class="sending-dot"></span>
-											<span class="sending-dot" style="animation-delay: 0.15s"></span>
-											<span class="sending-dot" style="animation-delay: 0.3s"></span>
-										</span>
-									{:else}
-										Sign In
-									{/if}
-								</button>
-							{/if}
-
-							<button
-								type="button"
-								onclick={goBack}
+					<form onsubmit={handleCodeSubmit} class="modal-body step-enter">
+						<div>
+							<label class="modal-label" for="code">Code sent to {email}</label>
+							<input
+								id="code"
+								type="text"
+								bind:value={code}
+								required
 								disabled={isLoading}
-								class="w-full text-center text-ash/40 hover:text-copper text-[13px] tracking-[0.15em] uppercase transition-colors duration-300 disabled:opacity-50 pt-2"
-								style="font-family: 'DM Sans', sans-serif; font-weight: 500;"
-							>
-								Use a different email
-							</button>
-						</form>
-					</div>
+								class={['modal-input tracking-[0.3em]', { 'modal-input-error': !!error }]}
+								placeholder="000000"
+								maxlength="6"
+								inputmode="numeric"
+								autocomplete="one-time-code"
+							/>
+						</div>
+
+						{#if error}
+							<p class="field-error shake" role="alert">{error}</p>
+						{/if}
+
+						<button type="submit" disabled={!canSubmitCode} class="modal-button">
+							{#if isLoading}
+								<span class="inline-flex items-center gap-2.5" aria-label="Signing in">
+									<span class="sending-dot"></span>
+									<span class="sending-dot" style="animation-delay: 0.15s"></span>
+									<span class="sending-dot" style="animation-delay: 0.3s"></span>
+								</span>
+							{:else}
+								Sign In
+							{/if}
+						</button>
+
+						<button type="button" onclick={goBack} disabled={isLoading} class="modal-link">
+							Use a different email
+						</button>
+					</form>
 				{/if}
 			</div>
 		</div>
@@ -256,52 +244,93 @@
 {/if}
 
 <style>
-	.modal-card {
-		padding: 72px 48px;
-		background:
-			radial-gradient(ellipse at 50% 40%, rgba(184, 115, 51, 0.12) 0%, transparent 80%),
-			rgba(255, 255, 255, 0.92);
-		border: 1px solid rgba(138, 128, 120, 0.15);
-		border-radius: 16px;
-		backdrop-filter: blur(16px);
-		box-shadow: 0 4px 24px rgba(44, 34, 24, 0.06);
+	.modal-backdrop {
+		background: rgba(250, 243, 230, 0.55);
+		-webkit-backdrop-filter: blur(24px) saturate(110%);
+		backdrop-filter: blur(24px) saturate(110%);
 	}
 
-	.stucco-gradient {
-		background: radial-gradient(
-			ellipse at center,
-			rgba(245, 241, 235, 0.95) 0%,
-			rgba(243, 233, 225, 0.9) 30%,
-			rgba(253, 218, 130, 0.15) 60%,
-			transparent 85%
-		);
+	.modal-card {
+		background: rgba(251, 241, 227, 0.88);
+		border: 1px solid rgba(61, 46, 30, 0.18);
+		color: #2c2218;
+		font-family: 'DM Sans', sans-serif;
+	}
+
+	.modal-close {
+		position: absolute;
+		top: -1px;
+		right: -1px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border: 1px solid rgba(61, 46, 30, 0.18);
+		color: #3d2e1e;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+	}
+
+	.modal-close:hover {
+		background: rgba(61, 46, 30, 0.06);
+	}
+
+	.modal-header {
+		padding: 32px 32px 24px;
+		border-bottom: 1px solid rgba(61, 46, 30, 0.14);
+	}
+
+	.modal-eyebrow,
+	.modal-label {
+		display: block;
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: #5f5044;
+	}
+
+	.modal-title {
+		margin-top: 10px;
+		font-family: 'Playfair Display', Georgia, serif;
+		font-size: 34px;
+		font-weight: 400;
+		line-height: 1.1;
+		color: #2c2218;
+	}
+
+	.modal-body {
+		display: grid;
+		gap: 20px;
+		padding: 24px 32px 32px;
+	}
+
+	.modal-label {
+		margin-bottom: 8px;
+		overflow-wrap: anywhere;
 	}
 
 	.modal-input {
 		width: 100%;
-		padding: 16px 18px;
-		background: rgba(255, 255, 255, 0.5);
-		border: 1px solid rgba(138, 128, 120, 0.2);
-		border-radius: 1px;
-		color: #2C2218;
-		font-family: 'DM Sans', sans-serif;
-		font-size: 17px;
-		font-weight: 400;
-		letter-spacing: 0.03em;
+		height: 48px;
+		padding: 0 14px;
+		background: rgba(255, 255, 255, 0.45);
+		border: 1px solid rgba(61, 46, 30, 0.22);
+		border-radius: 0;
+		color: #2c2218;
+		font-size: 16px;
 		outline: none;
-		backdrop-filter: blur(12px);
-		transition: border-color 0.3s ease, background 0.3s ease;
+		transition: border-color 0.2s ease, background-color 0.2s ease;
 	}
 
 	.modal-input::placeholder {
-		color: rgba(138, 128, 120, 0.5);
-		font-weight: 400;
-		font-size: 17px;
+		color: rgba(95, 80, 68, 0.55);
 	}
 
 	.modal-input:focus {
-		border-color: #B87333;
-		background: rgba(255, 255, 255, 0.65);
+		border-color: #3d2e1e;
+		background: rgba(255, 255, 255, 0.7);
 	}
 
 	.modal-input:disabled {
@@ -309,48 +338,72 @@
 	}
 
 	.modal-input-error {
-		border-color: #B87333;
+		border-color: #9a5a22;
 	}
 
 	.modal-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		width: 100%;
-		padding: 14px 0;
-		background: transparent;
-		border: none;
-		color: #2C2218;
-		font-family: 'DM Sans', sans-serif;
-		font-size: 14px;
+		height: 48px;
+		background: #2c2218;
+		border: 1px solid #2c2218;
+		color: #fbf1e3;
+		font-size: 11px;
 		font-weight: 500;
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
 		cursor: pointer;
-		transition: color 0.3s ease;
+		transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 	}
 
-	.modal-button:hover {
-		color: #B87333;
+	.modal-button:hover:not(:disabled) {
+		background: #3d2e1e;
 	}
 
 	.modal-button:disabled {
+		background: transparent;
+		border-color: rgba(61, 46, 30, 0.18);
+		color: rgba(61, 46, 30, 0.45);
 		cursor: default;
 	}
 
-	.field-error {
-		font-family: 'DM Sans', sans-serif;
-		font-size: 13px;
+	.modal-link {
+		font-size: 11px;
 		font-weight: 500;
-		letter-spacing: 0.1em;
-		color: #B87333;
-		margin-top: 10px;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: #5f5044;
+		cursor: pointer;
+		transition: color 0.2s ease;
+	}
+
+	.modal-link:hover {
+		color: #2c2218;
+	}
+
+	.modal-link:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+
+	.modal-close:focus-visible,
+	.modal-button:focus-visible,
+	.modal-link:focus-visible {
+		outline: 1px solid #3d2e1e;
+		outline-offset: 2px;
+	}
+
+	.field-error {
+		margin-top: 8px;
+		font-size: 13px;
+		color: #9a5a22;
 	}
 
 	/* Animations */
 	.modal-enter {
 		animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-	}
-
-	.button-enter {
-		animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.step-enter {
@@ -368,8 +421,7 @@
 	.sending-dot {
 		width: 5px;
 		height: 5px;
-		border-radius: 50%;
-		background: #2C2218;
+		background: currentColor;
 		display: inline-block;
 		animation: pulse 0.6s ease-in-out infinite alternate;
 	}
