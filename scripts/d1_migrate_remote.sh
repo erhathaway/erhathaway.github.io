@@ -12,7 +12,8 @@ bunx wrangler d1 execute "$db_name" --remote --command "CREATE TABLE IF NOT EXIS
 
 for file in ./drizzle/*.sql; do
   name="$(basename "$file" .sql)"
-  applied=$(bunx wrangler d1 execute "$db_name" --remote --command "SELECT 1 FROM __drizzle_migrations WHERE id='$name' LIMIT 1" --json | jq -r '.[0].results[0]["1"] // empty')
+  # Parsed with Bun so the script runs anywhere the build does, including Cloudflare's build image.
+  applied=$(bunx wrangler d1 execute "$db_name" --remote --command "SELECT 1 FROM __drizzle_migrations WHERE id='$name' LIMIT 1" --json | bun -e 'const r = await Bun.stdin.json(); process.stdout.write(r[0]?.results?.length ? "1" : "")')
   if [ -n "$applied" ]; then
     echo "Skipping $name (already applied)"
     continue
