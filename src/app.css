@@ -24,6 +24,23 @@
     -webkit-backdrop-filter: blur(24px) saturate(110%);
     backdrop-filter: blur(24px) saturate(110%);
   }
+  /* Square, hairline-framed controls on glass. Adjacent buttons share a border. */
+  .arch-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    border: 1px solid rgba(61, 46, 30, 0.14);
+    color: #3d2e1e;
+  }
+  .arch-button + .arch-button {
+    margin-left: -1px;
+  }
+  .arch-button:focus-visible {
+    outline: 1px solid #3d2e1e;
+    outline-offset: 2px;
+  }
   /* Frosts an image directly, for glass whose backdrop-filter can't reach what's behind it. */
   .warm-glass-frost {
     filter: var(--warm-glass-filter);

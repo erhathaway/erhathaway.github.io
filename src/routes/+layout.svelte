@@ -623,14 +623,14 @@
 		{#if isMobileScreen && !isErrorPage && !isHomePage}
 			<button
 				onclick={() => mobileMenuOpen = !mobileMenuOpen}
-				class="fixed bottom-6 left-6 z-[9999] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg"
+				class="soft-glass arch-button fixed bottom-4 left-6 z-[9999]"
 				aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
 			>
-				<svg class="w-6 h-6 text-walnut" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					{#if mobileMenuOpen}
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+						<path stroke-linecap="square" stroke-width="1.25" d="M6 18L18 6M6 6l12 12" />
 					{:else}
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+						<path stroke-linecap="square" stroke-width="1.25" d="M4 7h16M4 12h16M4 17h16" />
 					{/if}
 				</svg>
 			</button>
