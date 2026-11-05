@@ -1,4 +1,18 @@
 <script lang="ts">
+ import SpacingStyles from '$lib/spacing/SpacingStyles.svelte';
+ import SpacingPreviewPanel from '$lib/spacing/SpacingPreviewPanel.svelte';
+ import { setSpacingPreview, type SpacingPreview } from '$lib/spacing/preview';
+ const spacingPreview = $state<SpacingPreview>({ draft: null, baseline: '', enabled: true });
+ setSpacingPreview(spacingPreview);
+ import EmptyCardPreviewPanel from '$lib/empty-card/EmptyCardPreviewPanel.svelte';
+ import { setEmptyCardPreview, type EmptyCardPreview } from '$lib/empty-card/preview';
+ const emptyCardPreview = $state<EmptyCardPreview>({ draft: null, baseline: '', enabled: true });
+ setEmptyCardPreview(emptyCardPreview);
+ import HoverCardPreviewPanel from '$lib/hover-card/HoverCardPreviewPanel.svelte';
+ import { setHoverCardPreview, type HoverCardPreview } from '$lib/hover-card/preview';
+ const hoverCardPreview = $state<HoverCardPreview>({ draft: null, baseline: '', enabled: true });
+ setHoverCardPreview(hoverCardPreview);
+
   import { resolve } from '$app/paths';
 	import '../app.css';
 	import TypographyStyles from '$lib/typography/TypographyStyles.svelte';
@@ -8,23 +22,24 @@
 	setTypographyPreview(typographyPreview);
 	import favicon from '$lib/assets/favicon.svg';
 	import LeftPanel from '$lib/components/LeftPanel.svelte';
+	import ProjectPageBackground from '$lib/empty-card/ProjectPageBackground.svelte';
 	import CategoryPills from '$lib/components/CategoryPills.svelte';
 	import LoginModal from '$lib/components/LoginModal.svelte';
 	import AuthButton from '$lib/components/AuthButton.svelte';
 	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
 	import { portfolio } from '$lib/stores/portfolio.svelte';
-	import { onNavigate, goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { onNavigate, afterNavigate, goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { onMount, tick } from 'svelte';
 	import { env } from '$env/dynamic/public';
 	import { initPostHog } from '$lib/posthog';
 
 	let { children, data } = $props();
-	const isProjectPage = $derived($page.route.id === '/[slug]');
-	const isAdminPage = $derived($page.route.id?.includes('/admin'));
-	const isHomePage = $derived($page.url.pathname === '/');
-	const isErrorPage = $derived(!!$page.error);
+	const isProjectPage = $derived(page.route.id === '/[slug]');
+	const isAdminPage = $derived(page.route.id?.includes('/admin'));
+	const isHomePage = $derived(page.url.pathname === '/');
+	const isErrorPage = $derived(!!page.error);
 
 	let appliedHoverId: number | null = null;
 	let showLoginModal = $state(false);
@@ -278,24 +293,21 @@
 		const handleAuthOpen = () => { showLoginModal = true; };
 		window.addEventListener('auth:open-login', handleAuthOpen);
 
-		const isTouch = window.matchMedia('(pointer: coarse)').matches;
-		const unsubscribe = page.subscribe(($page) => {
-			const hoverId = $page.state?.hoverId as number | undefined;
-			if (hoverId && hoverId !== appliedHoverId) {
-				if (!isTouch) {
-					portfolio.lockHover(hoverId);
-				}
-				appliedHoverId = hoverId;
-			}
-		});
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
 			window.removeEventListener('namecard:open', handleNameCardOpen);
 			window.removeEventListener('auth:open-login', handleAuthOpen);
-			unsubscribe();
 		};
 	});
+
+ afterNavigate(() => {
+  const hoverId = (page.state as { hoverId?: number }).hoverId;
+  if (hoverId && hoverId !== appliedHoverId) {
+   if (!window.matchMedia('(pointer: coarse)').matches) portfolio.lockHover(hoverId);
+   appliedHoverId = hoverId;
+  }
+ });
 
 	// Enable View Transitions API for home↔project navigation
 	onNavigate((navigation) => {
@@ -464,6 +476,10 @@
 	});
 </script>
 
+<SpacingStyles theme={spacingPreview.enabled && spacingPreview.draft ? spacingPreview.draft : data.spacingTheme} />
+{#if spacingPreview.draft && !isAdminPage}<SpacingPreviewPanel />{/if}
+{#if emptyCardPreview.draft && !isAdminPage}<EmptyCardPreviewPanel />{/if}
+{#if hoverCardPreview.draft && !isAdminPage}<HoverCardPreviewPanel />{/if}
 <TypographyStyles theme={typographyPreview.enabled && typographyPreview.draft ? typographyPreview.draft : data.typographyTheme} enabled={!isAdminPage && !isErrorPage} />
 
 <svelte:window onkeydown={(e: KeyboardEvent) => { if (e.key === 'Escape' && nameCardExpanded) collapseNameCard(); }} />
@@ -488,10 +504,11 @@
 		<div class="font-body bg-charcoal text-cream h-screen flex {isHomePage || isErrorPage ? '' : 'ml-[12px]'}">
 			<!-- Left spacer only on project pages on larger screens -->
 			{#if isProjectPage && !isErrorPage}
+				<ProjectPageBackground />
 				<div class="hidden lg:block w-80 shrink-0"></div>
 			{/if}
 			<!-- Main Content - full width for home/gallery, adjusted for project pages -->
-			<div class="{isProjectPage && !isErrorPage ? 'flex-1' : 'w-full'} h-full {isHomePage ? 'overflow-hidden' : 'overflow-auto'} vt-exclude-namecard" style="view-transition-name: main-content">
+			<div class="{isProjectPage && !isErrorPage ? 'flex-1 relative' : 'w-full'} h-full {isHomePage ? 'overflow-hidden' : 'overflow-auto'} vt-exclude-namecard" style="view-transition-name: main-content">
 				{@render children()}
 			</div>
 		</div>
@@ -530,7 +547,7 @@
 				{#if isProjectPage}
 					<a href={resolve('/')} class="pointer-events-auto pill active inline-flex items-center gap-2 px-3 py-1.5 text-sm tracking-[0.2em] uppercase rounded-[1px] hover:opacity-80 transition-opacity" style="view-transition-name: category-back;" onclick={(event: MouseEvent) => {
 						event.preventDefault();
-						const slug = $page.params?.slug;
+						const slug = page.params?.slug;
 						const projectItem = slug ? portfolio.allItems.find(i => i.slug === slug) : null;
 						goto(resolve('/'), projectItem ? { state: { hoverId: projectItem.id } } : undefined);
 					}}>
@@ -606,14 +623,14 @@
 		{#if isMobileScreen && !isErrorPage && !isHomePage}
 			<button
 				onclick={() => mobileMenuOpen = !mobileMenuOpen}
-				class="fixed bottom-6 left-6 z-[9999] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg"
+				class="soft-glass arch-button fixed bottom-4 left-6 z-[9999]"
 				aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
 			>
-				<svg class="w-6 h-6 text-walnut" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					{#if mobileMenuOpen}
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+						<path stroke-linecap="square" stroke-width="1.25" d="M6 18L18 6M6 6l12 12" />
 					{:else}
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+						<path stroke-linecap="square" stroke-width="1.25" d="M4 7h16M4 12h16M4 17h16" />
 					{/if}
 				</svg>
 			</button>

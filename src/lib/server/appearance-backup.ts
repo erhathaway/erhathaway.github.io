@@ -6,17 +6,42 @@ import type { Db } from './db';
 import { siteSettings } from './db/schema';
 import { ROLES } from '$lib/typography';
 import { validateStyle } from './typography';
+import { validateValues } from './spacing';
+import { validateEffects, validateFill } from './empty-card';
+import { validateHoverCard } from './hover-card';
+import { PROJECT_NAMECARD_BACKGROUND_KEY } from './project-namecard';
 import { validateNamecardRecipe } from './namecard-recipe';
 import type { AppearanceBackup, ConflictResolution } from '$lib/types/export-manifest';
 
 const destinations = ['namecard_image', 'project_namecard_image', 'preview_namecard_image'];
+const THEME_PREFIX_BY_ACTIVE_KEY: Record<string, string> = {
+	'typography-active': 'typography-theme:',
+	'spacing-active': 'spacing-theme:',
+	'empty-card-active': 'empty-card-theme:',
+	'hover-card-active': 'hover-card-theme:'
+};
 export function isAppearanceKey(key: string) {
 	return (
 		destinations.includes(key) ||
-		key === 'typography-active' ||
-		/^namecard-variant:[\w-]+$/.test(key) ||
-		/^typography-theme:[\w-]+$/.test(key)
+		key in THEME_PREFIX_BY_ACTIVE_KEY ||
+		key === PROJECT_NAMECARD_BACKGROUND_KEY ||
+		/^(namecard-variant|typography-theme|spacing-theme|empty-card-theme|hover-card-theme):[\w-]+$/.test(key)
 	);
+}
+/** Replacing clears these only when the backup covers them, so older backups can't wipe them. */
+const OPTIONAL_THEME_KINDS = ['spacing', 'empty-card', 'hover-card', 'project-namecard'];
+function backupCoversKey(backup: AppearanceBackup, key: string) {
+	const kind = OPTIONAL_THEME_KINDS.find((item) => key.startsWith(`${item}-`));
+	return !kind || !!backup.themeKinds?.includes(kind);
+}
+function validateThemeName(value: Record<string, unknown>) {
+	if (
+		typeof value.name !== 'string' ||
+		!value.name.trim() ||
+		value.name.length > 100 ||
+		typeof value.updatedAt !== 'string'
+	)
+		throw error(400, 'Invalid theme name.');
 }
 export function imageKey(url: string): string | null {
 	if (url.startsWith('artifacts/')) return url;
@@ -50,10 +75,10 @@ function referencedKeys(settings: AppearanceBackup['settings']) {
 	for (const row of settings)
 		walkImages(row.value, (url, formats) => {
 			const key = imageKey(url);
-			if (!key || !safeKey(key)) throw error(400, `Cannot back up name card image: ${url}`);
+			if (!key || !safeKey(key)) throw error(400, `Cannot back up image: ${url}`);
 			keys.add(key);
 			for (const format of formats) {
-				if (!['webp', 'avif'].includes(format)) throw error(400, 'Invalid name card image format.');
+				if (!['webp', 'avif'].includes(format)) throw error(400, 'Invalid image format.');
 				keys.add(key.replace(/\.[^.]+$/, `.${format}`));
 			}
 			return url;
@@ -67,6 +92,7 @@ export async function exportAppearance(db: Db): Promise<AppearanceBackup> {
 		.filter((row) => isAppearanceKey(row.key))
 		.map(({ key, value }) => ({ key, value }));
 	return {
+		themeKinds: OPTIONAL_THEME_KINDS,
 		settings,
 		images: [...referencedKeys(settings)].map((key) => ({
 			key,
@@ -79,6 +105,8 @@ export async function exportAppearance(db: Db): Promise<AppearanceBackup> {
 export function validateAppearance(backup: AppearanceBackup, zip: JSZip, bucket?: R2Bucket) {
 	if (!backup || !Array.isArray(backup.settings) || !Array.isArray(backup.images))
 		throw error(400, 'Invalid appearance backup.');
+	if (backup.themeKinds !== undefined && !Array.isArray(backup.themeKinds))
+		throw error(400, 'Invalid appearance backup.');
 	const keys = new Set<string>();
 	for (const row of backup.settings) {
 		if (
@@ -90,12 +118,14 @@ export function validateAppearance(backup: AppearanceBackup, zip: JSZip, bucket?
 		)
 			throw error(400, 'Invalid or duplicate appearance setting.');
 		keys.add(row.key);
-		if (row.key.startsWith('typography-theme:') || row.key.startsWith('namecard-variant:')) {
+		if (row.key.includes(':')) {
 			const value = row.value as { id?: unknown };
 			if (value.id !== row.key.slice(row.key.indexOf(':') + 1))
 				throw error(400, 'Appearance ID does not match its key.');
 		}
-		if (row.key !== 'typography-active') {
+		if (row.key === PROJECT_NAMECARD_BACKGROUND_KEY) {
+			if (typeof row.value !== 'boolean') throw error(400, 'Invalid name card background setting.');
+		} else if (!(row.key in THEME_PREFIX_BY_ACTIVE_KEY)) {
 			if (typeof row.value !== 'object' || Array.isArray(row.value))
 				throw error(400, 'Invalid appearance value.');
 			const value = row.value as Record<string, unknown>;
@@ -115,6 +145,16 @@ export function validateAppearance(backup: AppearanceBackup, zip: JSZip, bucket?
 						throw error(400, 'Unknown typography role in backup.');
 					validateStyle(style);
 				}
+			} else if (row.key.startsWith('spacing-theme:')) {
+				validateThemeName(value);
+				validateValues(value.values);
+			} else if (row.key.startsWith('empty-card-theme:')) {
+				validateThemeName(value);
+				validateFill(value.fill);
+				validateEffects(value.effects);
+			} else if (row.key.startsWith('hover-card-theme:')) {
+				validateThemeName(value);
+				validateHoverCard(value);
 			} else {
 				if (typeof value.imageUrl !== 'string') throw error(400, 'Missing name card image.');
 				for (const [field, min, max] of [
@@ -138,14 +178,15 @@ export function validateAppearance(backup: AppearanceBackup, zip: JSZip, bucket?
 			}
 		}
 	}
-	const active = backup.settings.find((row) => row.key === 'typography-active')?.value;
-	// The built-in default is code-defined and has no database row.
-	if (
-		active != null &&
-		(typeof active !== 'string' ||
-			(active !== 'default' && !keys.has(`typography-theme:${active}`)))
-	)
-		throw error(400, 'Active typography theme is missing from the backup.');
+	for (const [activeKey, prefix] of Object.entries(THEME_PREFIX_BY_ACTIVE_KEY)) {
+		const active = backup.settings.find((row) => row.key === activeKey)?.value;
+		// The built-in default is code-defined and has no database row.
+		if (
+			active != null &&
+			(typeof active !== 'string' || (active !== 'default' && !keys.has(`${prefix}${active}`)))
+		)
+			throw error(400, 'Active theme is missing from the backup.');
+	}
 	const imageKeys = new Set<string>();
 	for (const image of backup.images) {
 		if (
@@ -210,7 +251,7 @@ export async function restoreAppearance(
 	);
 	if (resolution === 'clobber') {
 		const old = (await db.select({ key: siteSettings.key }).from(siteSettings))
-			.filter((row) => isAppearanceKey(row.key))
+			.filter((row) => isAppearanceKey(row.key) && backupCoversKey(backup, row.key))
 			.map((row) => row.key);
 		// D1 batch commits all settings together, including clearing absent promotions.
 		await db.batch([db.delete(siteSettings).where(inArray(siteSettings.key, old)), ...writes]);

@@ -6,6 +6,9 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import ProjectPanelFrost from '$lib/empty-card/ProjectPanelFrost.svelte';
+  import type { EmptyCardTheme } from '$lib/empty-card';
+  import { getEmptyCardPreview } from '$lib/empty-card/preview';
 
   let {
     isMobile = false,
@@ -26,6 +29,13 @@
   } = $props();
 
   const isProjectPage = $derived($page.route.id === '/[slug]');
+  const emptyCardPreview = getEmptyCardPreview();
+  const emptyCardTheme = $derived(
+    (emptyCardPreview.enabled && emptyCardPreview.draft) ||
+      ($page.data.emptyCardTheme as EmptyCardTheme | undefined)
+  );
+  const textOnlyCard = $derived(isProjectPage && $page.data.projectNamecardBackground === false);
+  const mobileFrost = $derived(isProjectPage && isMobile && !!emptyCardTheme && emptyCardTheme.fill.type !== 'blank');
   const activeNamecardImage = $derived(isProjectPage ? portfolio.projectNamecardImage : portfolio.namecardImage);
 
   const activeSlug = $derived($page.params.slug ?? null);
@@ -68,15 +78,20 @@
 
 <aside
   class="w-full h-full text-walnut flex flex-col relative overflow-visible {slideInActive ? 'animate-slide-in-left' : ''}"
+  style:border-left={isProjectPage ? '1px solid #00000024' : undefined}
+  style:border-right={isProjectPage && isMobile ? '1px solid #00000024' : undefined}
   onanimationend={handleSlideInDone}
   onanimationcancel={handleSlideInDone}
 >
+  <!-- A text-only card has no panel of its own, so the frost has to reach behind it too. -->
+  {#if mobileFrost && textOnlyCard}<ProjectPanelFrost />{/if}
+
   {#if isProjectPage}
-    <div class="w-full h-3 shrink-0 relative z-30" style="background: #fcfbfa;"></div>
+    <div class="w-full h-3 shrink-0 relative z-30 {textOnlyCard && !isMobile ? 'warm-glass' : ''}" style={textOnlyCard && (!isMobile || mobileFrost) ? undefined : 'background: #fcfbfa;'}></div>
   {/if}
 
   {#if showNameCard}
-    {#if activeNamecardImage}
+    {#if activeNamecardImage && !textOnlyCard}
       <!-- Namecard image replaces gradient + text -->
       <button
         type="button"
@@ -104,11 +119,11 @@
     {:else}
       <!-- Fixed Header - Always on top -->
       <div
-        class="namecard-vt relative {isProjectPage ? '' : 'w-[280px]'} border z-30 cursor-pointer"
-        style="border-color: rgba(138,128,120,0.15); background-color: #fae6d0;"
+        class="namecard-vt relative {isProjectPage ? '' : 'w-[280px]'} {textOnlyCard ? '' : 'border'} {textOnlyCard && !isMobile ? 'warm-glass' : ''} z-30 cursor-pointer"
+        style={textOnlyCard ? (isMobile && !mobileFrost ? 'background-color: #fcfbfa;' : undefined) : 'border-color: rgba(138,128,120,0.15); background-color: #fae6d0;'}
         style:view-transition-name={hasTransitionNames ? 'name-card-bg' : undefined}
       >
-        {#if isProjectPage}
+        {#if isProjectPage && !textOnlyCard}
           <div class="absolute -top-2.5 -bottom-4 z-30" style="left: -1px; width: 2px; background: linear-gradient(to bottom, rgba(0,0,0,0.08) 15%, rgba(0,0,0,0.02) 15%, rgba(0,0,0,0.02) 85%, rgba(0,0,0,0.08) 85%);"></div>
         {/if}
         <button
@@ -126,7 +141,7 @@
           </span>
         </button>
         <button type="button"
-          data-typo={isProjectPage ? 'project-card-subtitle' : 'landing-subtitle'} class="block w-full text-left namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 px-8 pt-4 pb-11 relative border-b border-black/5 {slideUpActive ? 'animate-slide-up' : ''} cursor-pointer"
+          data-typo={isProjectPage ? 'project-card-subtitle' : 'landing-subtitle'} class="block w-full text-left namecard-vt text-[11px] tracking-[0.32em] uppercase text-ash/80 px-8 pt-4 pb-11 relative {textOnlyCard ? '' : 'border-b border-black/5'} {slideUpActive ? 'animate-slide-up' : ''} cursor-pointer"
           style="animation-delay: 0.2s;"
           style:view-transition-name={hasTransitionNames ? 'subtitle-text' : undefined}
           onclick={() => isProjectPage ? goto(resolve('/')) : onNameClick?.()}
@@ -140,7 +155,9 @@
   {/if}
 
   <!-- Main Content Area - glass white background fills from namecard to bottom -->
-  <div class="flex-1 flex flex-col relative z-0 min-h-0 {isProjectPage ? '' : 'border-l border-black/10'}" style="background: {isMobile ? '#fcfbfa' : 'rgba(245, 241, 235, 0.28)'}; {isMobile ? '' : '-webkit-backdrop-filter: saturate(180%) blur(100px); backdrop-filter: saturate(180%) blur(100px);'}">
+  <div class="flex-1 flex flex-col relative z-0 min-h-0 {isProjectPage ? '' : 'border-l border-black/10'} {isProjectPage && !isMobile ? 'warm-glass' : ''}" style={(isProjectPage && !isMobile) || mobileFrost ? undefined : `background: ${isMobile ? '#fcfbfa' : 'rgba(245, 241, 235, 0.28)'}; ${isMobile ? '' : '-webkit-backdrop-filter: saturate(180%) blur(100px); backdrop-filter: saturate(180%) blur(100px);'}`}>
+
+    {#if mobileFrost && !textOnlyCard}<ProjectPanelFrost />{/if}
 
     <!-- Scrollable Navigation Area -->
     <nav

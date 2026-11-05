@@ -1,22 +1,48 @@
 <script lang="ts">
   import type { PortfolioItem } from '$lib/data/items';
+  import { page } from '$app/state';
+  import {
+    DEFAULT_THEME,
+    MOBILE_MAX_WIDTH,
+    panelClipPath,
+    panelTextWidth,
+    shapeForScreen,
+    type HoverCardScreen,
+    type HoverCardTheme
+  } from '$lib/hover-card';
+  import { getHoverCardPreview } from '$lib/hover-card/preview';
 
   let {
     item,
     variant = 'inline',
-    dockSide = 'left'
-  }: { item: PortfolioItem; variant?: 'inline' | 'tile'; dockSide?: 'left' | 'right' } = $props();
+    dockSide = 'left',
+    theme = undefined,
+    screen = undefined
+  }: {
+    item: PortfolioItem;
+    variant?: 'inline' | 'tile';
+    dockSide?: 'left' | 'right';
+    theme?: HoverCardTheme;
+    screen?: HoverCardScreen;
+  } = $props();
+  let innerWidth = $state(1200);
+  const activeScreen = $derived<HoverCardScreen>(
+    screen ?? (innerWidth <= MOBILE_MAX_WIDTH ? 'mobile' : 'desktop')
+  );
+  const hoverCardPreview = getHoverCardPreview();
+  const hoverCard = $derived(
+    theme ??
+      (hoverCardPreview.enabled ? hoverCardPreview.draft : null) ??
+      (page.data.hoverCardTheme as HoverCardTheme | undefined) ??
+      DEFAULT_THEME
+  );
 
   function formatMetadata(key: string, value: string): string {
     return value;
   }
 
   const isTile = $derived(variant === 'tile');
-  const tileClipPath = $derived.by(() =>
-    dockSide === 'right'
-      ? 'polygon(40% 0%, 100% 0%, 100% 100%, 56% 100%)'
-      : 'polygon(0% 0%, 60% 0%, 44% 100%, 0% 100%)'
-  );
+  const tileClipPath = $derived(panelClipPath(hoverCard, dockSide, activeScreen));
 
   const wrapperClass = $derived.by(() => {
     if (variant === 'tile') {
@@ -46,8 +72,8 @@
   });
   const projectHeaderStyle = $derived.by(() => {
     if (!isTile) return undefined;
-    // Keep the text width inside the trapezoid on small tiles.
-    return 'width: min(240px, 40%); max-width: min(240px, 40%);';
+    const width = panelTextWidth(hoverCard, activeScreen);
+    return `width: ${width}; max-width: ${width};`;
   });
 
   const titleClass = $derived.by(() =>
@@ -94,17 +120,17 @@
 
   const tileTextWrapClass = $derived.by(() => {
     if (!isTile) return '';
-    return dockSide === 'right' ? 'relative z-10 max-w-[72%] ml-auto' : 'relative z-10 max-w-[72%]';
+    const maxWidth = shapeForScreen(hoverCard, activeScreen) === 'full' ? 'max-w-full' : 'max-w-[72%]';
+    return dockSide === 'right' ? `relative z-10 ${maxWidth} ml-auto` : `relative z-10 ${maxWidth}`;
   });
 </script>
 
+<svelte:window bind:innerWidth />
+
 {#if item}
-  <div class={wrapperClass}>
+  <div class={wrapperClass} style:container-type={isTile ? 'size' : undefined}>
     {#if isTile}
-      <div
-        class="absolute inset-0"
-        style="background: rgba(253, 245, 230, 0.95); clip-path: {tileClipPath};"
-      ></div>
+      <div class="soft-glass absolute inset-0" style:clip-path={tileClipPath}></div>
     {/if}
     <div class={innerClass} style={innerStyle}>
       <div class={projectHeaderClass} style={projectHeaderStyle}>
@@ -114,7 +140,7 @@
         </h3>
 
         {#if item.description?.trim()}
-          <p data-typo={isTile ? 'tile-description' : 'hover-description'} class={descriptionClass} style="font-family: 'DM Sans', sans-serif; color: #6b5c4f; {isTile ? 'letter-spacing: 0.01em;' : ''} {descriptionStyle ?? ''}">
+          <p data-typo={isTile ? 'tile-description' : 'hover-description'} class={descriptionClass} style="font-family: 'DM Sans', sans-serif; color: {isTile ? '#4a3d32' : '#6b5c4f'}; {isTile ? 'letter-spacing: 0.01em;' : ''} {descriptionStyle ?? ''}">
             {item.description}
           </p>
         {/if}
@@ -123,7 +149,7 @@
           <div class="flex vt-exclude-namecard {dockSide === 'right' ? 'justify-end text-right' : 'justify-start text-left'}" style="gap: {isTile ? 'clamp(0.75rem, 1.2vw, 1.5rem)' : '1.5rem'};">
             {#each Object.entries(item.metadata) as [key, value] (key)}
               <div class="flex flex-col {dockSide === 'right' ? 'items-end' : 'items-start'}" style="gap: {isTile ? 'clamp(0.2rem, 0.4vw, 0.375rem)' : '0.375rem'};">
-                <span data-typo={isTile ? 'tile-label' : 'hover-label'} class={metaKeyClass} style="color: #a08e7a; {metaKeyStyle ?? ''}">{key}</span>
+                <span data-typo={isTile ? 'tile-label' : 'hover-label'} class={metaKeyClass} style="color: {isTile ? '#5f5044' : '#a08e7a'}; {metaKeyStyle ?? ''}">{key}</span>
                 <span data-typo={isTile ? 'tile-value' : 'hover-value'} class={metaValueClass} style="font-family: 'Cormorant Garamond', Georgia, serif; color: #3d2e1e; {metaValueStyle ?? ''}">{formatMetadata(key, value)}</span>
               </div>
             {/each}

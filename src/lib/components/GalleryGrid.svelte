@@ -5,10 +5,14 @@
   import GalleryItem from './GalleryItem.svelte';
   import { env } from '$env/dynamic/public';
   import { browser } from '$app/environment';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import HoverInfo from './HoverInfo.svelte';
   import AuthButton from './AuthButton.svelte';
   import { getImageSources, getResponsiveSrcset, GALLERY_SIZES } from '$lib/utils/image-formats';
+  import { DEFAULT_THEME as DEFAULT_EMPTY_CARD, type EmptyCardTheme } from '$lib/empty-card';
+  import EmptyCardFill from '$lib/empty-card/EmptyCardFill.svelte';
+  import { getEmptyCardPreview } from '$lib/empty-card/preview';
+  import { getHoverCardPreview } from '$lib/hover-card/preview';
   import { onMount } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
 
@@ -60,7 +64,7 @@
     });
   }
 
-  function handleNamecardTileEnter(e: PointerEvent) {
+  function clearHoverOnEnter(e: PointerEvent) {
     if (e.pointerType === 'touch') return;
     portfolio.setHoveredItem(null);
   }
@@ -75,9 +79,13 @@
     | { target: 'filler'; dockSide: 'left' | 'right' }
     | null;
 
+  const hoverCardPreview = getHoverCardPreview();
+  const heldHoverPreview = $derived(
+    [typographyPreview, hoverCardPreview].find((preview) => preview.draft && preview.keepHoverOpen !== false)
+  );
   const hoveredItem = $derived(
-    typographyPreview.draft && typographyPreview.keepHoverOpen !== false && $page.route.id === '/(home)'
-      ? portfolio.filteredItems.find(item => item.id === typographyPreview.hoverItemId) ?? portfolio.filteredItems[0] ?? null
+    heldHoverPreview && page.route.id === '/(home)'
+      ? portfolio.filteredItems.find(item => item.id === heldHoverPreview.hoverItemId) ?? portfolio.filteredItems[0] ?? null
       : portfolio.hoveredItem
   );
 
@@ -103,14 +111,20 @@
   });
   const fillerStartDisplayIndex = $derived.by(() => displayTileCount);
   const fillerClass = $derived.by(() => {
-    if (fillerSpan === 0) return '';
-    if (fillerSpan === 1) return 'col-span-1 aspect-square';
-    return `aspect-[${fillerSpan}/1]`;
+    // Wider fillers stretch to the row height; an aspect ratio would ignore the column gap.
+    return fillerSpan === 1 ? 'col-span-1 aspect-square' : '';
   });
   const fillerGridColumn = $derived.by(() => {
     if (fillerSpan <= 1) return undefined;
     return `span ${fillerSpan}`;
   });
+
+  const emptyCardPreview = getEmptyCardPreview();
+  const emptyCardTheme = $derived(
+    (emptyCardPreview.enabled && emptyCardPreview.draft) ||
+      ((page.data.emptyCardTheme as EmptyCardTheme | undefined) ?? DEFAULT_EMPTY_CARD)
+  );
+  const fillerSizes = $derived(fillerSpan > 1 ? '67vw' : GALLERY_SIZES);
 
   const isTouchDevice = $derived(browser && window.matchMedia('(pointer: coarse)').matches);
 
@@ -177,11 +191,11 @@
 <svelte:window bind:innerWidth />
 
 <main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-hide" style="height: 100dvh;" onpointerleave={handleGalleryLeave}>
-  <div class="grid gap-0.5 p-0.5 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
+  <div data-home-spacing class="grid min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
     {#if homeNamecardInGallery}
       <div
         class="gallery-item group relative aspect-square overflow-hidden block cursor-pointer"
-        onpointerenter={handleNamecardTileEnter}
+        onpointerenter={clearHoverOnEnter}
         onclick={triggerWave}
         onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerWave(); } }}
         role="button"
@@ -246,7 +260,6 @@
         {/if}
 
         {#if hoveredItem && dockTarget?.target === 'namecard'}
-          <div class="absolute inset-0 z-10 bg-black/25 pointer-events-none"></div>
           <div class="absolute inset-0 z-20 pointer-events-none">
             <HoverInfo item={hoveredItem} variant="tile" dockSide={dockSide} />
           </div>
@@ -268,9 +281,9 @@
       />
     {/each}
     {#if fillerSpan > 0}
-      <div class="gallery-item relative overflow-hidden border {fillerClass}" aria-hidden="true" style="border-color: rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); {fillerGridColumn ? `grid-column: ${fillerGridColumn};` : ''}">
+      <div data-empty-card class="gallery-item relative overflow-hidden {fillerClass}" aria-hidden="true" style:grid-column={fillerGridColumn} onpointerenter={clearHoverOnEnter}>
+        <EmptyCardFill fill={emptyCardTheme.fill} effects={emptyCardTheme.effects} sizes={fillerSizes} />
         {#if hoveredItem && dockTarget?.target === 'filler'}
-          <div class="absolute inset-0 z-10 bg-black/25 pointer-events-none"></div>
           <div class="absolute inset-0 z-20 pointer-events-none">
             <HoverInfo item={hoveredItem} variant="tile" dockSide={dockSide} />
           </div>
@@ -280,6 +293,8 @@
   </div>
   <div
     class="relative overflow-hidden border backdrop-blur-md"
+    onpointerenter={clearHoverOnEnter}
+    role="contentinfo"
     style="border-color: rgba(138,128,120,0.15); background: radial-gradient(circle at bottom right, rgba(253,218,130,0.22), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.08)); background-color: #f3e9e1;"
   >
     <div class="relative px-8 py-5 flex items-center justify-start min-[600px]:justify-center">

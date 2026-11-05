@@ -91,6 +91,8 @@ export interface ImportSummary {
 }
 
 export interface AppearanceBackup {
+	/** Newer theme kinds this backup includes. Replacing leaves other kinds unchanged. */
+	themeKinds?: string[];
 	settings: { key: string; value: unknown }[];
 	images: { key: string; path: string }[];
 }
