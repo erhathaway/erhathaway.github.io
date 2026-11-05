@@ -15,6 +15,7 @@ import { saveTypography, activateTypography, activeTypography } from './typograp
 import { saveSpacing, activateSpacing, activeSpacing } from './spacing';
 import { saveEmptyCard, activateEmptyCard, activeEmptyCard } from './empty-card';
 import { saveHoverCard, activateHoverCard, activeHoverCard } from './hover-card';
+import { projectNamecardBackground, setProjectNamecardBackground } from './project-namecard';
 import {
 	saveNamecardVariant,
 	promoteNamecardVariant,
@@ -158,6 +159,7 @@ it.skipIf(process.env.RUN_DEV_BACKUP_RESTORE !== '1')(
 				angle: -14
 			});
 			await activateHoverCard(db, hoverCard.id);
+			await setProjectNamecardBackground(db, false);
 			const snapshot = await exportAppearance(db);
 			const archive = await exportZip();
 			await writeFile(join(directory, 'round-trip.zip'), archive);
@@ -187,6 +189,7 @@ it.skipIf(process.env.RUN_DEV_BACKUP_RESTORE !== '1')(
 			expect(await activeSpacing(db)).toEqual(spacing);
 			expect((await activeEmptyCard(db)).id).toBe(emptyCard.id);
 			expect(await activeHoverCard(db)).toEqual(hoverCard);
+			expect(await projectNamecardBackground(db)).toBe(false);
 			const restored = await exportAppearance(db);
 			const restoredRows = new Map(restored.settings.map((row) => [row.key, row.value]));
 			// Compare every field recursively; only image URLs may change, and their bytes must match.

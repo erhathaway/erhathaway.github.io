@@ -22,6 +22,7 @@
 	setTypographyPreview(typographyPreview);
 	import favicon from '$lib/assets/favicon.svg';
 	import LeftPanel from '$lib/components/LeftPanel.svelte';
+	import ProjectPageBackground from '$lib/empty-card/ProjectPageBackground.svelte';
 	import CategoryPills from '$lib/components/CategoryPills.svelte';
 	import LoginModal from '$lib/components/LoginModal.svelte';
 	import AuthButton from '$lib/components/AuthButton.svelte';
@@ -503,10 +504,11 @@
 		<div class="font-body bg-charcoal text-cream h-screen flex {isHomePage || isErrorPage ? '' : 'ml-[12px]'}">
 			<!-- Left spacer only on project pages on larger screens -->
 			{#if isProjectPage && !isErrorPage}
+				<ProjectPageBackground />
 				<div class="hidden lg:block w-80 shrink-0"></div>
 			{/if}
 			<!-- Main Content - full width for home/gallery, adjusted for project pages -->
-			<div class="{isProjectPage && !isErrorPage ? 'flex-1' : 'w-full'} h-full {isHomePage ? 'overflow-hidden' : 'overflow-auto'} vt-exclude-namecard" style="view-transition-name: main-content">
+			<div class="{isProjectPage && !isErrorPage ? 'flex-1 relative' : 'w-full'} h-full {isHomePage ? 'overflow-hidden' : 'overflow-auto'} vt-exclude-namecard" style="view-transition-name: main-content">
 				{@render children()}
 			</div>
 		</div>

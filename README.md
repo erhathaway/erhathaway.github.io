@@ -183,7 +183,7 @@ bunx wrangler d1 execute portfolio-db --file=./drizzle/<migration>.sql
 ## Backing up themes and name cards
 
 Admin → Export / Import creates a version 2 ZIP. Every export includes all saved
-typography, spacing, empty card, and hover card themes and the active theme of each, name-card variants and framing, generator
+typography, spacing, empty card, and hover card themes and the active theme of each, the project name card background setting, name-card variants and framing, generator
 recipes (including typography snapshots), background images, and the promoted
 landing, project, and social preview cards. Referenced PNG/JPEG/WebP/AVIF/GIF files
 are included and shared images are stored once. Unsaved browser preview drafts
@@ -222,7 +222,7 @@ Preview on site opens a private live editor with apply/compare, highlight, minim
 
 ## Empty card themes
 
-Admin → Themes → Empty card themes controls what fills the leftover space when projects don't complete the home gallery's last row. A theme can be blank (the locked default), a color, a gradient, or an uploaded image with an adjustable focal point. Blur, transparency, fade, and wash out can soften any non-blank card. Preview on site opens a private live editor on the home page; Review & save in admin carries the draft back without publishing it. Themes are stored in existing site settings (`empty-card-theme:*` and `empty-card-active`); no database migration is needed. They are included in appearance backups, along with their images.
+Admin → Themes → Empty card themes controls what fills the leftover space when projects don't complete the home gallery's last row. A theme can be blank (the locked default), a color, a gradient, or an uploaded image with an adjustable focal point. Blur, transparency, fade, and wash out can soften any non-blank card. Preview on site opens a private live editor on the home page; Review & save in admin carries the draft back without publishing it. The active theme is also the fixed background on project pages. Themes are stored in existing site settings (`empty-card-theme:*` and `empty-card-active`); no database migration is needed. They are included in appearance backups, along with their images.
 
 ## Hover card themes
 

@@ -76,7 +76,8 @@ const original = [
 	{ key: 'empty-card-theme:empty-1', value: emptyCardTheme },
 	{ key: 'empty-card-active', value: 'empty-1' },
 	{ key: 'hover-card-theme:hover-1', value: hoverCardTheme },
-	{ key: 'hover-card-active', value: 'hover-1' }
+	{ key: 'hover-card-active', value: 'hover-1' },
+	{ key: 'project-namecard-background', value: false }
 ];
 beforeEach(async () => {
 	client = createClient({ url: ':memory:' });
@@ -113,7 +114,7 @@ async function settings() {
 describe('appearance backup', () => {
 	it('includes themes, active theme, every promotion, variant recipes, backgrounds and all formats, deduplicated', async () => {
 		const backup = await exportAppearance(db);
-		expect(backup.settings).toHaveLength(12);
+		expect(backup.settings).toHaveLength(13);
 		expect(backup.images.map((image) => image.key).sort()).toEqual(
 			[
 				'backdrop.png',
@@ -139,7 +140,7 @@ describe('appearance backup', () => {
 		const result = await restoreAppearance(db, backup, zip, bucket, 'clobber');
 		const rows = await settings();
 		const restored = rows['namecard-variant:card-1'] as typeof variant;
-		expect(result).toEqual({ appearanceSettingsRestored: 12, appearanceImagesRestored: 7 });
+		expect(result).toEqual({ appearanceSettingsRestored: 13, appearanceImagesRestored: 7 });
 		expect(rows['typography-theme:extra']).toBeUndefined();
 		expect(rows['unrelated-secret']).toBe('keep');
 		expect(rows['typography-theme:theme-1']).toEqual(theme);
@@ -184,6 +185,7 @@ describe('appearance backup', () => {
 		expect(rows['empty-card-active']).toBe('empty-1');
 		expect(rows['hover-card-theme:hover-1']).toEqual(hoverCardTheme);
 		expect(rows['hover-card-active']).toBe('hover-1');
+		expect(rows['project-namecard-background']).toBe(false);
 		expect(restored).toEqual({
 			...emptyCardTheme,
 			fill: { ...emptyCardTheme.fill, imageUrl: restored.fill.imageUrl }
@@ -207,7 +209,8 @@ describe('appearance backup', () => {
 			'empty-card-theme:empty-1',
 			'empty-card-active',
 			'hover-card-theme:hover-1',
-			'hover-card-active'
+			'hover-card-active',
+			'project-namecard-background'
 		])
 			expect(rows[key]).toEqual(before[key]);
 	});
@@ -227,7 +230,7 @@ describe('appearance backup', () => {
 	it('empty replacement resets all appearance defaults and leaves unrelated settings', async () => {
 		await restoreAppearance(
 			db,
-			{ themeKinds: ['spacing', 'empty-card', 'hover-card'], settings: [], images: [] },
+			{ themeKinds: ['spacing', 'empty-card', 'hover-card', 'project-namecard'], settings: [], images: [] },
 			zip,
 			bucket,
 			'clobber'
@@ -317,6 +320,10 @@ describe('appearance backup', () => {
 				.value as typeof emptyCardTheme
 		).effects.blur = 500;
 		expect(() => validateAppearance(badEffects, zip, bucket)).toThrow();
+		const badNamecardSetting = structuredClone(backup);
+		badNamecardSetting.settings.find((row) => row.key === 'project-namecard-background')!.value =
+			'false';
+		expect(() => validateAppearance(badNamecardSetting, zip, bucket)).toThrow();
 		const badCard = structuredClone(backup);
 		(badCard.settings.find((row) => row.key === 'namecard_image')!.value as typeof card).zoom = -1;
 		await expect(

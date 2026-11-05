@@ -9,6 +9,7 @@ import { validateStyle } from './typography';
 import { validateValues } from './spacing';
 import { validateEffects, validateFill } from './empty-card';
 import { validateHoverCard } from './hover-card';
+import { PROJECT_NAMECARD_BACKGROUND_KEY } from './project-namecard';
 import { validateNamecardRecipe } from './namecard-recipe';
 import type { AppearanceBackup, ConflictResolution } from '$lib/types/export-manifest';
 
@@ -23,11 +24,12 @@ export function isAppearanceKey(key: string) {
 	return (
 		destinations.includes(key) ||
 		key in THEME_PREFIX_BY_ACTIVE_KEY ||
+		key === PROJECT_NAMECARD_BACKGROUND_KEY ||
 		/^(namecard-variant|typography-theme|spacing-theme|empty-card-theme|hover-card-theme):[\w-]+$/.test(key)
 	);
 }
 /** Replacing clears these only when the backup covers them, so older backups can't wipe them. */
-const OPTIONAL_THEME_KINDS = ['spacing', 'empty-card', 'hover-card'];
+const OPTIONAL_THEME_KINDS = ['spacing', 'empty-card', 'hover-card', 'project-namecard'];
 function backupCoversKey(backup: AppearanceBackup, key: string) {
 	const kind = OPTIONAL_THEME_KINDS.find((item) => key.startsWith(`${item}-`));
 	return !kind || !!backup.themeKinds?.includes(kind);
@@ -121,7 +123,9 @@ export function validateAppearance(backup: AppearanceBackup, zip: JSZip, bucket?
 			if (value.id !== row.key.slice(row.key.indexOf(':') + 1))
 				throw error(400, 'Appearance ID does not match its key.');
 		}
-		if (!(row.key in THEME_PREFIX_BY_ACTIVE_KEY)) {
+		if (row.key === PROJECT_NAMECARD_BACKGROUND_KEY) {
+			if (typeof row.value !== 'boolean') throw error(400, 'Invalid name card background setting.');
+		} else if (!(row.key in THEME_PREFIX_BY_ACTIVE_KEY)) {
 			if (typeof row.value !== 'object' || Array.isArray(row.value))
 				throw error(400, 'Invalid appearance value.');
 			const value = row.value as Record<string, unknown>;

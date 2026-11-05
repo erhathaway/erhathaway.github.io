@@ -114,7 +114,7 @@
 {#if item}
   <div class={wrapperClass} style:container-type={isTile ? 'size' : undefined}>
     {#if isTile}
-      <div class="tile-glass absolute inset-0" style:clip-path={tileClipPath}></div>
+      <div class="warm-glass absolute inset-0" style:clip-path={tileClipPath}></div>
     {/if}
     <div class={innerClass} style={innerStyle}>
       <div class={projectHeaderClass} style={projectHeaderStyle}>
@@ -144,24 +144,3 @@
     </div>
   </div>
 {/if}
-
-<style>
-  .tile-glass {
-    background: rgba(245, 232, 210, 0.38);
-    -webkit-backdrop-filter: blur(20px) saturate(140%) brightness(1.12);
-    backdrop-filter: blur(20px) saturate(140%) brightness(1.12);
-  }
-  /* Keep the text readable where the blur is unavailable or transparency is unwanted. */
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .tile-glass {
-      background: rgba(253, 245, 230, 0.94);
-    }
-  }
-  @media (prefers-reduced-transparency: reduce) {
-    .tile-glass {
-      background: rgb(253, 245, 230);
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
-  }
-</style>

@@ -10,6 +10,32 @@
 @layer components {
   /* Remove old hover info styles since we're using a different approach */
 
+  :root {
+    --warm-glass-filter: blur(20px) saturate(140%) brightness(1.12);
+  }
+  .warm-glass {
+    background: rgba(245, 232, 210, 0.38);
+    -webkit-backdrop-filter: var(--warm-glass-filter);
+    backdrop-filter: var(--warm-glass-filter);
+  }
+  /* Frosts an image directly, for glass whose backdrop-filter can't reach what's behind it. */
+  .warm-glass-frost {
+    filter: var(--warm-glass-filter);
+  }
+  /* Keep the text readable where the blur is unavailable or transparency is unwanted. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .warm-glass {
+      background: rgba(253, 245, 230, 0.94);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .warm-glass {
+      background: rgb(253, 245, 230);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
   .gallery-item::after {
     content: '';
     position: absolute;

@@ -9,7 +9,7 @@
 	let { data, className = '' }: Props = $props();
 </script>
 
-<div class={`sticky top-0 z-10 -mx-8 px-8 py-8 bg-white ${className}`}>
+<div class={`sticky top-0 z-10 -mx-8 px-8 py-8 warm-glass ${className}`}>
 	<h2 data-typo="section-title" class="text-xl text-walnut" style="font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: 0.02em;">
 		{data.title}
 	</h2>

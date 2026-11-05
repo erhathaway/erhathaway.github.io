@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { SignedIn, SignedOut, useClerkContext } from 'svelte-clerk';
 	import NamecardImageSettings from '../NamecardImageSettings.svelte';
+	import ProjectNamecardBackgroundToggle from '../ProjectNamecardBackgroundToggle.svelte';
 
 	const ctx = useClerkContext();
 
@@ -17,6 +18,7 @@
 </header>
 
 <SignedIn>
+	<ProjectNamecardBackgroundToggle />
 	<NamecardImageSettings {getToken} />
 </SignedIn>
 
