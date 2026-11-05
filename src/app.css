@@ -141,6 +141,10 @@
   .item-link.active::after {
     width: 100%;
   }
+  /* The current page's item is marked by its size and color, not the underline. */
+  .item-link.active-project::after {
+    display: none;
+  }
 
   .project-header-block {
     width: 256px;
