@@ -78,7 +78,9 @@
 				style:transform-origin={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
 			/>
 		{/if}
-		<div class="image-shade absolute inset-0 pointer-events-none rounded-[0.35rem]" style="box-shadow: inset 0 0 12px rgba(0,0,0,0.15);"></div>
+		{#if data.innerShadow !== false}
+			<div class="image-shade absolute inset-0 pointer-events-none rounded-[0.35rem]" style="box-shadow: inset 0 0 12px rgba(0,0,0,0.15);"></div>
+		{/if}
 	</div>
 	{#if comment}
 		<!-- Overlaps the photo by a fixed amount, so longer comments grow downward, not over it. -->

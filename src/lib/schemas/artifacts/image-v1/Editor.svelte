@@ -44,26 +44,27 @@
 
 	const updateDescription = (event: Event) => {
 		const target = event.currentTarget as HTMLTextAreaElement | null;
-		const next: ImageV1Data = {
+		onChange?.({
+			...current,
 			imageUrl: current.imageUrl?.trim() || '',
-			description: (target?.value ?? '').trim() || undefined,
-			positionX: current.positionX,
-			positionY: current.positionY,
-			zoom: current.zoom,
-			hoverImageUrl: current.hoverImageUrl
-		};
-		onChange?.(next);
+			description: (target?.value ?? '').trim() || undefined
+		});
 	};
 
 	const handlePositionChange = (x: number, y: number, z: number) => {
 		onChange?.({
+			...current,
 			imageUrl: current.imageUrl?.trim() || '',
 			description: current.description?.trim() || undefined,
 			positionX: x,
 			positionY: y,
-			zoom: z,
-			hoverImageUrl: current.hoverImageUrl
+			zoom: z
 		});
+	};
+
+	const innerShadow = $derived(current.innerShadow !== false);
+	const toggleInnerShadow = () => {
+		onChange?.({ ...current, imageUrl: current.imageUrl?.trim() || '', innerShadow: !innerShadow });
 	};
 
 	const handleHoverFile = async (file: File) => {
@@ -384,6 +385,20 @@
 			class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 bg-white focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all duration-150 resize-none"
 		></textarea>
 	</label>
+
+	<div class="flex items-center gap-2.5">
+		<button
+			type="button"
+			role="switch"
+			aria-checked={innerShadow}
+			aria-label="Inner shadow"
+			onclick={toggleInnerShadow}
+			class={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${innerShadow ? 'bg-slate-600' : 'bg-slate-200'}`}
+		>
+			<span class={`pointer-events-none inline-block h-4 w-4 translate-y-[1px] rounded-full bg-white shadow-sm transition-transform duration-200 ${innerShadow ? 'translate-x-[17px]' : 'translate-x-[2px]'}`}></span>
+		</button>
+		<span class="text-xs text-slate-500">{innerShadow ? 'Inner shadow on the photo' : 'No inner shadow'}</span>
+	</div>
 
 	{#if hasImage && !uploading}
 		<CoverPositionEditor

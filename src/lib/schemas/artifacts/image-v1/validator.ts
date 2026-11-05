@@ -16,6 +16,8 @@ export type ImageV1Data = {
 	/** Pixel size of the image, recorded so layouts can reserve its space before it loads. */
 	width?: number;
 	height?: number;
+	/** Whether the photo gets the soft inner shadow. Missing means on. */
+	innerShadow?: boolean;
 };
 
 export const createImageV1Draft = (): ImageV1Data => ({
@@ -74,6 +76,11 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 		errors.push('hoverImageFormats must be an array of strings');
 	}
 
+	const innerShadow = data.innerShadow;
+	if (innerShadow !== undefined && typeof innerShadow !== 'boolean') {
+		errors.push('innerShadow must be a boolean');
+	}
+
 	const width = data.width;
 	const height = data.height;
 	const isSize = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v > 0;
@@ -96,7 +103,8 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 			...(typeof hoverImageUrl === 'string' && hoverImageUrl.trim() ? { hoverImageUrl: hoverImageUrl.trim() } : {}),
 			...(Array.isArray(imageFormats) && imageFormats.length > 0 ? { imageFormats } : {}),
 			...(Array.isArray(hoverImageFormats) && hoverImageFormats.length > 0 ? { hoverImageFormats } : {}),
-			...(isSize(width) && isSize(height) ? { width, height } : {})
+			...(isSize(width) && isSize(height) ? { width, height } : {}),
+			...(typeof innerShadow === 'boolean' ? { innerShadow } : {})
 		}
 	};
 };
