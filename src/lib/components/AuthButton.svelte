@@ -9,13 +9,19 @@
 
 	let { onOpenModal, inline = false }: Props = $props();
 
-	const ctx = useClerkContext();
-	// Until Clerk loads, userId is undefined; that counts as signed out so the button opens the modal.
-	const isSignedIn = $derived(!!ctx.auth.userId);
+	// Public pages render this outside ClerkProvider for signed-out visitors, so Clerk's script
+	// isn't loaded for them. The server's initial auth state says whether they're signed in.
+	let ctx: ReturnType<typeof useClerkContext> | null = null;
+	try {
+		ctx = useClerkContext();
+	} catch {
+		ctx = null;
+	}
+	const isSignedIn = $derived(ctx ? !!ctx.auth.userId : !!$page.data.initialState?.userId);
 	const isAdminPage = $derived($page.route.id?.includes('/admin'));
 
 	async function handleSignOut() {
-		await ctx.clerk.signOut();
+		await ctx?.clerk?.signOut();
 	}
 </script>
 

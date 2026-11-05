@@ -7,9 +7,11 @@
 		className?: string;
 		eager?: boolean;
 		aspectRatio?: number;
+		/** The image's share of the viewport, for responsive variants. */
+		sizes?: string;
 	};
 
-	let { schema, data, className = '', eager = false, aspectRatio }: Props = $props();
+	let { schema, data, className = '', eager = false, aspectRatio, sizes }: Props = $props();
 
 	const validation = $derived.by(() => validateArtifactData(schema, data));
 	const ViewerComponent = $derived(getArtifactComponent(schema, 'publicViewProjectPage'));
@@ -20,7 +22,7 @@
 		Invalid artifact data: {validation.errors.join('; ')}
 	</div>
 {:else if ViewerComponent}
-	<ViewerComponent data={validation.value} {className} {eager} {aspectRatio} />
+	<ViewerComponent data={validation.value} {className} {eager} {aspectRatio} {sizes} />
 {:else}
 	<div class={`rounded-lg border border-walnut/20 bg-cream/60 p-3 text-xs text-ash ${className}`}>
 		Unknown schema: {schema}

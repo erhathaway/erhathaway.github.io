@@ -23,7 +23,8 @@
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	const isEmailValid = $derived(emailRegex.test(email.trim()));
 	const showEmailError = $derived(emailTouched && email.trim().length > 0 && !isEmailValid);
-	const canSubmitEmail = $derived(isEmailValid && !isLoading);
+	// Clerk's script loads when the modal first opens, so the form waits for it.
+	const canSubmitEmail = $derived(isEmailValid && !isLoading && ctx.isLoaded);
 	const canSubmitCode = $derived(code.trim().length > 0 && !isLoading);
 
 	async function handleEmailSubmit(e: Event) {

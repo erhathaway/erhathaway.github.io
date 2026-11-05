@@ -52,7 +52,7 @@ const securityHeadersHandle: Handle = async ({ event, resolve }) => {
 	// Clerk's dev instance runs on *.clerk.accounts.dev; the production instance on clerk.erhathaway.com.
 	response.headers.set('Content-Security-Policy', [
 		"default-src 'self'",
-		"script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://*.clerk.accounts.dev https://clerk.erhathaway.com https://us.i.posthog.com https://us-assets.i.posthog.com",
+		"script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://*.clerk.accounts.dev https://clerk.erhathaway.com https://cdn.protect.clerk.com https://us.i.posthog.com https://us-assets.i.posthog.com",
 		"worker-src 'self' blob:",
 		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 		"font-src 'self' https://fonts.gstatic.com",

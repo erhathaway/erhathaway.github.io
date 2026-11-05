@@ -294,6 +294,16 @@
     return cols;
   }
 
+  // Each slot's share of the viewport, so the browser fetches a fittingly sized variant. The
+  // content column is the viewport minus the 320px side panel on desktop.
+  const COLUMN = 'calc(100vw - 320px)';
+  const SIZES = {
+    half: `(max-width: 767px) 50vw, calc(${COLUMN} / 2)`,
+    quarter: `(max-width: 767px) 25vw, calc(${COLUMN} / 4)`,
+    full: `(max-width: 767px) 100vw, calc(${COLUMN} / 2)`
+  };
+  const enlargedSizes = (widthPct: number) => `(max-width: 767px) ${widthPct}vw, calc(${COLUMN} * ${widthPct / 100})`;
+
   // On phones, a section's last image often ends up below both columns with nothing beside it.
   // Rather than fill half the width, it leaves the columns and spans the whole row.
   let innerWidth = $state(0);
@@ -605,6 +615,7 @@
                       data={segment.artifact.dataBlob}
                       eager={eagerIds.has(segment.artifact.id)}
                       aspectRatio={artifactRatios.get(segment.artifact.id)}
+                      sizes={enlargedSizes(widthPct)}
                     />
                   </div>
                 </div>
@@ -619,6 +630,7 @@
                           data={artifact.dataBlob}
                           eager={eagerIds.has(artifact.id)}
                           aspectRatio={artifactRatios.get(artifact.id)}
+                          sizes={SIZES.quarter}
                         />
                       {/each}
                     </div>
@@ -637,6 +649,7 @@
                               data={artifact.dataBlob}
                               eager={eagerIds.has(artifact.id)}
                               aspectRatio={artifactRatios.get(artifact.id)}
+                              sizes={SIZES.half}
                             />
                           {/each}
                         </div>
@@ -649,6 +662,7 @@
                       data={artifact.dataBlob}
                       eager={eagerIds.has(artifact.id)}
                       aspectRatio={artifactRatios.get(artifact.id)}
+                      sizes={SIZES.full}
                     />
                   {/each}
                 </div>
