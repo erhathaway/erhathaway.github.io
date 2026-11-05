@@ -42,7 +42,7 @@
 			href="/admin"
 			class="{inline ? '' : 'fixed top-4 right-4 z-50'} text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors"
 		>
-			{@render letterReveal('Admin', 0.8)}
+			Admin
 		</a>
 	{/if}
 {:else}
@@ -50,7 +50,7 @@
 		onclick={onOpenModal}
 		class="{inline ? '' : 'fixed top-4 right-4 z-50'} text-[11px] tracking-[0.22em] uppercase text-ash/70 hover:text-copper transition-colors"
 	>
-		{@render letterReveal('Admin', 0.8)}
+		Admin
 	</button>
 {/if}
 
