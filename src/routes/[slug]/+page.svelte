@@ -294,12 +294,38 @@
     return cols;
   }
 
-  // Columns per masonry segment, keyed by segment index.
+  // On phones, a section's last image often ends up below both columns with nothing beside it.
+  // Rather than fill half the width, it leaves the columns and spans the whole row.
+  let innerWidth = $state(0);
+  const widensLoneTail = $derived(innerWidth > 0 && innerWidth < 768);
+
+  // Moves trailing images that nothing sits beside out of `cols`, in their original order.
+  function takeLoneTail(items: Artifact[], cols: Artifact[][], ratios: Map<number, number>): Artifact[] {
+    const ratio = (a: Artifact) => ratios.get(a.id) ?? 1;
+    const height = (col: Artifact[]) => col.reduce((sum, a) => sum + ratio(a), 0);
+    const tail: Artifact[] = [];
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      const own = cols.find((col) => col[col.length - 1] === item);
+      if (!own) break;
+      const top = height(own) - ratio(item);
+      if (cols.some((col) => col !== own && height(col) > top + 0.01)) break;
+      own.pop();
+      tail.unshift(item);
+    }
+    return tail;
+  }
+
+  // Columns per masonry segment, keyed by segment index, plus any images shown full width after them.
+  type SegmentLayout = { cols: Artifact[][]; tail: Artifact[] };
   const segmentColumns = $derived.by(() => {
-    const next = new Map<number, Artifact[][]>();
+    const next = new Map<number, SegmentLayout>();
     segments.forEach((seg, i) => {
-      if (seg.type === 'masonry' || seg.type === 'dense-masonry') {
-        next.set(i, distributeIntoColumns(seg.items, artifactRatios, seg.type === 'dense-masonry' ? 4 : 2));
+      if (seg.type === 'masonry') {
+        const cols = distributeIntoColumns(seg.items, artifactRatios, 2);
+        next.set(i, { cols, tail: widensLoneTail ? takeLoneTail(seg.items, cols, artifactRatios) : [] });
+      } else if (seg.type === 'dense-masonry') {
+        next.set(i, { cols: distributeIntoColumns(seg.items, artifactRatios, 4), tail: [] });
       }
     });
     return next;
@@ -390,6 +416,8 @@
     };
   });
 </script>
+
+<svelte:window bind:innerWidth />
 
 <svelte:head>
   {#if data.meta}
@@ -581,7 +609,7 @@
                   </div>
                 </div>
               {:else if segment.type === 'dense-masonry'}
-                {@const cols = segmentColumns.get(segIdx) ?? [[], [], [], []]}
+                {@const cols = segmentColumns.get(segIdx)?.cols ?? [[], [], [], []]}
                 <div class="grid grid-cols-4 gap-2 items-start">
                   {#each cols as col, colIdx (colIdx)}
                     <div class="flex flex-col gap-2">
@@ -597,19 +625,31 @@
                   {/each}
                 </div>
               {:else}
-                {@const cols = segmentColumns.get(segIdx) ?? [[], []]}
-                <div class="grid grid-cols-2 gap-4 items-start">
-                  {#each cols as col, colIdx (colIdx)}
-                    <div class="flex flex-col gap-4">
-                      {#each col as artifact (artifact.id)}
-                        <ArtifactView
-                          schema={artifact.schema}
-                          data={artifact.dataBlob}
-                          eager={eagerIds.has(artifact.id)}
-                          aspectRatio={artifactRatios.get(artifact.id)}
-                        />
+                {@const layout = segmentColumns.get(segIdx) ?? { cols: [[], []], tail: [] }}
+                <div class="flex flex-col gap-4">
+                  {#if layout.cols.some((col) => col.length > 0)}
+                    <div class="grid grid-cols-2 gap-4 items-start">
+                      {#each layout.cols as col, colIdx (colIdx)}
+                        <div class="flex flex-col gap-4">
+                          {#each col as artifact (artifact.id)}
+                            <ArtifactView
+                              schema={artifact.schema}
+                              data={artifact.dataBlob}
+                              eager={eagerIds.has(artifact.id)}
+                              aspectRatio={artifactRatios.get(artifact.id)}
+                            />
+                          {/each}
+                        </div>
                       {/each}
                     </div>
+                  {/if}
+                  {#each layout.tail as artifact (artifact.id)}
+                    <ArtifactView
+                      schema={artifact.schema}
+                      data={artifact.dataBlob}
+                      eager={eagerIds.has(artifact.id)}
+                      aspectRatio={artifactRatios.get(artifact.id)}
+                    />
                   {/each}
                 </div>
               {/if}
