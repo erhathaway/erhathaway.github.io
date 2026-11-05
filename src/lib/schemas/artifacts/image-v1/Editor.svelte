@@ -3,6 +3,7 @@
 	import { validateImageV1 } from './validator';
 	import type { ImageV1Data } from './validator';
 	import CoverPositionEditor from '$lib/components/CoverPositionEditor.svelte';
+	import { measureImage } from '$lib/utils/image-size';
 
 	type UploadResult = string | { url: string; formats?: string[] };
 
@@ -145,8 +146,10 @@
 			const result = await onUpload(file);
 			const uploadedUrl = typeof result === 'string' ? result : result.url;
 			const formats = typeof result === 'object' ? result.formats : undefined;
+			const size = await measureImage(uploadedUrl);
 			onChange?.({
 				imageUrl: uploadedUrl,
+				...(size ?? {}),
 				description: current.description?.trim() || undefined,
 				positionX: current.positionX,
 				positionY: current.positionY,

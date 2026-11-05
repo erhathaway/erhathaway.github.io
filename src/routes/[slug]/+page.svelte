@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { storedAspectRatio } from '$lib/utils/image-size';
   import { resolve } from '$app/paths';
   import type { PageData } from './$types';
   import { portfolio } from '$lib/stores/portfolio.svelte';
@@ -196,7 +197,7 @@
   const segments = $derived(buildSegments(additionalArtifacts));
 
   // Group segments into sections: each section-title break starts a new group.
-  // segIdx is preserved so segmentColumns2 lookups still work.
+  // segIdx is preserved so segmentColumns lookups still work.
   // Breaks after a section's last image go in `trailing`, outside the measured group. That leaves
   // out the closing cover image, which follows the final divider rather than belonging to a section.
   type SectionGroup = { title?: Artifact; segments: { segment: Segment; segIdx: number }[]; trailing: Artifact[] };
@@ -247,15 +248,36 @@
   });
 
   // Masonry: preload images to get aspect ratios, then distribute into shortest column
-  let segmentColumns2 = $state<Map<number, Artifact[][]>>(new Map());
-  let artifactRatios = $state<Map<number, number>>(new Map());
-  let eagerIds = $state<Set<number>>(new Set());
-
   function getImageUrl(artifact: Artifact): string | null {
     if (artifact.schema !== 'image-v1') return null;
     const blob = artifact.dataBlob as Record<string, unknown> | null;
     return typeof blob?.imageUrl === 'string' ? blob.imageUrl : null;
   }
+
+  // Each image's height per unit of width. Stored sizes make the layout instant; an image without
+  // one is measured after it loads, which shifts the layout once, so uploads record their size.
+  const measuredRatios = new SvelteMap<number, number>();
+  const measuring = new Set<number>();
+  const artifactRatios = $derived.by(() => {
+    const ratios = new Map<number, number>();
+    for (const artifact of additionalArtifacts) {
+      const ratio = storedAspectRatio(artifact.dataBlob) ?? measuredRatios.get(artifact.id);
+      if (ratio !== undefined) ratios.set(artifact.id, ratio);
+    }
+    return ratios;
+  });
+
+  $effect(() => {
+    for (const artifact of additionalArtifacts) {
+      const url = getImageUrl(artifact);
+      if (!url || storedAspectRatio(artifact.dataBlob) !== undefined || measuring.has(artifact.id)) continue;
+      measuring.add(artifact.id);
+      const img = new Image();
+      img.onload = () => measuredRatios.set(artifact.id, img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1);
+      img.onerror = () => measuredRatios.set(artifact.id, 1);
+      img.src = url;
+    }
+  });
 
   function distributeIntoColumns(items: Artifact[], ratios: Map<number, number>, numCols: number): Artifact[][] {
     const MAX_RATIO = 1.4;
@@ -272,67 +294,28 @@
     return cols;
   }
 
-  // Runs wait on image loads, so an older one can finish after a newer one. Its columns are keyed by
-  // segment positions that may have shifted since, so only the latest run may save its results.
-  let latestMasonryRun = 0;
-
-  async function computeAllMasonry(segs: Segment[]) {
-    const run = ++latestMasonryRun;
-    const masonrySegments = segs
-      .map((seg, i) => ({ seg, i }))
-      .filter((s): s is { seg: Extract<Segment, { type: 'masonry' }> | Extract<Segment, { type: 'dense-masonry' }>; i: number } =>
-        s.seg.type === 'masonry' || s.seg.type === 'dense-masonry');
-
-    if (masonrySegments.length === 0) {
-      segmentColumns2 = new Map();
-      return;
-    }
-
-    // Collect all image artifacts across all masonry segments
-    const allItems = masonrySegments.flatMap(s => s.seg.items);
-    const ratios = new SvelteMap<number, number>();
-
-    await Promise.all(allItems.map((item) => {
-      const url = getImageUrl(item);
-      if (!url) {
-        ratios.set(item.id, 1);
-        return;
+  // Columns per masonry segment, keyed by segment index.
+  const segmentColumns = $derived.by(() => {
+    const next = new Map<number, Artifact[][]>();
+    segments.forEach((seg, i) => {
+      if (seg.type === 'masonry' || seg.type === 'dense-masonry') {
+        next.set(i, distributeIntoColumns(seg.items, artifactRatios, seg.type === 'dense-masonry' ? 4 : 2));
       }
-      return new Promise<void>((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          ratios.set(item.id, img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1);
-          resolve();
-        };
-        img.onerror = () => {
-          ratios.set(item.id, 1);
-          resolve();
-        };
-        img.src = url;
-      });
-    }));
+    });
+    return next;
+  });
 
-    if (run !== latestMasonryRun) return;
-
-    const next = new SvelteMap<number, Artifact[][]>();
-    for (const { seg, i } of masonrySegments) {
-      const numCols = seg.type === 'dense-masonry' ? 4 : 2;
-      next.set(i, distributeIntoColumns(seg.items, ratios, numCols));
+  // The first few images load eagerly.
+  const eagerIds = $derived.by(() => {
+    const eager = new Set<number>();
+    for (const seg of segments) {
+      if (seg.type !== 'masonry' && seg.type !== 'dense-masonry') continue;
+      for (const item of seg.items) {
+        if (eager.size >= 4) return eager;
+        eager.add(item.id);
+      }
     }
-    segmentColumns2 = next;
-    artifactRatios = ratios;
-
-    // Mark the first ~4 image artifacts as eager-load
-    const eager = new SvelteSet<number>();
-    for (const item of allItems) {
-      if (eager.size >= 4) break;
-      eager.add(item.id);
-    }
-    eagerIds = eager;
-  }
-
-  $effect(() => {
-    computeAllMasonry(segments);
+    return eager;
   });
 
   // Reload artifacts whenever the project changes
@@ -593,11 +576,12 @@
                       schema={segment.artifact.schema}
                       data={segment.artifact.dataBlob}
                       eager={eagerIds.has(segment.artifact.id)}
+                      aspectRatio={artifactRatios.get(segment.artifact.id)}
                     />
                   </div>
                 </div>
               {:else if segment.type === 'dense-masonry'}
-                {@const cols = segmentColumns2.get(segIdx) ?? [[], [], [], []]}
+                {@const cols = segmentColumns.get(segIdx) ?? [[], [], [], []]}
                 <div class="grid grid-cols-4 gap-2 items-start">
                   {#each cols as col, colIdx (colIdx)}
                     <div class="flex flex-col gap-2">
@@ -613,7 +597,7 @@
                   {/each}
                 </div>
               {:else}
-                {@const cols = segmentColumns2.get(segIdx) ?? [[], []]}
+                {@const cols = segmentColumns.get(segIdx) ?? [[], []]}
                 <div class="grid grid-cols-2 gap-4 items-start">
                   {#each cols as col, colIdx (colIdx)}
                     <div class="flex flex-col gap-4">

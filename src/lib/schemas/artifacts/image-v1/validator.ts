@@ -13,6 +13,9 @@ export type ImageV1Data = {
 	hoverImageUrl?: string;
 	imageFormats?: string[];
 	hoverImageFormats?: string[];
+	/** Pixel size of the image, recorded so layouts can reserve its space before it loads. */
+	width?: number;
+	height?: number;
 };
 
 export const createImageV1Draft = (): ImageV1Data => ({
@@ -71,6 +74,13 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 		errors.push('hoverImageFormats must be an array of strings');
 	}
 
+	const width = data.width;
+	const height = data.height;
+	const isSize = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v > 0;
+	if ((width !== undefined || height !== undefined) && !(isSize(width) && isSize(height))) {
+		errors.push('width and height must both be positive numbers');
+	}
+
 	if (errors.length > 0) {
 		return { ok: false, errors };
 	}
@@ -85,7 +95,8 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 			...(typeof zoom === 'number' ? { zoom } : {}),
 			...(typeof hoverImageUrl === 'string' && hoverImageUrl.trim() ? { hoverImageUrl: hoverImageUrl.trim() } : {}),
 			...(Array.isArray(imageFormats) && imageFormats.length > 0 ? { imageFormats } : {}),
-			...(Array.isArray(hoverImageFormats) && hoverImageFormats.length > 0 ? { hoverImageFormats } : {})
+			...(Array.isArray(hoverImageFormats) && hoverImageFormats.length > 0 ? { hoverImageFormats } : {}),
+			...(isSize(width) && isSize(height) ? { width, height } : {})
 		}
 	};
 };
