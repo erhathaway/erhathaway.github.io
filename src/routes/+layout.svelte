@@ -43,6 +43,11 @@
 
 	let appliedHoverId: number | null = null;
 	let showLoginModal = $state(false);
+	// Clerk's script is only loaded where it's needed: admin pages, signed-in visitors, and
+	// the sign-in modal once it's been opened.
+	let clerkRequested = $state(false);
+	const signedIn = $derived(!!page.data.initialState?.userId);
+	const needsClerk = $derived(signedIn || clerkRequested);
 	// Start closed; resize handler on mount will open it if screen is wide enough
 	let mobileMenuOpen = $state(false);
 	let isMobileScreen = $state(false);
@@ -290,7 +295,7 @@
 		};
 		window.addEventListener('namecard:open', handleNameCardOpen);
 
-		const handleAuthOpen = () => { showLoginModal = true; };
+		const handleAuthOpen = () => { clerkRequested = true; showLoginModal = true; };
 		window.addEventListener('auth:open-login', handleAuthOpen);
 
 
@@ -485,18 +490,19 @@
 <svelte:window onkeydown={(e: KeyboardEvent) => { if (e.key === 'Escape' && nameCardExpanded) collapseNameCard(); }} />
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<ClerkProvider>
-	{#if typographyPreview.draft && !isAdminPage}
-		<TypographyPreviewPanel />
-	{/if}
-	<PostHogIdentify />
-	{#if isAdminPage}
+{#if typographyPreview.draft && !isAdminPage}
+	<TypographyPreviewPanel />
+{/if}
+{#if isAdminPage}
+	<ClerkProvider>
+		<PostHogIdentify />
 		<div class="min-h-screen bg-cream text-walnut">
 			{@render children()}
 		</div>
 		<AuthButton onOpenModal={() => showLoginModal = true} />
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
-	{:else}
+	</ClerkProvider>
+{:else}
 		{#if !isHomePage && !isErrorPage}
 			<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[50] vt-exclude-namecard" style="view-transition-name: left-bar"></div>
 		{/if}
@@ -618,7 +624,12 @@
 				</div>
 			</div>
 		{/if}
-		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
+		{#if needsClerk}
+			<ClerkProvider>
+				<PostHogIdentify />
+				<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
+			</ClerkProvider>
+		{/if}
 		<!-- Hamburger menu button - show below md (768px) - placed last to ensure it's on top -->
 		{#if isMobileScreen && !isErrorPage && !isHomePage}
 			<button
@@ -636,4 +647,3 @@
 			</button>
 		{/if}
 	{/if}
-</ClerkProvider>

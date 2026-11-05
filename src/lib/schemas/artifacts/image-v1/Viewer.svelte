@@ -7,9 +7,16 @@
 		className?: string;
 		eager?: boolean;
 		aspectRatio?: number;
+		sizes?: string;
 	};
 
-	let { data, className = '', eager = false, aspectRatio }: Props = $props();
+	let {
+		data,
+		className = '',
+		eager = false,
+		aspectRatio,
+		sizes = '(max-width: 767px) 100vw, calc(100vw - 320px)'
+	}: Props = $props();
 
 	// With a known aspect ratio the frame reserves the image's exact space, so nothing shifts when
 	// the image arrives; a placeholder shows until it does. The width is explicit because a sized
@@ -46,7 +53,7 @@
 	>
 		{#if data.imageFormats?.length}
 			<picture>
-				{#each getImageSources(data.imageUrl, data.imageFormats, '(max-width: 767px) 100vw, calc(100vw - 320px)') as source (source.type)}
+				{#each getImageSources(data.imageUrl, data.imageFormats, sizes) as source (source.type)}
 					<source srcset={source.srcset} type={source.type} sizes={source.sizes} />
 				{/each}
 				<img
@@ -57,7 +64,7 @@
 					class={sized ? 'absolute inset-0 h-full w-full object-cover' : 'w-full max-h-[70vh] object-cover'}
 					{@attach trackLoaded}
 					srcset={imgSrcset}
-					sizes={imgSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
+					sizes={imgSrcset ? sizes : undefined}
 					style:object-position={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
 					style:transform={hasPosition && data.zoom && data.zoom !== 1 ? `scale(${data.zoom})` : undefined}
 					style:transform-origin={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
@@ -72,7 +79,7 @@
 				class={sized ? 'absolute inset-0 h-full w-full object-cover' : 'w-full max-h-[70vh] object-cover'}
 				{@attach trackLoaded}
 				srcset={imgSrcset}
-				sizes={imgSrcset ? '(max-width: 767px) 100vw, calc(100vw - 320px)' : undefined}
+				sizes={imgSrcset ? sizes : undefined}
 				style:object-position={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
 				style:transform={hasPosition && data.zoom && data.zoom !== 1 ? `scale(${data.zoom})` : undefined}
 				style:transform-origin={hasPosition ? `${data.positionX ?? 50}% ${data.positionY ?? 50}%` : undefined}
