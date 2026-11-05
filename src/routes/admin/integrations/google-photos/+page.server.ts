@@ -4,7 +4,7 @@ export const load = async ({ locals }) => {
 	const { userId } = locals.auth();
 
 	if (!userId) {
-		throw redirect(307, '/admin/sign-in');
+		throw redirect(307, '/');
 	}
 
 	return {};

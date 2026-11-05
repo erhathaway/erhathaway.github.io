@@ -76,6 +76,6 @@
 <SignedOut>
 	<div class="max-w-3xl">
 		<h1 class="text-2xl font-semibold text-slate-900 mb-2">Sign in required</h1>
-		<p class="text-sm text-slate-500">Please <a href="/admin/sign-in" class="text-slate-900 underline">sign in</a> to view schema previews.</p>
+		<p class="text-sm text-slate-500">Please <a href="/" class="text-slate-900 underline">sign in</a> to view schema previews.</p>
 	</div>
 </SignedOut>
