@@ -191,7 +191,8 @@
 <svelte:window bind:innerWidth />
 
 <main class="right-panel flex-1 h-screen overflow-y-auto bg-charcoal scrollbar-hide" style="height: 100dvh;" onpointerleave={handleGalleryLeave}>
-  <div data-home-spacing class="grid min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid; grid-template-columns: repeat({colCount}, 1fr);">
+  <!-- Columns come from CSS so the server-rendered grid already matches the viewport; colCount only feeds the filler and hover logic. -->
+  <div data-home-spacing class="grid grid-cols-2 min-[900px]:grid-cols-3 min-h-full vt-exclude-namecard" style="view-transition-name: gallery-grid;">
     {#if homeNamecardInGallery}
       <div
         class="gallery-item group relative aspect-square overflow-hidden block cursor-pointer"
