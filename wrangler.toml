@@ -22,6 +22,7 @@ PUBLIC_POSTHOG_KEY = "phc_cxOjJKH4BepLxOmy5EktXsQzOYXXjQOep9aJ2Q3chqy"
 binding = "DB"
 database_name = "portfolio-db"
 database_id = "4878e4eb-3391-4401-93cd-9c6f91897a14"
+migrations_dir = "drizzle"
 
 [[r2_buckets]]
 binding = "ARTIFACTS"

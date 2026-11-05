@@ -167,7 +167,7 @@ interface PortfolioItem {
 - Access database via `event.platform.env.DB` and `getDb` in `src/lib/server/db/index.ts`
 - `event.locals.db` is set in `src/hooks.server.ts`
 - Use `bunx wrangler dev` for local dev with D1 (Vite dev does not provide `platform.env`)
-- Generate migrations with `bun run db:generate`, apply with `bunx wrangler d1 execute portfolio-db --file=./drizzle/<migration>.sql`
+- Generate migrations with `bun run db:generate`, apply locally with `bun run db:migrate:local` and to production with `bun run db:migrate:remote`. Both wrap `wrangler d1 migrations apply`, which runs the `.sql` files in `drizzle/` that its `d1_migrations` table doesn't list yet.
 
 ## API Notes
 
@@ -329,7 +329,7 @@ bun run deploy        # or: bunx wrangler deploy
 
 This runs `vite build` (configured in `wrangler.toml [build]`), then uploads the Worker + static assets to Cloudflare.
 
-Cloudflare Workers Builds also watches the GitHub repo: pushes to `master` deploy, and pushes to other branches upload preview versions. Its production deploy command should be `bun run db:migrate:remote && bunx wrangler deploy` so pending migrations apply before the Worker goes live; the migration scripts only need Bun and Wrangler.
+Cloudflare Workers Builds also watches the GitHub repo: pushes to `master` deploy, and pushes to other branches upload preview versions. Its production deploy command is `bun run db:migrate:remote && bunx wrangler deploy`, so pending migrations apply before the Worker goes live. Don't pass SQL to Wrangler as a `--command` argument in anything the build runs: that environment splits the quoted string into separate words.
 
 - **Production URL:** `erhathaway.com`
 - **Route:** `erhathaway.com/*` (defined in `wrangler.toml`)
