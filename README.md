@@ -226,4 +226,4 @@ Admin → Themes → Empty card themes controls what fills the leftover space wh
 
 ## Hover card themes
 
-Admin → Themes → Hover card themes sets the shape of the glass panel that shows project details on the home gallery: the full card, or a partial panel with an adjustable width and angle. Preview on site opens a private live editor that can hold a project's hover card open. Themes are stored in existing site settings (`hover-card-theme:*` and `hover-card-active`), need no database migration, and are included in appearance backups.
+Admin → Themes → Hover card themes sets the shape of the glass panel that shows project details on the home gallery: the full card, or a partial panel with an adjustable width and angle, chosen separately for desktop and mobile widths. Preview on site opens a private live editor that can hold a project's hover card open. Themes are stored in existing site settings (`hover-card-theme:*` and `hover-card-active`), need no database migration, and are included in appearance backups.

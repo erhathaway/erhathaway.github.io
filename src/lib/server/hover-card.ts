@@ -16,17 +16,22 @@ function numberInRange(value: unknown, range: { min: number; max: number }, labe
 		throw error(400, `${label} must be between ${range.min} and ${range.max}.`);
 	return value;
 }
-export function validateHoverCard(input: unknown) {
+export function validateHoverCard(
+	input: unknown
+): Pick<HoverCardTheme, 'shape' | 'mobileShape' | 'width' | 'angle'> {
 	if (!input || typeof input !== 'object' || Array.isArray(input))
 		throw error(400, 'Invalid hover card settings.');
 	const body = input as Record<string, unknown>;
-	if (body.shape !== 'partial' && body.shape !== 'full')
-		throw error(400, 'Unknown hover card shape.');
+	const { shape, mobileShape } = body;
+	if (shape !== 'partial' && shape !== 'full') throw error(400, 'Unknown hover card shape.');
+	if (mobileShape !== undefined && mobileShape !== 'partial' && mobileShape !== 'full')
+		throw error(400, 'Unknown mobile hover card shape.');
 	return {
-		shape: body.shape,
+		shape,
+		...(mobileShape ? { mobileShape } : {}),
 		width: numberInRange(body.width, WIDTH_RANGE, 'Width'),
 		angle: numberInRange(body.angle, ANGLE_RANGE, 'Angle')
-	} as const;
+	};
 }
 export async function listHoverCard(db: Db) {
 	const rows = await db

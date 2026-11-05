@@ -61,6 +61,7 @@ const hoverCardTheme = {
 	name: 'Full glass',
 	updatedAt: '2026-10-23',
 	shape: 'full',
+	mobileShape: 'partial',
 	width: 60,
 	angle: -12
 };

@@ -1,20 +1,34 @@
 <script lang="ts">
   import type { PortfolioItem } from '$lib/data/items';
   import { page } from '$app/state';
-  import { DEFAULT_THEME, panelClipPath, panelTextWidth, type HoverCardTheme } from '$lib/hover-card';
+  import {
+    DEFAULT_THEME,
+    MOBILE_MAX_WIDTH,
+    panelClipPath,
+    panelTextWidth,
+    shapeForScreen,
+    type HoverCardScreen,
+    type HoverCardTheme
+  } from '$lib/hover-card';
   import { getHoverCardPreview } from '$lib/hover-card/preview';
 
   let {
     item,
     variant = 'inline',
     dockSide = 'left',
-    theme = undefined
+    theme = undefined,
+    screen = undefined
   }: {
     item: PortfolioItem;
     variant?: 'inline' | 'tile';
     dockSide?: 'left' | 'right';
     theme?: HoverCardTheme;
+    screen?: HoverCardScreen;
   } = $props();
+  let innerWidth = $state(1200);
+  const activeScreen = $derived<HoverCardScreen>(
+    screen ?? (innerWidth <= MOBILE_MAX_WIDTH ? 'mobile' : 'desktop')
+  );
   const hoverCardPreview = getHoverCardPreview();
   const hoverCard = $derived(
     theme ??
@@ -28,7 +42,7 @@
   }
 
   const isTile = $derived(variant === 'tile');
-  const tileClipPath = $derived(panelClipPath(hoverCard, dockSide));
+  const tileClipPath = $derived(panelClipPath(hoverCard, dockSide, activeScreen));
 
   const wrapperClass = $derived.by(() => {
     if (variant === 'tile') {
@@ -58,7 +72,7 @@
   });
   const projectHeaderStyle = $derived.by(() => {
     if (!isTile) return undefined;
-    const width = panelTextWidth(hoverCard);
+    const width = panelTextWidth(hoverCard, activeScreen);
     return `width: ${width}; max-width: ${width};`;
   });
 
@@ -106,10 +120,12 @@
 
   const tileTextWrapClass = $derived.by(() => {
     if (!isTile) return '';
-    const maxWidth = hoverCard.shape === 'full' ? 'max-w-full' : 'max-w-[72%]';
+    const maxWidth = shapeForScreen(hoverCard, activeScreen) === 'full' ? 'max-w-full' : 'max-w-[72%]';
     return dockSide === 'right' ? `relative z-10 ${maxWidth} ml-auto` : `relative z-10 ${maxWidth}`;
   });
 </script>
+
+<svelte:window bind:innerWidth />
 
 {#if item}
   <div class={wrapperClass} style:container-type={isTile ? 'size' : undefined}>

@@ -2,6 +2,8 @@
 	import {
 		ANGLE_RANGE,
 		WIDTH_RANGE,
+		shapeForScreen,
+		type HoverCardScreen,
 		type HoverCardShape,
 		type HoverCardTheme
 	} from './index';
@@ -12,12 +14,24 @@
 	}: {
 		theme: HoverCardTheme;
 		disabled?: boolean;
-		change: (patch: Partial<Pick<HoverCardTheme, 'shape' | 'width' | 'angle'>>) => void;
+		change: (patch: Partial<Pick<HoverCardTheme, 'shape' | 'mobileShape' | 'width' | 'angle'>>) => void;
 	} = $props();
 	const SHAPES: Array<{ id: HoverCardShape; label: string }> = [
 		{ id: 'partial', label: 'Partial' },
 		{ id: 'full', label: 'Full card' }
 	];
+	const SCREENS: Array<{ id: HoverCardScreen; label: string }> = [
+		{ id: 'desktop', label: 'Desktop (900px and above)' },
+		{ id: 'mobile', label: 'Mobile (below 900px)' }
+	];
+	const anyPartial = $derived(
+		SCREENS.some((screen) => shapeForScreen(theme, screen.id) === 'partial')
+	);
+	function setShape(screen: HoverCardScreen, shape: HoverCardShape) {
+		// Pin mobile first, so changing desktop can't change a mobile shape already on screen.
+		if (screen === 'mobile') change({ mobileShape: shape });
+		else change({ shape, mobileShape: shapeForScreen(theme, 'mobile') });
+	}
 </script>
 
 {#snippet slider(
@@ -60,23 +74,29 @@
 {/snippet}
 
 <div class="controls">
-	<div class="shapes" role="group" aria-label="Hover card shape">
-		{#each SHAPES as shape (shape.id)}
-			<button
-				type="button"
-				class={['shape', { selected: theme.shape === shape.id }]}
-				aria-pressed={theme.shape === shape.id}
-				{disabled}
-				onclick={() => change({ shape: shape.id })}>{shape.label}</button
-			>
-		{/each}
-	</div>
-	{#if theme.shape === 'partial'}
+	{#each SCREENS as screen (screen.id)}
+		<div class="screen">
+			<span>{screen.label}</span>
+			<div class="shapes" role="group" aria-label={`${screen.label} hover card shape`}>
+				{#each SHAPES as shape (shape.id)}
+					<button
+						type="button"
+						class={['shape', { selected: shapeForScreen(theme, screen.id) === shape.id }]}
+						aria-pressed={shapeForScreen(theme, screen.id) === shape.id}
+						{disabled}
+						onclick={() => setShape(screen.id, shape.id)}>{shape.label}</button
+					>
+				{/each}
+			</div>
+		</div>
+	{/each}
+	{#if anyPartial}
 		{@render slider('Width', 'percent', WIDTH_RANGE, theme.width, (width) => change({ width }))}
 		{@render slider('Angle', 'degrees', ANGLE_RANGE, theme.angle, (angle) => change({ angle }))}
-		<p class="hint">Width is measured at mid-height. A negative angle leans the edge the other way.</p>
-	{:else}
-		<p class="hint">The glass covers the whole card it appears on.</p>
+		<p class="hint">
+			Width and angle apply to the partial shape on any screen. Width is measured at mid-height, and
+			a negative angle leans the edge the other way.
+		</p>
 	{/if}
 </div>
 
@@ -86,6 +106,11 @@
 		gap: 16px;
 		color: #475569;
 		font-size: 12px;
+	}
+	.screen {
+		display: grid;
+		gap: 6px;
+		font-weight: 500;
 	}
 	.shapes {
 		display: flex;

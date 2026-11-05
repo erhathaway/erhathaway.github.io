@@ -155,6 +155,7 @@ it.skipIf(process.env.RUN_DEV_BACKUP_RESTORE !== '1')(
 			const hoverCard = await saveHoverCard(db, {
 				name: 'Backup hover card fixture',
 				shape: 'partial',
+				mobileShape: 'full',
 				width: 67,
 				angle: -14
 			});

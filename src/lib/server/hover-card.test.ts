@@ -9,7 +9,7 @@ import {
 	saveHoverCard,
 	validateHoverCard
 } from './hover-card';
-import { DEFAULT_THEME, panelClipPath, panelTextWidth } from '$lib/hover-card';
+import { DEFAULT_THEME, panelClipPath, panelTextWidth, shapeForScreen } from '$lib/hover-card';
 let client: Client;
 let db: Db;
 beforeEach(async () => {
@@ -53,6 +53,20 @@ describe('hover card themes', () => {
 		);
 		expect(panelClipPath({ ...theme, shape: 'full' }, 'left')).toBeUndefined();
 	});
+	it('can use a different shape on mobile, and follows desktop until one is chosen', async () => {
+		const partial = { ...DEFAULT_THEME, shape: 'partial' as const };
+		expect(shapeForScreen(partial, 'mobile')).toBe('partial');
+		const mobileFull = { ...partial, mobileShape: 'full' as const };
+		expect(shapeForScreen(mobileFull, 'desktop')).toBe('partial');
+		expect(shapeForScreen(mobileFull, 'mobile')).toBe('full');
+		expect(panelClipPath(mobileFull, 'left', 'desktop')).toContain('polygon');
+		expect(panelClipPath(mobileFull, 'left', 'mobile')).toBeUndefined();
+		expect(panelTextWidth(mobileFull, 'mobile')).toBe('min(420px, 80%)');
+		const saved = await saveHoverCard(db, { ...full, shape: 'partial', mobileShape: 'full' });
+		expect(saved).toMatchObject({ shape: 'partial', mobileShape: 'full' });
+		const unset = await saveHoverCard(db, full);
+		expect(unset).not.toHaveProperty('mobileShape');
+	});
 	it('keeps text inside the narrowest part of the panel for either lean', () => {
 		const theme = { ...DEFAULT_THEME, width: 50, angle: 45 };
 		expect(panelTextWidth(theme)).toBe('min(240px, calc(46% - 50cqh))');
@@ -64,6 +78,8 @@ describe('hover card themes', () => {
 			null,
 			[],
 			{ ...full, shape: 'circle' },
+			{ ...full, mobileShape: 'circle' },
+			{ ...full, mobileShape: null },
 			{ ...full, width: 29 },
 			{ ...full, width: 91 },
 			{ ...full, angle: -26 },

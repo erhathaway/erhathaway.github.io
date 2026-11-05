@@ -223,14 +223,22 @@
 			The panel opens on the card next to the one you hover, on the side facing it.
 		</p>
 		<div class="flex flex-wrap items-start gap-4">
-			{#each ['left', 'right'] as const as side (side)}
+			{#each [{ screen: 'desktop', side: 'left', size: 'w-72' }, { screen: 'desktop', side: 'right', size: 'w-72' }, { screen: 'mobile', side: 'left', size: 'w-44' }] as const as view (view.screen + view.side)}
 				<figure>
-					<div class="preview relative aspect-square w-72 max-w-full overflow-hidden">
+					<div class="preview relative aspect-square {view.size} max-w-full overflow-hidden">
 						<div class="absolute inset-0 z-20">
-							<HoverInfo item={sampleItem} variant="tile" dockSide={side} theme={draft} />
+							<HoverInfo
+								item={sampleItem}
+								variant="tile"
+								dockSide={view.side}
+								theme={draft}
+								screen={view.screen}
+							/>
 						</div>
 					</div>
-					<figcaption>Hovered card on the {side}</figcaption>
+					<figcaption>
+						{view.screen === 'mobile' ? 'Mobile' : `Desktop, hovered card on the ${view.side}`}
+					</figcaption>
 				</figure>
 			{/each}
 		</div>
