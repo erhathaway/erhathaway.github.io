@@ -272,7 +272,12 @@
     return cols;
   }
 
+  // Runs wait on image loads, so an older one can finish after a newer one. Its columns are keyed by
+  // segment positions that may have shifted since, so only the latest run may save its results.
+  let latestMasonryRun = 0;
+
   async function computeAllMasonry(segs: Segment[]) {
+    const run = ++latestMasonryRun;
     const masonrySegments = segs
       .map((seg, i) => ({ seg, i }))
       .filter((s): s is { seg: Extract<Segment, { type: 'masonry' }> | Extract<Segment, { type: 'dense-masonry' }>; i: number } =>
@@ -306,6 +311,8 @@
         img.src = url;
       });
     }));
+
+    if (run !== latestMasonryRun) return;
 
     const next = new SvelteMap<number, Artifact[][]>();
     for (const { seg, i } of masonrySegments) {
