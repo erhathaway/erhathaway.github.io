@@ -524,7 +524,7 @@
           style="view-transition-name: project-image-{item.id}; view-transition-class: project-image"
         >
           {#if item.hoverImage || item.image}
-            {@const coverSrc = item.hoverImage || item.image}
+            {@const coverSrc = item.hoverImage || item.image || ''}
             {@const coverFormats = item.hoverImage ? item.hoverImageFormats : item.imageFormats}
             {@const coverSrcset = getResponsiveSrcset(coverSrc)}
             {#if coverFormats?.length}

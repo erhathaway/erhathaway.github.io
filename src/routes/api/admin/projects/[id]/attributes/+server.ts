@@ -69,7 +69,7 @@ const parseAttributes = (payload: unknown) => {
 };
 
 const fetchProjectOrThrow = async (
-	db: ReturnType<App.Locals['db']>,
+	db: NonNullable<App.Locals['db']>,
 	projectId: number
 ) => {
 	const [project] = await db.select().from(projects).where(eq(projects.id, projectId));

@@ -49,7 +49,7 @@
 		attributes,
 		onSave,
 		onCancel
-	} = $props<Props>();
+	}: Props = $props();
 
 	let editIsPublished = $state(project.isPublished);
 	let editCategoryIds = $state([...categoryIds]);

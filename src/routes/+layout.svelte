@@ -79,7 +79,7 @@
 
 	type NameCardCloseMaskPhase = 'hidden' | 'visible' | 'fading';
 	let nameCardCloseMaskPhase = $state<NameCardCloseMaskPhase>('hidden');
-	let nameCardCloseMaskTimer: ReturnType<typeof setTimeout> | null = null;
+	let nameCardCloseMaskTimer: number | null = null;
 	let nameCardViewTransitionScopes = 0;
 	const NAME_CARD_CLOSE_MASK_FADE_MS = 120;
 

@@ -35,5 +35,5 @@ export const GET: RequestHandler = async ({ url, platform }) => {
 	if (object.httpMetadata?.contentType) {
 		headers.set('Content-Type', object.httpMetadata.contentType);
 	}
-	return new Response(object.body, { status: 200, headers });
+	return new Response(object.body as unknown as BodyInit, { status: 200, headers });
 };

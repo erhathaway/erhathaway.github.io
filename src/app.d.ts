@@ -3,6 +3,13 @@
 /// <reference types="svelte-clerk/env" />
 import type { D1Database, R2Bucket } from '@cloudflare/workers-types';
 import type { Db } from '$lib/server/db';
+declare module 'svelte/elements' {
+	// Svelte's typings list animationend but not animationcancel.
+	interface DOMAttributes<T extends EventTarget> {
+		onanimationcancel?: AnimationEventHandler<T> | undefined | null;
+	}
+}
+
 declare global {
 	namespace App {
 		// interface Error {}

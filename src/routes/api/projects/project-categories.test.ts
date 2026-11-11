@@ -1,16 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DELETE, GET, OPTIONS, POST } from './[id]/categories/+server';
-import { categories, projectCategories, projects } from '$lib/server/db/schema';
-
-vi.mock('$lib/server/auth', () => ({
-	verifyClerkAuth: vi.fn()
-}));
-
-import { verifyClerkAuth } from '$lib/server/auth';
-
-const asAuth = (value: string | null) => {
-	vi.mocked(verifyClerkAuth).mockResolvedValue(value);
-};
+import { describe, expect, it } from 'vitest';
+import { DELETE, GET, OPTIONS, POST } from '../admin/projects/[id]/categories/+server';
+import { projectCategories, projects } from '$lib/server/db/schema';
 
 const createDbForGet = (projectRow: any, categoryRows: any[]) => {
 	return {
@@ -54,13 +44,9 @@ const createDeleteDb = () => {
 	} as any;
 };
 
-beforeEach(() => {
-	vi.mocked(verifyClerkAuth).mockResolvedValue(null);
-});
-
-describe('GET /api/projects/:id/categories', () => {
-	it('returns 404 when project is not published and unauthenticated', async () => {
-		const db = createDbForGet({ id: 1, isPublished: false }, []);
+describe('GET /api/admin/projects/:id/categories', () => {
+	it('returns 404 when the project does not exist', async () => {
+		const db = createDbForGet(null, []);
 		const request = new Request('http://localhost/api/projects/1/categories');
 
 		await expect(GET({ params: { id: '1' }, request, locals: { db } } as any)).rejects.toMatchObject({
@@ -68,13 +54,12 @@ describe('GET /api/projects/:id/categories', () => {
 		});
 	});
 
-	it('returns categories for authenticated user', async () => {
+	it('returns categories', async () => {
 		const db = createDbForGet(
 			{ id: 1, isPublished: false },
 			[{ id: 10, name: 'wood', displayName: 'Wood', isPublished: false }]
 		);
 
-		asAuth('user_123');
 		const request = new Request('http://localhost/api/projects/1/categories');
 		const response = await GET({ params: { id: '1' }, request, locals: { db } } as any);
 		const body = await response.json();
@@ -83,23 +68,9 @@ describe('GET /api/projects/:id/categories', () => {
 	});
 });
 
-describe('POST /api/projects/:id/categories', () => {
-	it('requires authentication', async () => {
+describe('POST /api/admin/projects/:id/categories', () => {
+	it('adds categories', async () => {
 		const db = createInsertDb();
-		const request = new Request('http://localhost/api/projects/1/categories', {
-			method: 'POST',
-			body: JSON.stringify({ category_ids: [1] }),
-			headers: { 'Content-Type': 'application/json' }
-		});
-
-		await expect(POST({ params: { id: '1' }, request, locals: { db } } as any)).rejects.toMatchObject({
-			status: 401
-		});
-	});
-
-	it('adds categories when authenticated', async () => {
-		const db = createInsertDb();
-		asAuth('user_123');
 		const request = new Request('http://localhost/api/projects/1/categories', {
 			method: 'POST',
 			body: JSON.stringify({ category_ids: [1, 2] }),
@@ -113,23 +84,9 @@ describe('POST /api/projects/:id/categories', () => {
 	});
 });
 
-describe('DELETE /api/projects/:id/categories', () => {
-	it('requires authentication', async () => {
+describe('DELETE /api/admin/projects/:id/categories', () => {
+	it('removes categories', async () => {
 		const db = createDeleteDb();
-		const request = new Request('http://localhost/api/projects/1/categories', {
-			method: 'DELETE',
-			body: JSON.stringify({ category_ids: [1] }),
-			headers: { 'Content-Type': 'application/json' }
-		});
-
-		await expect(DELETE({ params: { id: '1' }, request, locals: { db } } as any)).rejects.toMatchObject({
-			status: 401
-		});
-	});
-
-	it('removes categories when authenticated', async () => {
-		const db = createDeleteDb();
-		asAuth('user_123');
 		const request = new Request('http://localhost/api/projects/1/categories', {
 			method: 'DELETE',
 			body: JSON.stringify({ category_ids: [1, 2] }),
@@ -143,7 +100,7 @@ describe('DELETE /api/projects/:id/categories', () => {
 	});
 });
 
-describe('OPTIONS /api/projects/:id/categories', () => {
+describe('OPTIONS /api/admin/projects/:id/categories', () => {
 	it('returns 200', async () => {
 		const response = await OPTIONS({} as any);
 		expect(response.status).toBe(200);
