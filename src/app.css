@@ -246,6 +246,36 @@
     view-transition-name: none !important;
   }
 
+  /* Returning from a project: the gallery is already known to the visitor, so show it at
+     once rather than letting the UA cross-fade it in under the morphing cover image. */
+  html.vt-project-to-home::view-transition-new(gallery-grid) {
+    animation: none;
+    opacity: 1;
+  }
+
+  /* Returning from a project with the cursor away from its tile: the tile shows the regular
+     image, so hide the cover's (hover image) snapshot and morph the regular image alone. */
+  html.vt-morph-regular-image::view-transition-old(*.project-image) {
+    animation: none;
+    opacity: 0;
+  }
+  html.vt-morph-regular-image::view-transition-new(*.project-image) {
+    animation: none;
+    opacity: 1;
+    mix-blend-mode: normal;
+  }
+
+  /* Returning with the cursor on the tile: hover can't register during the transition, so
+     hold the tile on its hover image, matching the cover it morphs from. */
+  .gallery-item.vt-morph-hovered:has([data-cover='hover']) [data-cover='primary'] {
+    opacity: 0;
+    transition: none;
+  }
+  .gallery-item.vt-morph-hovered [data-cover='hover'] {
+    opacity: 1;
+    transition: none;
+  }
+
   /* Root snapshot: keep UA positioning transform; disable crossfade */
   ::view-transition-group(root) {
     animation-duration: 0s !important;

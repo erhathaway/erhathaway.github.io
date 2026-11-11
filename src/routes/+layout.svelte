@@ -277,6 +277,10 @@
 	onMount(() => {
 		initPostHog(env.PUBLIC_POSTHOG_KEY ?? '');
 
+		// Children mount first, so the gallery tiles of the initial page load have already
+		// read this as false and play their entrance animation; later mounts skip it.
+		portfolio.hydrated = true;
+
 		// Ensure the trigger-name suppression class matches initial state on first paint/hydration.
 		setPanelTransitionNames(panelTransitionNames);
 
@@ -290,6 +294,12 @@
 		window.addEventListener('resize', handleResize);
 		handleResize(); // Initial check
 
+		const trackPointer = (e: PointerEvent) => {
+			lastPointer = e.pointerType === 'touch' ? null : { x: e.clientX, y: e.clientY };
+		};
+		window.addEventListener('pointermove', trackPointer, { passive: true });
+		window.addEventListener('pointerdown', trackPointer, { passive: true });
+
 		const handleNameCardOpen = () => {
 			expandNameCard();
 		};
@@ -301,21 +311,57 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			window.removeEventListener('pointermove', trackPointer);
+			window.removeEventListener('pointerdown', trackPointer);
 			window.removeEventListener('namecard:open', handleNameCardOpen);
 			window.removeEventListener('auth:open-login', handleAuthOpen);
 		};
 	});
 
- afterNavigate(() => {
-  const hoverId = (page.state as { hoverId?: number }).hoverId;
-  if (hoverId && hoverId !== appliedHoverId) {
-   if (!window.matchMedia('(pointer: coarse)').matches) portfolio.lockHover(hoverId);
-   appliedHoverId = hoverId;
-  }
- });
+	// Coming back from a project, the hover overlay for that project is held back until the
+	// view transition has finished plus this pause, so it doesn't cover a tile mid-morph.
+	const HOVER_REVEAL_DELAY_MS = 1000;
+	let hoverRevealTimer: ReturnType<typeof setTimeout> | null = null;
+	let navTransitionFinished: Promise<unknown> | null = null;
+	let hoverRevealToken = 0;
+
+	// Last known mouse position, used to tell whether the cursor will be resting on a
+	// project's gallery tile when the visitor returns home. Null for touch input.
+	let lastPointer: { x: number; y: number } | null = null;
+	const MORPH_HOVERED_CLASS = 'vt-morph-hovered';
+
+	function cancelHoverReveal() {
+		hoverRevealToken += 1;
+		if (hoverRevealTimer) {
+			clearTimeout(hoverRevealTimer);
+			hoverRevealTimer = null;
+		}
+	}
+
+	afterNavigate(() => {
+		const hoverId = (page.state as { hoverId?: number }).hoverId;
+		if (!hoverId || hoverId === appliedHoverId) return;
+		appliedHoverId = hoverId;
+		if (window.matchMedia('(pointer: coarse)').matches) return;
+
+		cancelHoverReveal();
+		const token = hoverRevealToken;
+		const reveal = () => {
+			if (token !== hoverRevealToken) return;
+			hoverRevealTimer = setTimeout(() => {
+				hoverRevealTimer = null;
+				// Skip if the visitor has left the home page or is already hovering something.
+				if (token !== hoverRevealToken || !isHomePage || portfolio.hoveredItemId !== null) return;
+				portfolio.lockHover(hoverId);
+			}, HOVER_REVEAL_DELAY_MS);
+		};
+		(navTransitionFinished ?? Promise.resolve()).then(reveal, reveal);
+	});
 
 	// Enable View Transitions API for home↔project navigation
 	onNavigate((navigation) => {
+		cancelHoverReveal();
+		navTransitionFinished = null;
 		const fromRoute = navigation.from?.route?.id;
 		const toRoute = navigation.to?.route?.id;
 		const isHomeToProject = fromRoute === '/(home)' && toRoute === '/[slug]';
@@ -393,6 +439,11 @@
 		if (isHomeToProject) {
 			document.documentElement.classList.add('vt-home-to-project');
 		}
+		// Lets CSS show the returning gallery at once instead of cross-fading it in.
+		const PROJECT_TO_HOME_CLASS = 'vt-project-to-home';
+		if (isProjectToHome) {
+			document.documentElement.classList.add(PROJECT_TO_HOME_CLASS);
+		}
 
 		// Mark the gallery item that should keep its view-transition-name for the
 		// image morph. All other gallery items get their names stripped via CSS to
@@ -406,9 +457,20 @@
 				?.classList.add(MORPH_SOURCE_CLASS);
 		}
 
+		// The project cover shows the hover image, but the tile it morphs into only shows
+		// that image while the cursor is on it. Not under the cursor: drop the cover's
+		// snapshot so the regular image is used for the whole morph.
+		const MORPH_REGULAR_IMAGE_CLASS = 'vt-morph-regular-image';
 		const cleanupMorphSource = () => {
+			document.documentElement.classList.remove(PROJECT_TO_HOME_CLASS, MORPH_REGULAR_IMAGE_CLASS);
 			document.querySelector(`.${MORPH_SOURCE_CLASS}`)
 				?.classList.remove(MORPH_SOURCE_CLASS);
+			// A tile forced to its hover image keeps it until the cursor moves, when real
+			// :hover takes over (or it eases back if the cursor has left).
+			const forced = document.querySelector(`.${MORPH_HOVERED_CLASS}`);
+			if (forced) {
+				window.addEventListener('pointermove', () => forced.classList.remove(MORPH_HOVERED_CLASS), { once: true });
+			}
 		};
 
 		return new Promise((resolve) => {
@@ -425,15 +487,6 @@
 						if (isHomeToProject) {
 							document.documentElement.classList.remove('vt-home-to-project');
 						}
-						if (isProjectToHome && portfolio.hoverLockId !== null) {
-							const lockId = portfolio.hoverLockId;
-							setTimeout(() => {
-								if (portfolio.hoverLockId === lockId && portfolio.hoveredItemId === lockId) {
-									portfolio.hoveredItemId = null;
-									portfolio.hoverLockId = null;
-								}
-							}, 650);
-						}
 					} finally {
 						resolveOnce();
 					}
@@ -448,9 +501,18 @@
 						await restoreHomeRightPanelScrollTop();
 						// Mark the target gallery item in the newly rendered home page so the
 						// browser only creates one VT group for gallery items in the new state.
-						if (morphSlug) {
-							document.querySelector(`a.gallery-item[href="/${morphSlug}"]`)
-								?.classList.add(MORPH_SOURCE_CLASS);
+						const target = morphSlug
+							? document.querySelector(`a.gallery-item[href="/${morphSlug}"]`)
+							: null;
+						target?.classList.add(MORPH_SOURCE_CLASS);
+						const rect = target?.getBoundingClientRect();
+						const cursorOnTile = !!rect && !!lastPointer &&
+							lastPointer.x >= rect.left && lastPointer.x <= rect.right &&
+							lastPointer.y >= rect.top && lastPointer.y <= rect.bottom;
+						if (cursorOnTile) {
+							target?.classList.add(MORPH_HOVERED_CLASS);
+						} else {
+							document.documentElement.classList.add(MORPH_REGULAR_IMAGE_CLASS);
 						}
 					}
 				});
@@ -459,6 +521,7 @@
 				swallowViewTransitionErrors(t);
 				const finished = (t as any).finished;
 				if (finished && typeof finished.then === 'function') {
+					navTransitionFinished = finished;
 					finished.then(
 						() => { document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS); cleanupMorphSource(); },
 						() => { document.documentElement.classList.remove(HOME_PROJECT_NAV_CLASS); cleanupMorphSource(); }

@@ -1,9 +1,16 @@
+<script lang="ts" module>
+  // Cover images that have finished loading at least once in this session. When the gallery
+  // remounts (returning from a project page) these are in the browser cache, so they can be
+  // requested eagerly and decoded synchronously instead of popping in a frame or two late.
+  const loadedImages = new Set<string>();
+</script>
+
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { portfolio } from '$lib/stores/portfolio.svelte';
   import type { PortfolioItem } from '$lib/data/items';
   import { page } from '$app/stores';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import HoverInfo from './HoverInfo.svelte';
   import { getImageSources, getResponsiveSrcset, GALLERY_SIZES } from '$lib/utils/image-formats';
 
@@ -19,7 +26,8 @@
     dockSide = 'left',
     static: isStatic = false,
     href: hrefOverride = undefined,
-    waveHighlight = false
+    waveHighlight = false,
+    entrance = true
   }: {
     item: PortfolioItem;
     index?: number;
@@ -33,10 +41,26 @@
     static?: boolean;
     href?: string;
     waveHighlight?: boolean;
+    entrance?: boolean;
   } = $props();
   // View transitions temporarily hide the live DOM, which can cause CSS animations to restart
   // when it is revealed again. Disable the "entrance" animation after its first run.
-  let fadeInActive = $state(true);
+  // Only the value at mount matters: `entrance` is false while the gallery remounts on the
+  // way back from a project page.
+  let fadeInActive = $state(untrack(() => entrance && !isStatic));
+  const alreadyLoaded = untrack(() => !!item.image && loadedImages.has(item.image));
+
+  function trackLoaded(img: HTMLImageElement) {
+    const key = item.image;
+    if (!key) return;
+    const mark = () => loadedImages.add(key);
+    if (img.complete && img.naturalWidth > 0) {
+      mark();
+      return;
+    }
+    img.addEventListener('load', mark);
+    return () => img.removeEventListener('load', mark);
+  }
 
   function handleFadeInDone(e: AnimationEvent) {
     if (e.target !== e.currentTarget) return;
@@ -45,10 +69,7 @@
   }
 
   onMount(() => {
-    if (isStatic) {
-      fadeInActive = false;
-      return;
-    }
+    if (!fadeInActive) return;
     const timer = window.setTimeout(() => {
       fadeInActive = false;
     }, 1200 + index * 50);
@@ -109,6 +130,7 @@
   aria-label="{item.name} - {item.categories.join(', ')}"
   aria-current={isActive ? 'page' : undefined}
   style:view-transition-name={isStatic ? undefined : `project-image-${item.id}`}
+  style:view-transition-class={isStatic ? undefined : 'project-image'}
   style:animation-delay={fadeInActive ? `${index * 0.05}s` : undefined}
 >
   {#if item.image}
@@ -128,8 +150,11 @@
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           srcset={imgSrcset}
           sizes={imgSrcset ? GALLERY_SIZES : undefined}
-          loading={index < 6 ? 'eager' : 'lazy'}
+          loading={index < 6 || alreadyLoaded ? 'eager' : 'lazy'}
+          decoding={alreadyLoaded ? 'sync' : undefined}
           fetchpriority={index < 6 ? 'high' : undefined}
+          data-cover="primary"
+          {@attach trackLoaded}
         />
       </picture>
     {:else}
@@ -143,8 +168,11 @@
         style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
         srcset={imgSrcset}
         sizes={imgSrcset ? GALLERY_SIZES : undefined}
-        loading={index < 6 ? 'eager' : 'lazy'}
+        loading={index < 6 || alreadyLoaded ? 'eager' : 'lazy'}
+        decoding={alreadyLoaded ? 'sync' : undefined}
         fetchpriority={index < 6 ? 'high' : undefined}
+        data-cover="primary"
+        {@attach trackLoaded}
       />
     {/if}
     {#if item.hoverImage}
@@ -159,6 +187,7 @@
             alt={item.name}
             class="w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
             style:opacity={waveHighlight ? 1 : undefined}
+            data-cover="hover"
             style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
             style:transform="scale({item.coverPosition?.zoom ?? 1})"
             style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
@@ -173,6 +202,7 @@
           alt={item.name}
           class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           style:opacity={waveHighlight ? 1 : undefined}
+          data-cover="hover"
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"

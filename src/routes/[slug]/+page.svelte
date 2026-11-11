@@ -521,7 +521,7 @@
         <div
           bind:this={coverEl}
           class="group relative w-full aspect-square max-h-[50vh] lg:max-h-[67vh] max-w-[67vh] overflow-hidden rounded-lg vt-exclude-namecard"
-          style="view-transition-name: project-image-{item.id}"
+          style="view-transition-name: project-image-{item.id}; view-transition-class: project-image"
         >
           {#if item.hoverImage || item.image}
             {@const coverSrc = item.hoverImage || item.image}
