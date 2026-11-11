@@ -238,6 +238,10 @@
 	});
 
 	const CreateEditorComp = $derived(getArtifactComponent(artifactSchema, 'adminEditor'));
+	// An image with its framing preview lays out side by side, so it gets a wider modal.
+	const createModalWide = $derived(
+		artifactSchema === 'image-v1' && (!!artifactDraft.imageUrl || artifactUploadState.uploading)
+	);
 	const editArtifactSchema = $derived(
 		editingArtifactId !== null ? (artifacts.find(a => a.id === editingArtifactId)?.schema ?? artifactSchema) : artifactSchema
 	);
@@ -1160,6 +1164,8 @@
 
 	onMount(() => {
 		function onFileDrop(e: Event) {
+			// An open artifact modal takes pasted and dropped images itself.
+			if (showCreateArtifactModal || showEditArtifactModal) return;
 			const files = (e as CustomEvent).detail?.files as FileList | undefined;
 			if (files && files.length > 0) {
 				const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
@@ -1247,7 +1253,15 @@
 		dropUploading = false;
 	}
 
-	async function handleFileDropFromList(files: File[]) {
+	function handleBulkUpload(files: File[]) {
+		const isPublished = artifactIsPublished;
+		showCreateArtifactModal = false;
+		artifactIsPublished = defaultPublishNew;
+		artifactIsCover = false;
+		void handleFileDropFromList(files, isPublished);
+	}
+
+	async function handleFileDropFromList(files: File[], isPublished = defaultPublishNew) {
 		const token = await getToken();
 		if (!token) {
 			pageError = 'Sign in to upload images.';
@@ -1260,13 +1274,14 @@
 		pageError = '';
 
 		const created: typeof artifacts = [];
+		const failed: string[] = [];
 
 		for (const file of files) {
 			try {
 				const result = await handleArtifactUpload(file);
 				const uploadedUrl = typeof result === 'string' ? result : result.url;
 				const formats = typeof result === 'object' ? (result as { formats?: string[] }).formats : undefined;
-				const dataBlob: Record<string, unknown> = { imageUrl: uploadedUrl };
+				const dataBlob: Record<string, unknown> = { imageUrl: uploadedUrl, ...((await measureImage(uploadedUrl)) ?? {}) };
 				if (formats?.length) dataBlob.imageFormats = formats;
 				if (!defaultSkipDescription) {
 					dataBlob.description = file.name;
@@ -1280,16 +1295,19 @@
 					body: JSON.stringify({
 						schema: 'image-v1',
 						dataBlob,
-						isPublished: defaultPublishNew
+						isPublished
 					})
 				});
 
 				if (response.ok) {
 					const artifact = await response.json();
 					created.push({ ...artifact, projectId, isCover: false, coverPositionX: 50, coverPositionY: 50, coverZoom: 1 });
+				} else {
+					failed.push(file.name);
 				}
 			} catch {
 				// continue with remaining files
+				failed.push(file.name);
 			}
 			dropProgress = { done: dropProgress.done + 1, total: files.length };
 		}
@@ -1299,6 +1317,11 @@
 		if (created.length > 0) {
 			insertArtifacts(created);
 			pageSuccess = `Uploaded ${created.length} image${created.length !== 1 ? 's' : ''}.`;
+		} else {
+			insertAtIndex = null;
+		}
+		if (failed.length > 0) {
+			pageError = `Couldn't upload ${failed.join(', ')}.`;
 		}
 	}
 </script>
@@ -1882,15 +1905,16 @@
 
 	<!-- Create Artifact Modal -->
 	{#if showCreateArtifactModal}
-		<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
+		<!-- The modal never outgrows the viewport: its body scrolls and the footer stays in reach. -->
+		<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:py-8">
 			<button
 				type="button"
 				class="absolute inset-0 bg-black/40 backdrop-blur-sm"
 				onclick={() => { showCreateArtifactModal = false; insertAtIndex = null; }}
 				aria-label="Close create artifact modal"
 			></button>
-			<div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
-				<div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
+			<div class="relative flex max-h-full w-full flex-col rounded-2xl bg-white shadow-2xl overflow-hidden {createModalWide ? 'max-w-3xl' : 'max-w-lg'}">
+				<div class="flex shrink-0 items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
 					<h3 class="text-sm font-semibold text-slate-900">New Artifact</h3>
 					<button
 						type="button"
@@ -1903,12 +1927,14 @@
 					</button>
 				</div>
 
-				<form class="px-5 py-4 grid gap-3" onsubmit={createArtifact}>
+				<form class="flex min-h-0 flex-col" onsubmit={createArtifact}>
+					<div class="grid min-h-0 gap-3 overflow-y-auto px-5 py-4">
 					{#if CreateEditorComp}
 						<CreateEditorComp
 							value={artifactDraft}
 							onChange={handleArtifactDraftChange}
 							onUpload={handleArtifactUpload}
+							onUploadMany={handleBulkUpload}
 							onUploadStateChange={handleArtifactUploadStateChange}
 							{googlePhotosConnected}
 							onGooglePhotosPick={() => {
@@ -1922,7 +1948,8 @@
 							{[...artifactDraftErrors, artifactUploadState.error].filter(Boolean).join('; ')}
 						</p>
 					{/if}
-					<div class="flex items-center justify-between pt-3 border-t border-slate-100">
+					</div>
+					<div class="flex shrink-0 items-center justify-between px-5 py-3 border-t border-slate-100">
 						<div class="flex items-center gap-4">
 							<div class="flex items-center gap-2.5">
 								<button
