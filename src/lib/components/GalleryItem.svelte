@@ -130,6 +130,7 @@
   aria-label="{item.name} - {item.categories.join(', ')}"
   aria-current={isActive ? 'page' : undefined}
   style:view-transition-name={isStatic ? undefined : `project-image-${item.id}`}
+  style:view-transition-class={isStatic ? undefined : 'project-image'}
   style:animation-delay={fadeInActive ? `${index * 0.05}s` : undefined}
 >
   {#if item.image}
@@ -152,6 +153,7 @@
           loading={index < 6 || alreadyLoaded ? 'eager' : 'lazy'}
           decoding={alreadyLoaded ? 'sync' : undefined}
           fetchpriority={index < 6 ? 'high' : undefined}
+          data-cover="primary"
           {@attach trackLoaded}
         />
       </picture>
@@ -169,6 +171,7 @@
         loading={index < 6 || alreadyLoaded ? 'eager' : 'lazy'}
         decoding={alreadyLoaded ? 'sync' : undefined}
         fetchpriority={index < 6 ? 'high' : undefined}
+        data-cover="primary"
         {@attach trackLoaded}
       />
     {/if}
@@ -184,6 +187,7 @@
             alt={item.name}
             class="w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
             style:opacity={waveHighlight ? 1 : undefined}
+            data-cover="hover"
             style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
             style:transform="scale({item.coverPosition?.zoom ?? 1})"
             style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
@@ -198,6 +202,7 @@
           alt={item.name}
           class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           style:opacity={waveHighlight ? 1 : undefined}
+          data-cover="hover"
           style:object-position="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"
           style:transform="scale({item.coverPosition?.zoom ?? 1})"
           style:transform-origin="{item.coverPosition?.x ?? 50}% {item.coverPosition?.y ?? 50}%"

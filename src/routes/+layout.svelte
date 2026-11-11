@@ -294,6 +294,12 @@
 		window.addEventListener('resize', handleResize);
 		handleResize(); // Initial check
 
+		const trackPointer = (e: PointerEvent) => {
+			lastPointer = e.pointerType === 'touch' ? null : { x: e.clientX, y: e.clientY };
+		};
+		window.addEventListener('pointermove', trackPointer, { passive: true });
+		window.addEventListener('pointerdown', trackPointer, { passive: true });
+
 		const handleNameCardOpen = () => {
 			expandNameCard();
 		};
@@ -305,6 +311,8 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			window.removeEventListener('pointermove', trackPointer);
+			window.removeEventListener('pointerdown', trackPointer);
 			window.removeEventListener('namecard:open', handleNameCardOpen);
 			window.removeEventListener('auth:open-login', handleAuthOpen);
 		};
@@ -316,6 +324,11 @@
 	let hoverRevealTimer: ReturnType<typeof setTimeout> | null = null;
 	let navTransitionFinished: Promise<unknown> | null = null;
 	let hoverRevealToken = 0;
+
+	// Last known mouse position, used to tell whether the cursor will be resting on a
+	// project's gallery tile when the visitor returns home. Null for touch input.
+	let lastPointer: { x: number; y: number } | null = null;
+	const MORPH_HOVERED_CLASS = 'vt-morph-hovered';
 
 	function cancelHoverReveal() {
 		hoverRevealToken += 1;
@@ -444,10 +457,20 @@
 				?.classList.add(MORPH_SOURCE_CLASS);
 		}
 
+		// The project cover shows the hover image, but the tile it morphs into only shows
+		// that image while the cursor is on it. Not under the cursor: drop the cover's
+		// snapshot so the regular image is used for the whole morph.
+		const MORPH_REGULAR_IMAGE_CLASS = 'vt-morph-regular-image';
 		const cleanupMorphSource = () => {
-			document.documentElement.classList.remove(PROJECT_TO_HOME_CLASS);
+			document.documentElement.classList.remove(PROJECT_TO_HOME_CLASS, MORPH_REGULAR_IMAGE_CLASS);
 			document.querySelector(`.${MORPH_SOURCE_CLASS}`)
 				?.classList.remove(MORPH_SOURCE_CLASS);
+			// A tile forced to its hover image keeps it until the cursor moves, when real
+			// :hover takes over (or it eases back if the cursor has left).
+			const forced = document.querySelector(`.${MORPH_HOVERED_CLASS}`);
+			if (forced) {
+				window.addEventListener('pointermove', () => forced.classList.remove(MORPH_HOVERED_CLASS), { once: true });
+			}
 		};
 
 		return new Promise((resolve) => {
@@ -478,9 +501,18 @@
 						await restoreHomeRightPanelScrollTop();
 						// Mark the target gallery item in the newly rendered home page so the
 						// browser only creates one VT group for gallery items in the new state.
-						if (morphSlug) {
-							document.querySelector(`a.gallery-item[href="/${morphSlug}"]`)
-								?.classList.add(MORPH_SOURCE_CLASS);
+						const target = morphSlug
+							? document.querySelector(`a.gallery-item[href="/${morphSlug}"]`)
+							: null;
+						target?.classList.add(MORPH_SOURCE_CLASS);
+						const rect = target?.getBoundingClientRect();
+						const cursorOnTile = !!rect && !!lastPointer &&
+							lastPointer.x >= rect.left && lastPointer.x <= rect.right &&
+							lastPointer.y >= rect.top && lastPointer.y <= rect.bottom;
+						if (cursorOnTile) {
+							target?.classList.add(MORPH_HOVERED_CLASS);
+						} else {
+							document.documentElement.classList.add(MORPH_REGULAR_IMAGE_CLASS);
 						}
 					}
 				});
