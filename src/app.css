@@ -246,6 +246,13 @@
     view-transition-name: none !important;
   }
 
+  /* Returning from a project: the gallery is already known to the visitor, so show it at
+     once rather than letting the UA cross-fade it in under the morphing cover image. */
+  html.vt-project-to-home::view-transition-new(gallery-grid) {
+    animation: none;
+    opacity: 1;
+  }
+
   /* Root snapshot: keep UA positioning transform; disable crossfade */
   ::view-transition-group(root) {
     animation-duration: 0s !important;

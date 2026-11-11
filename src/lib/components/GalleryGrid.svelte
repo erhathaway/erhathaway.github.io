@@ -16,8 +16,14 @@
   import { onMount } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
 
+  // Tiles fade in on the first page load and when a filter change adds them, but not when
+  // the whole gallery remounts on the way back from a project page: there the visitor has
+  // already seen it, and a faded-out tile would hide the cover image morphing into it.
+  let entranceAnimation = $state(!portfolio.hydrated);
+
   onMount(() => {
     portfolio.setHoveredItem(null);
+    entranceAnimation = true;
   });
 
   let innerWidth = $state(browser ? window.innerWidth : 1200);
@@ -279,6 +285,7 @@
         dockHasTarget={hasDockTarget}
         dockSide={dockSide}
         waveHighlight={waveActiveIds.has(item.id)}
+        entrance={entranceAnimation}
       />
     {/each}
     {#if fillerSpan > 0}

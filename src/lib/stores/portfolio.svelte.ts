@@ -17,6 +17,9 @@ class PortfolioStore {
   namecardImage = $state<NamecardImageSetting | null>(null);
   projectNamecardImage = $state<NamecardImageSetting | null>(null);
   loading = $state(false);
+  // Set once the initial page load has hydrated. Deliberately not reactive: components
+  // read it while initialising to tell a first load from a client-side navigation.
+  hydrated = false;
 
   allItems = $derived.by(() => {
     return this.projects.map(project => {
