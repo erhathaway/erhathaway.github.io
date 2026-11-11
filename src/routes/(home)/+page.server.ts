@@ -1,3 +1,4 @@
+import type { NamecardImageSetting } from '$lib/types/site-settings';
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { and, eq, asc } from 'drizzle-orm';
@@ -140,8 +141,8 @@ export const load: PageServerLoad = async ({ locals, setHeaders, url }) => {
 		origin: url.origin,
 		projects: projectList,
 		categories: catList,
-		namecardImage: namecardRow?.value ?? null,
-		previewNamecardImage: previewNamecardRow?.value ?? null,
-		projectNamecardImage: projectNamecardRow?.value ?? null
+		namecardImage: (namecardRow?.value ?? null) as NamecardImageSetting | null,
+		previewNamecardImage: (previewNamecardRow?.value ?? null) as NamecardImageSetting | null,
+		projectNamecardImage: (projectNamecardRow?.value ?? null) as NamecardImageSetting | null
 	};
 };

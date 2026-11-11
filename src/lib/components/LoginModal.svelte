@@ -36,7 +36,8 @@
 
 		try {
 			const clerk = ctx.clerk;
-			const client = clerk.client;
+			const client = clerk?.client;
+			if (!clerk || !client) throw new Error('Sign-in is still loading.');
 
 			await client.signIn.create({
 				identifier: email,
@@ -68,7 +69,8 @@
 
 		try {
 			const clerk = ctx.clerk;
-			const client = clerk.client;
+			const client = clerk?.client;
+			if (!clerk || !client) throw new Error('Sign-in is still loading.');
 
 			const signInAttempt = client.signIn;
 

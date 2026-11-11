@@ -49,7 +49,7 @@
 		attributes,
 		onSave,
 		onCancel
-	} = $props<Props>();
+	}: Props = $props();
 
 	let editIsPublished = $state(project.isPublished);
 	let editCategoryIds = $state([...categoryIds]);
@@ -179,15 +179,9 @@
 	let hasUnsavedChanges = $state(false);
 	let isSaving = $state(false);
 
-	// Log when isSaving changes
-	$effect(() => {
-		console.log('isSaving changed to:', isSaving);
-	});
-
 	let saveStartTime = 0;
 
 	function triggerAutoSave() {
-		console.log('triggerAutoSave called');
 		hasUnsavedChanges = true;
 
 		// Show spinner immediately
@@ -197,12 +191,9 @@
 		}
 
 		if (saveTimeout) {
-			console.log('Clearing existing timeout');
 			clearTimeout(saveTimeout);
 		}
-		console.log('Setting 3-second timeout for save');
 		saveTimeout = setTimeout(async () => {
-			console.log('Timeout fired, saving now...');
 			try {
 				await onSave({
 					name: project.name,
@@ -212,7 +203,6 @@
 					categoryIds: editCategoryIds,
 					attributes: editAttributes
 				});
-				console.log('Save completed');
 
 				// Ensure spinner shows for at least 500ms from when it first appeared
 				const elapsed = Date.now() - saveStartTime;
@@ -227,7 +217,6 @@
 	}
 
 	async function saveImmediately() {
-		console.log('saveImmediately called, hasUnsavedChanges:', hasUnsavedChanges);
 		if (saveTimeout) clearTimeout(saveTimeout);
 		if (hasUnsavedChanges) {
 			isSaving = true;
@@ -241,7 +230,6 @@
 					categoryIds: editCategoryIds,
 					attributes: editAttributes
 				});
-				console.log('Immediate save completed');
 
 				// Ensure spinner shows for at least 500ms
 				const elapsed = Date.now() - startTime;
@@ -267,14 +255,6 @@
 		const attributesChanged = currentAttributes !== prevAttributes;
 
 		if (isPublishedChanged || categoryIdsChanged || attributesChanged) {
-			console.log('Change detected!', {
-				isPublishedChanged,
-				categoryIdsChanged,
-				attributesChanged,
-				currentIsPublished,
-				prevIsPublished
-			});
-
 			// Update prev values
 			prevIsPublished = currentIsPublished;
 			prevCategoryIds = currentCategoryIds;
@@ -383,7 +363,6 @@
 			aria-label="Toggle published"
 			onclick={() => {
 				editIsPublished = !editIsPublished;
-				console.log('Toggle changed!', 'new value:', editIsPublished);
 			}}
 			class={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 ${editIsPublished ? 'bg-emerald-500' : 'bg-slate-200'}`}
 		>

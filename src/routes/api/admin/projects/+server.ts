@@ -132,12 +132,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const payload = (await request.json()) as Partial<ProjectInput>;
 	const name = payload.name?.trim();
-	const displayName = payload.displayName?.trim() || name;
 	const description = payload.description?.trim() || null;
 
 	if (!name) {
 		throw error(400, 'name is required');
 	}
+	const displayName = payload.displayName?.trim() || name;
 
 	const slugError = validateSlug(name);
 	if (slugError) {

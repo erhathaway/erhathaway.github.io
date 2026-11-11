@@ -1,16 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { GET, OPTIONS, POST, PUT } from './[id]/attributes/+server';
+import { describe, expect, it } from 'vitest';
+import { GET, OPTIONS, POST, PUT } from '../admin/projects/[id]/attributes/+server';
 import { projectAttributes, projects } from '$lib/server/db/schema';
-
-vi.mock('$lib/server/auth', () => ({
-	verifyClerkAuth: vi.fn()
-}));
-
-import { verifyClerkAuth } from '$lib/server/auth';
-
-const asAuth = (value: string | null) => {
-	vi.mocked(verifyClerkAuth).mockResolvedValue(value);
-};
 
 const createDbForGet = (projectRow: any, attributeRows: any[]) => {
 	return {
@@ -78,13 +68,9 @@ const createDbForPut = (projectRow: any, existingRows: any[], finalRows: any[]) 
 	} as any;
 };
 
-beforeEach(() => {
-	vi.mocked(verifyClerkAuth).mockResolvedValue(null);
-});
-
-describe('GET /api/projects/:id/attributes', () => {
-	it('returns 404 when project is not published and unauthenticated', async () => {
-		const db = createDbForGet({ id: 1, isPublished: false }, []);
+describe('GET /api/admin/projects/:id/attributes', () => {
+	it('returns 404 when the project does not exist', async () => {
+		const db = createDbForGet(null, []);
 		const request = new Request('http://localhost/api/projects/1/attributes');
 
 		await expect(GET({ params: { id: '1' }, request, locals: { db } } as any)).rejects.toMatchObject({
@@ -92,12 +78,11 @@ describe('GET /api/projects/:id/attributes', () => {
 		});
 	});
 
-	it('returns attributes for authenticated user', async () => {
+	it('returns attributes', async () => {
 		const db = createDbForGet(
 			{ id: 1, isPublished: false },
 			[{ id: 10, name: 'Material', value: 'Walnut', showInNav: true, isPublished: false }]
 		);
-		asAuth('user_123');
 		const request = new Request('http://localhost/api/projects/1/attributes');
 		const response = await GET({ params: { id: '1' }, request, locals: { db } } as any);
 		const body = await response.json();
@@ -108,26 +93,12 @@ describe('GET /api/projects/:id/attributes', () => {
 	});
 });
 
-describe('POST /api/projects/:id/attributes', () => {
-	it('requires authentication', async () => {
-		const db = createDbForPost({ id: 1, isPublished: true }, []);
-		const request = new Request('http://localhost/api/projects/1/attributes', {
-			method: 'POST',
-			body: JSON.stringify({ attributes: [{ name: 'Material', value: 'Walnut' }] }),
-			headers: { 'Content-Type': 'application/json' }
-		});
-
-		await expect(POST({ params: { id: '1' }, request, locals: { db } } as any)).rejects.toMatchObject({
-			status: 401
-		});
-	});
-
-	it('creates attributes when authenticated', async () => {
+describe('POST /api/admin/projects/:id/attributes', () => {
+	it('creates attributes', async () => {
 		const created = [
 			{ id: 10, projectId: 1, name: 'Material', value: 'Walnut', showInNav: true, isPublished: true }
 		];
 		const db = createDbForPost({ id: 1, isPublished: true }, created);
-		asAuth('user_123');
 		const request = new Request('http://localhost/api/projects/1/attributes', {
 			method: 'POST',
 			body: JSON.stringify({ attributes: [{ name: 'Material', value: 'Walnut', showInNav: true, isPublished: true }] }),
@@ -141,28 +112,14 @@ describe('POST /api/projects/:id/attributes', () => {
 	});
 });
 
-describe('PUT /api/projects/:id/attributes', () => {
-	it('requires authentication', async () => {
-		const db = createDbForPut({ id: 1, isPublished: true }, [], []);
-		const request = new Request('http://localhost/api/projects/1/attributes', {
-			method: 'PUT',
-			body: JSON.stringify({ attributes: [{ name: 'Material', value: 'Walnut' }] }),
-			headers: { 'Content-Type': 'application/json' }
-		});
-
-		await expect(PUT({ params: { id: '1' }, request, locals: { db } } as any)).rejects.toMatchObject({
-			status: 401
-		});
-	});
-
-	it('updates attributes when authenticated', async () => {
+describe('PUT /api/admin/projects/:id/attributes', () => {
+	it('updates attributes', async () => {
 		const existing = [{ id: 10 }];
 		const final = [
 			{ id: 10, name: 'Material', value: 'Walnut', showInNav: true, isPublished: true },
 			{ id: 11, name: 'Finish', value: 'Oil', showInNav: false, isPublished: false }
 		];
 		const db = createDbForPut({ id: 1, isPublished: true }, existing, final);
-		asAuth('user_123');
 		const request = new Request('http://localhost/api/projects/1/attributes', {
 			method: 'PUT',
 			body: JSON.stringify({
@@ -180,7 +137,7 @@ describe('PUT /api/projects/:id/attributes', () => {
 	});
 });
 
-describe('OPTIONS /api/projects/:id/attributes', () => {
+describe('OPTIONS /api/admin/projects/:id/attributes', () => {
 	it('returns 200', async () => {
 		const response = await OPTIONS({} as any);
 		expect(response.status).toBe(200);

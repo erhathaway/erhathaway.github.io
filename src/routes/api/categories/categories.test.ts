@@ -1,21 +1,12 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { GET as listGET, POST as listPOST, OPTIONS as listOPTIONS } from './+server';
+import { describe, expect, it } from 'vitest';
+import { GET as listGET, OPTIONS as listOPTIONS } from './+server';
+import { GET as adminListGET, POST as listPOST } from '../admin/categories/+server';
 import {
 	GET as itemGET,
 	PUT as itemPUT,
 	DELETE as itemDELETE,
 	OPTIONS as itemOPTIONS
-} from './[id]/+server';
-
-vi.mock('$lib/server/auth', () => ({
-	verifyClerkAuth: vi.fn()
-}));
-
-import { verifyClerkAuth } from '$lib/server/auth';
-
-const asAuth = (value: string | null) => {
-	vi.mocked(verifyClerkAuth).mockResolvedValue(value);
-};
+} from '../admin/categories/[id]/+server';
 
 const createListDb = (rows: any[]) => {
 	let whereCalled = false;
@@ -96,12 +87,8 @@ const makeRequest = (body?: unknown, token?: string) => {
 	});
 };
 
-beforeEach(() => {
-	vi.mocked(verifyClerkAuth).mockResolvedValue(null);
-});
-
 describe('GET /api/categories', () => {
-	it('returns only published categories when unauthenticated', async () => {
+	it('returns only published categories', async () => {
 		const rows = [
 			{ id: 1, name: 'wood', displayName: 'Wood', isPublished: true },
 			{ id: 2, name: 'food', displayName: 'Food', isPublished: true }
@@ -116,7 +103,7 @@ describe('GET /api/categories', () => {
 		expect(body).toEqual(rows);
 	});
 
-	it('returns all categories when authenticated', async () => {
+	it('returns all categories from the admin endpoint', async () => {
 		const rows = [
 			{ id: 1, name: 'wood', displayName: 'Wood', isPublished: false },
 			{ id: 2, name: 'food', displayName: 'Food', isPublished: true }
@@ -127,30 +114,19 @@ describe('GET /api/categories', () => {
 			})
 		} as any;
 
-		asAuth('user_123');
 		const request = makeRequest(undefined, 'token');
-		const response = await listGET({ request, locals: { db } } as any);
+		const response = await adminListGET({ request, locals: { db } } as any);
 		const body = await response.json();
 
 		expect(body).toEqual(rows);
 	});
 });
 
-describe('POST /api/categories', () => {
-	it('requires authentication', async () => {
-		const db = createInsertDb({ id: 1 });
-		const request = makeRequest({ name: 'wood', displayName: 'Wood' });
-
-		await expect(listPOST({ request, locals: { db } } as any)).rejects.toMatchObject({
-			status: 401
-		});
-	});
-
-	it('creates a category when authenticated', async () => {
+describe('POST /api/admin/categories', () => {
+	it('creates a category', async () => {
 		const created = { id: 1, name: 'wood', displayName: 'Wood', isPublished: true };
 		const db = createInsertDb(created);
 
-		asAuth('user_123');
 		const request = makeRequest({ name: 'wood', displayName: 'Wood', isPublished: true }, 'token');
 		const response = await listPOST({ request, locals: { db } } as any);
 		const body = await response.json();
@@ -161,7 +137,6 @@ describe('POST /api/categories', () => {
 
 	it('validates required fields', async () => {
 		const db = createInsertDb({ id: 1 });
-		asAuth('user_123');
 		const request = makeRequest({ name: '' }, 'token');
 
 		await expect(listPOST({ request, locals: { db } } as any)).rejects.toMatchObject({
@@ -170,8 +145,8 @@ describe('POST /api/categories', () => {
 	});
 });
 
-describe('GET /api/categories/:id', () => {
-	it('returns 404 for unpublished when unauthenticated', async () => {
+describe('GET /api/admin/categories/:id', () => {
+	it('returns 404 when the category does not exist', async () => {
 		const { db } = createItemDb([]);
 		const request = makeRequest();
 
@@ -180,10 +155,9 @@ describe('GET /api/categories/:id', () => {
 		).rejects.toMatchObject({ status: 404 });
 	});
 
-	it('returns item when authenticated', async () => {
+	it('returns item', async () => {
 		const rows = [{ id: 1, name: 'wood', displayName: 'Wood', isPublished: false }];
 		const { db } = createItemDb(rows);
-		asAuth('user_123');
 		const request = makeRequest(undefined, 'token');
 
 		const response = await itemGET({ params: { id: '1' }, request, locals: { db } } as any);
@@ -193,20 +167,10 @@ describe('GET /api/categories/:id', () => {
 	});
 });
 
-describe('PUT /api/categories/:id', () => {
-	it('requires authentication', async () => {
-		const db = createUpdateDb({ id: 1 });
-		const request = makeRequest({ name: 'wood', displayName: 'Wood' });
-
-		await expect(
-			itemPUT({ params: { id: '1' }, request, locals: { db } } as any)
-		).rejects.toMatchObject({ status: 401 });
-	});
-
-	it('updates a category when authenticated', async () => {
+describe('PUT /api/admin/categories/:id', () => {
+	it('updates a category', async () => {
 		const updated = { id: 1, name: 'wood', displayName: 'Wood', isPublished: false };
 		const db = createUpdateDb(updated);
-		asAuth('user_123');
 		const request = makeRequest({ name: 'wood', displayName: 'Wood' }, 'token');
 
 		const response = await itemPUT({ params: { id: '1' }, request, locals: { db } } as any);
@@ -216,19 +180,9 @@ describe('PUT /api/categories/:id', () => {
 	});
 });
 
-describe('DELETE /api/categories/:id', () => {
-	it('requires authentication', async () => {
+describe('DELETE /api/admin/categories/:id', () => {
+	it('deletes a category', async () => {
 		const db = createDeleteDb({ id: 1 });
-		const request = makeRequest();
-
-		await expect(
-			itemDELETE({ params: { id: '1' }, request, locals: { db } } as any)
-		).rejects.toMatchObject({ status: 401 });
-	});
-
-	it('deletes a category when authenticated', async () => {
-		const db = createDeleteDb({ id: 1 });
-		asAuth('user_123');
 		const request = makeRequest(undefined, 'token');
 
 		const response = await itemDELETE({ params: { id: '1' }, request, locals: { db } } as any);

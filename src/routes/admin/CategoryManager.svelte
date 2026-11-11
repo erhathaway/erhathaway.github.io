@@ -16,8 +16,8 @@
 		getToken: () => Promise<string | null>;
 	};
 
-	let { categories, categoriesLoaded, setCategories, setCategoriesLoaded, getToken } =
-		$props<Props>();
+	let { categories, categoriesLoaded, setCategories, setCategoriesLoaded, getToken }: Props =
+		$props();
 
 	let filter = $state<'all' | 'published' | 'unpublished'>('all');
 	let isLoading = $state(false);

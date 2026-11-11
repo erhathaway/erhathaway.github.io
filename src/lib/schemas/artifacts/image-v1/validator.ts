@@ -88,7 +88,7 @@ export const validateImageV1 = (payload: unknown): ImageV1ValidationResult => {
 		errors.push('width and height must both be positive numbers');
 	}
 
-	if (errors.length > 0) {
+	if (errors.length > 0 || typeof imageUrl !== 'string') {
 		return { ok: false, errors };
 	}
 

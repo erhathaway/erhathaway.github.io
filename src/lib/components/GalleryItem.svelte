@@ -219,7 +219,7 @@
     {displayNumber.toString().padStart(2, '0')}
   </span>
 
-  {#if showDockedHover}
+  {#if showDockedHover && dockHoverItem}
     <div class="absolute inset-0 z-20 pointer-events-none">
       <HoverInfo item={dockHoverItem} variant="tile" dockSide={dockSide} />
     </div>

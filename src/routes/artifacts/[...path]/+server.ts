@@ -81,5 +81,5 @@ export const GET: RequestHandler = async ({ request, params, platform, locals })
 	}
 	headers.set('Cache-Control', 'public, max-age=31536000, immutable');
 
-	return new Response(object.body, { status: 200, headers });
+	return new Response(object.body as unknown as BodyInit, { status: 200, headers });
 };

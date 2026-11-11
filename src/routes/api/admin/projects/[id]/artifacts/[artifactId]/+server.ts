@@ -33,7 +33,7 @@ const parseId = (raw: string) => {
 	return id;
 };
 
-const fetchProjectOrThrow = async (db: ReturnType<App.Locals['db']>, projectId: number) => {
+const fetchProjectOrThrow = async (db: NonNullable<App.Locals['db']>, projectId: number) => {
 	const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
 	if (!project) {
 		throw error(404, 'Project not found');

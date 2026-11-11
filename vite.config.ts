@@ -14,7 +14,7 @@ const clientProject = {
 		browser: {
 			enabled: browserEnabled,
 			provider: playwright(),
-			instances: [{ browser: 'chromium', headless: true }]
+			instances: [{ browser: 'chromium' as const, headless: true }]
 		},
 
 		include: ['src/**/*.svelte.{test,spec}.{js,ts}'],

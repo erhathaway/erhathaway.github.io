@@ -104,6 +104,7 @@
 		}
 		return {
 			id: project.id,
+			slug: project.name,
 			name: project.displayName || project.name,
 			categories: project.categories,
 			description: project.description ?? '',
