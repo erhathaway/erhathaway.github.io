@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { useClerkContext } from 'svelte-clerk';
 
 	const ctx = useClerkContext();
@@ -11,6 +12,8 @@
 	let error = $state('');
 	let success = $state('');
 	let disconnecting = $state(false);
+	let reconnectRequired = $state(false);
+	let statusFailed = $state(false);
 
 	async function getToken() {
 		const session = ctx.clerk?.session;
@@ -20,18 +23,24 @@
 
 	async function fetchStatus() {
 		loading = true;
-		error = '';
+		statusFailed = false;
+		error = page.url.searchParams.get('error') ?? '';
 		try {
 			const token = await getToken();
-			if (!token) return;
+			if (!token) throw new Error('Your admin session has expired. Sign in again to continue.');
 			const response = await fetch('/api/admin/integrations/google-photos/status', {
 				headers: { Authorization: `Bearer ${token}` }
 			});
-			if (!response.ok) throw new Error('Failed to fetch status');
+			if (!response.ok) throw new Error('Could not check your Google Photos connection. Please try again.');
 			const data = await response.json();
 			connected = data.connected;
 			connectedAt = data.connectedAt ?? null;
+			reconnectRequired = data.reconnectRequired === true;
+			if (reconnectRequired) error = data.message;
+			if (!connected) success = '';
 		} catch (err) {
+			statusFailed = true;
+			success = '';
 			error = err instanceof Error ? err.message : 'Failed to load status';
 		} finally {
 			loading = false;
@@ -56,6 +65,7 @@
 			});
 			if (!response.ok) throw new Error('Failed to disconnect');
 			connected = false;
+			reconnectRequired = false;
 			connectedAt = null;
 			success = 'Google Photos disconnected.';
 		} catch (err) {
@@ -67,33 +77,38 @@
 
 	onMount(() => {
 		// Check URL params for OAuth callback results
-		const urlError = $page.url.searchParams.get('error');
-		const urlConnected = $page.url.searchParams.get('connected');
+		const urlError = page.url.searchParams.get('error');
+		const urlConnected = page.url.searchParams.get('connected');
 		if (urlError) {
-			error = decodeURIComponent(urlError);
+			error = urlError;
 		}
 		if (urlConnected === 'true') {
 			success = 'Google Photos connected successfully.';
 		}
 
-		// Wait for Clerk to be ready before fetching status
-		const interval = setInterval(async () => {
+		// Start once Clerk is ready; avoid two concurrent token refreshes on mount.
+		if (ctx.clerk?.session) {
+			void fetchStatus();
+			return;
+		}
+		const interval = setInterval(() => {
 			if (ctx.clerk?.session) {
 				clearInterval(interval);
-				fetchStatus();
+				void fetchStatus();
 			}
 		}, 100);
-
-		// Fallback: try immediately in case already ready
-		fetchStatus();
-
 		return () => clearInterval(interval);
 	});
 </script>
 
 <div class="max-w-xl">
 	<h1 class="text-xl font-semibold text-slate-900 mb-1">Google Photos</h1>
-	<p class="text-sm text-slate-500 mb-6">Import images and videos from your Google Photos library into projects.</p>
+	<p class="text-sm text-slate-500 mb-3">Import selected photos from your Google Photos library into projects.</p>
+	<p class="text-xs text-slate-500 mb-6">
+		Imported copies are stored on this site and shown publicly when published.
+		Read the <a class="underline underline-offset-2" href={resolve('/privacy')}>Privacy Policy</a>
+		and <a class="underline underline-offset-2" href={resolve('/terms')}>Terms of Service</a>.
+	</p>
 
 	{#if error}
 		<div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-4">
@@ -112,6 +127,10 @@
 			<div class="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500"></div>
 			Loading...
 		</div>
+	{:else if statusFailed}
+		<button type="button" onclick={fetchStatus} class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800">
+			Check connection again
+		</button>
 	{:else if connected}
 		<div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
 			<div class="flex items-center gap-3">
@@ -134,6 +153,13 @@
 
 			<button
 				type="button"
+				onclick={handleConnect}
+				class="mr-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 border border-slate-200 hover:bg-slate-50"
+			>
+				Reconnect Google Photos
+			</button>
+			<button
+				type="button"
 				onclick={handleDisconnect}
 				disabled={disconnecting}
 				class="px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 border border-red-200 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
@@ -150,7 +176,7 @@
 					</svg>
 				</span>
 				<div>
-					<p class="text-sm font-medium text-slate-900">Not connected</p>
+					<p class="text-sm font-medium text-slate-900">{reconnectRequired ? 'Reconnect required' : 'Not connected'}</p>
 					<p class="text-xs text-slate-400">Connect to import photos and videos</p>
 				</div>
 			</div>
@@ -164,7 +190,7 @@
 				onclick={handleConnect}
 				class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors duration-150"
 			>
-				Connect Google Photos
+				{reconnectRequired ? 'Reconnect Google Photos' : 'Connect Google Photos'}
 			</button>
 		</div>
 	{/if}

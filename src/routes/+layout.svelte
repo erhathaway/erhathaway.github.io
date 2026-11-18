@@ -39,6 +39,7 @@
 	const isProjectPage = $derived(page.route.id === '/[slug]');
 	const isAdminPage = $derived(page.route.id?.includes('/admin'));
 	const isHomePage = $derived(page.url.pathname === '/');
+	const isPolicyPage = $derived(page.route.id === '/privacy' || page.route.id === '/terms');
 	const isErrorPage = $derived(!!page.error);
 
 	let appliedHoverId: number | null = null;
@@ -548,7 +549,7 @@
 {#if spacingPreview.draft && !isAdminPage}<SpacingPreviewPanel />{/if}
 {#if emptyCardPreview.draft && !isAdminPage}<EmptyCardPreviewPanel />{/if}
 {#if hoverCardPreview.draft && !isAdminPage}<HoverCardPreviewPanel />{/if}
-<TypographyStyles theme={typographyPreview.enabled && typographyPreview.draft ? typographyPreview.draft : data.typographyTheme} enabled={!isAdminPage && !isErrorPage} />
+<TypographyStyles theme={typographyPreview.enabled && typographyPreview.draft ? typographyPreview.draft : data.typographyTheme} enabled={!isAdminPage && !isErrorPage && !isPolicyPage} />
 
 <svelte:window onkeydown={(e: KeyboardEvent) => { if (e.key === 'Escape' && nameCardExpanded) collapseNameCard(); }} />
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -565,6 +566,12 @@
 		<AuthButton onOpenModal={() => showLoginModal = true} />
 		<LoginModal bind:isOpen={showLoginModal} onClose={() => showLoginModal = false} />
 	</ClerkProvider>
+{:else if isPolicyPage}
+	{#key page.route.id}
+		<div class="h-dvh overflow-y-auto" style="background: #f5f1eb;">
+			{@render children()}
+		</div>
+	{/key}
 {:else}
 		{#if !isHomePage && !isErrorPage}
 			<div class="fixed inset-y-0 left-0 w-[12px] bg-white z-[50] vt-exclude-namecard" style="view-transition-name: left-bar"></div>

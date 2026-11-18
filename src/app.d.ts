@@ -12,7 +12,10 @@ declare module 'svelte/elements' {
 
 declare global {
 	namespace App {
-		// interface Error {}
+		interface Error {
+			message: string;
+			code?: string;
+		}
 		interface Locals {
 			db?: Db;
 			auth?: () => { userId?: string | null };

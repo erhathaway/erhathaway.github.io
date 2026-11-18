@@ -1,6 +1,20 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
+import { error, isHttpError } from '@sveltejs/kit';
 import { integrations } from '../db/schema';
 import type { Db } from '../db';
+
+type GoogleEnv = {
+	GOOGLE_CLIENT_ID: string;
+	GOOGLE_CLIENT_SECRET: string;
+	GOOGLE_TOKEN_ENCRYPTION_KEY: string;
+};
+
+function requireReconnect(): never {
+	error(409, {
+		code: 'GOOGLE_PHOTOS_RECONNECT_REQUIRED',
+		message: 'Your Google Photos connection has expired or was revoked. Reconnect Google Photos to continue.'
+	});
+}
 
 // --- Types ---
 
@@ -146,12 +160,13 @@ export async function storeTokens(
 ): Promise<void> {
 	const encrypted = await encryptTokens(tokens, encryptionKey);
 
-	// Upsert: delete existing then insert
-	await db.delete(integrations).where(eq(integrations.provider, 'google-photos'));
 	await db.insert(integrations).values({
 		provider: 'google-photos',
 		userId,
 		tokens: encrypted
+	}).onConflictDoUpdate({
+		target: integrations.provider,
+		set: { userId, tokens: encrypted, createdAt: sql`(datetime('now'))`, updatedAt: sql`(datetime('now'))` }
 	});
 }
 
@@ -160,8 +175,9 @@ export async function deleteStoredTokens(db: Db): Promise<void> {
 }
 
 export async function getIntegrationStatus(
-	db: Db
-): Promise<{ connected: boolean; connectedAt?: string }> {
+	db: Db,
+	env: GoogleEnv
+): Promise<{ connected: boolean; connectedAt?: string; reconnectRequired?: boolean; message?: string }> {
 	const row = await db
 		.select({ createdAt: integrations.createdAt })
 		.from(integrations)
@@ -169,6 +185,15 @@ export async function getIntegrationStatus(
 		.get();
 
 	if (!row) return { connected: false };
+	try {
+		// Refresh expired access tokens before claiming this connection is usable.
+		await getValidAccessToken(db, env);
+	} catch (err) {
+		if (isHttpError(err, 409) && err.body.code === 'GOOGLE_PHOTOS_RECONNECT_REQUIRED') {
+			return { connected: false, reconnectRequired: true, message: err.body.message };
+		}
+		throw err;
+	}
 	return { connected: true, connectedAt: row.createdAt };
 }
 
@@ -176,17 +201,21 @@ export async function getIntegrationStatus(
 
 export async function getValidAccessToken(
 	db: Db,
-	env: { GOOGLE_CLIENT_ID: string; GOOGLE_CLIENT_SECRET: string; GOOGLE_TOKEN_ENCRYPTION_KEY: string }
+	env: GoogleEnv
 ): Promise<string> {
-	const tokens = await getStoredTokens(db, env.GOOGLE_TOKEN_ENCRYPTION_KEY);
-	if (!tokens) {
-		throw new Error('Google Photos not connected');
-	}
+	const row = await db.select().from(integrations)
+		.where(eq(integrations.provider, 'google-photos')).get();
+	if (!row) requireReconnect();
+	const tokens = await decryptTokens(row.tokens, env.GOOGLE_TOKEN_ENCRYPTION_KEY);
+	if (!tokens.refresh_token) requireReconnect();
 
 	// If token expires in less than 5 minutes, refresh
 	if (tokens.expires_at < Date.now() + 5 * 60 * 1000) {
 		const refreshed = await refreshAccessToken(tokens.refresh_token, env);
-		await storeTokens(db, '', refreshed, env.GOOGLE_TOKEN_ENCRYPTION_KEY);
+		const encrypted = await encryptTokens(refreshed, env.GOOGLE_TOKEN_ENCRYPTION_KEY);
+		// A slow refresh must not overwrite credentials from a concurrent reconnect.
+		await db.update(integrations).set({ tokens: encrypted, updatedAt: sql`(datetime('now'))` })
+			.where(and(eq(integrations.id, row.id), eq(integrations.tokens, row.tokens)));
 		return refreshed.access_token;
 	}
 
@@ -209,8 +238,9 @@ async function refreshAccessToken(
 	});
 
 	if (!response.ok) {
-		const text = await response.text();
-		throw new Error(`Token refresh failed: ${response.status} ${text}`);
+		const failure = await response.json().catch(() => null) as { error?: string } | null;
+		if (response.status === 400 && failure?.error === 'invalid_grant') requireReconnect();
+		throw new Error(`Google Photos could not refresh the connection (${response.status}). Please try again later.`);
 	}
 
 	const data = (await response.json()) as {
@@ -268,6 +298,10 @@ export async function exchangeCodeForTokens(
 		refresh_token: string;
 		expires_in: number;
 	};
+
+	if (!data.refresh_token) {
+		throw new Error('Google did not grant offline access. Reconnect Google Photos and allow access.');
+	}
 
 	return {
 		access_token: data.access_token,
