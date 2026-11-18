@@ -1,0 +1,145 @@
+/* Fonts load on demand when selected. See SOURCES.txt for upstream files and licenses. */
+
+@font-face {
+	font-family: 'Nimbus Roman';
+	src: url('./urw-base35/NimbusRoman-Regular.otf') format('opentype');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Nimbus Roman';
+	src: url('./urw-base35/NimbusRoman-Italic.otf') format('opentype');
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Nimbus Roman';
+	src: url('./urw-base35/NimbusRoman-Bold.otf') format('opentype');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Nimbus Roman';
+	src: url('./urw-base35/NimbusRoman-BoldItalic.otf') format('opentype');
+	font-weight: 700;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'P052 Roman';
+	src: url('./urw-base35/P052-Roman.otf') format('opentype');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'P052 Roman';
+	src: url('./urw-base35/P052-Italic.otf') format('opentype');
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'P052 Roman';
+	src: url('./urw-base35/P052-Bold.otf') format('opentype');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'P052 Roman';
+	src: url('./urw-base35/P052-BoldItalic.otf') format('opentype');
+	font-weight: 700;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Berenis ADF Pro';
+	src: url('./berenis-adf-pro/BerenisADFPro-Regular.otf') format('opentype');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Berenis ADF Pro';
+	src: url('./berenis-adf-pro/BerenisADFPro-Italic.otf') format('opentype');
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Berenis ADF Pro';
+	src: url('./berenis-adf-pro/BerenisADFPro-Bold.otf') format('opentype');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Berenis ADF Pro';
+	src: url('./berenis-adf-pro/BerenisADFPro-BoldItalic.otf') format('opentype');
+	font-weight: 700;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Linux Libertine';
+	src: url('./linux-libertine/LinLibertine_R.otf') format('opentype');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Linux Libertine';
+	src: url('./linux-libertine/LinLibertine_RI.otf') format('opentype');
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Linux Libertine';
+	src: url('./linux-libertine/LinLibertine_RZ.otf') format('opentype');
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Linux Libertine';
+	src: url('./linux-libertine/LinLibertine_RZI.otf') format('opentype');
+	font-weight: 600;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Linux Libertine';
+	src: url('./linux-libertine/LinLibertine_RB.otf') format('opentype');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Linux Libertine';
+	src: url('./linux-libertine/LinLibertine_RBI.otf') format('opentype');
+	font-weight: 700;
+	font-style: italic;
+	font-display: swap;
+}

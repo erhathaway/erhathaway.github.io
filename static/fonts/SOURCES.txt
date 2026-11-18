@@ -1,0 +1,18 @@
+Bundled font files are unmodified upstream OpenType files, downloaded 2026-11-18.
+
+Nimbus Roman and P052 Roman (upstream family: P052)
+Source: https://github.com/ArtifexSoftware/urw-base35-fonts/tree/20200910
+Files: fonts/NimbusRoman-*.otf and fonts/P052-*.otf
+License and exception: urw-base35/COPYING and urw-base35/LICENSE
+
+Berenis ADF Pro
+Source: https://ctan.math.utah.edu/ctan/tex-archive/fonts/berenisadf/opentype/
+License and exception: berenis-adf-pro/COPYING and berenis-adf-pro/NOTICE.txt
+
+Linux Libertine (upstream family: Linux Libertine O)
+Source: https://ctan.math.utah.edu/ctan/tex-archive/fonts/libertine/opentype/
+License and exception: linux-libertine/GPL.txt and linux-libertine/LICENCE.txt
+
+EB Garamond, Inter, Noto Serif, GFS Didot and Lato load through Google Fonts,
+alongside the existing hosted fonts. Not every family provides every weight
+or italic style; browsers use their standard nearest-weight/style fallback.

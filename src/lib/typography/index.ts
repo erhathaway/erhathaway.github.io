@@ -2,6 +2,15 @@ export const FONTS = [
 	'Playfair Display',
 	'Cormorant Garamond',
 	'DM Sans',
+	'EB Garamond',
+	'Inter',
+	'Noto Serif',
+	'Nimbus Roman',
+	'P052 Roman',
+	'GFS Didot',
+	'Lato',
+	'Berenis ADF Pro',
+	'Linux Libertine',
 	'Georgia',
 	'Arial'
 ] as const;
@@ -222,7 +231,7 @@ export function resolveRole(theme: TypographyTheme, id: string): TextStyle {
 	} as TextStyle;
 }
 export function fontStack(font: Font) {
-	return `"${font}", ${font === 'DM Sans' || font === 'Arial' ? 'sans-serif' : 'serif'}`;
+	return `"${font}", ${['DM Sans', 'Arial', 'Inter', 'Lato'].includes(font) ? 'sans-serif' : 'serif'}`;
 }
 export function textStyleCss(style: TextStyle, mobile = false, important = false) {
 	const suffix = important ? ' !important' : '';
@@ -260,9 +269,9 @@ export function themeCss(theme: TypographyTheme) {
 	)}}`;
 }
 
-/** Every weight a theme can pick. Keep in sync with the preload in src/app.html, which loads it. */
+/** Available hosted weights. Keep in sync with src/app.html; other families use /fonts/fonts.css. */
 export const FONT_STYLESHEET =
-	'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap';
+	'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=GFS+Didot&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap';
 export type TypographyContext = 'landing' | 'project' | 'preview';
 export interface TypographySnapshot {
 	themeId: string;
