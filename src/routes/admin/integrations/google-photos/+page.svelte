@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { useClerkContext } from 'svelte-clerk';
 
 	const ctx = useClerkContext();
@@ -102,7 +103,12 @@
 
 <div class="max-w-xl">
 	<h1 class="text-xl font-semibold text-slate-900 mb-1">Google Photos</h1>
-	<p class="text-sm text-slate-500 mb-6">Import images and videos from your Google Photos library into projects.</p>
+	<p class="text-sm text-slate-500 mb-3">Import selected photos from your Google Photos library into projects.</p>
+	<p class="text-xs text-slate-500 mb-6">
+		Imported copies are stored on this site and shown publicly when published.
+		Read the <a class="underline underline-offset-2" href={resolve('/privacy')}>Privacy Policy</a>
+		and <a class="underline underline-offset-2" href={resolve('/terms')}>Terms of Service</a>.
+	</p>
 
 	{#if error}
 		<div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-4">
