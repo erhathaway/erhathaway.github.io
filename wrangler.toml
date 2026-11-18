@@ -9,6 +9,8 @@ route = "erhathaway.com/*"
 
 [vars]
 ENVIRONMENT = "production"
+# Only this verified Clerk account may access admin tools and private photos.
+ADMIN_CLERK_USER_ID = "user_3LfzHx2LUFhmlReOvBwEdEn3Ed6"
 PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuZXJoYXRoYXdheS5jb20k"
 GOOGLE_CLIENT_ID = "648168811690-uj83q8al9j4dhblbbkqfrg7f90e1kko4.apps.googleusercontent.com"
 PUBLIC_HOME_NAMECARD_IN_GALLERY = "1"
@@ -36,3 +38,6 @@ binding = "ASSETS"
 [build]
 command = "bun run build"
 
+# Optimize private R2 bytes without public source URLs.
+[images]
+binding = "IMAGES"

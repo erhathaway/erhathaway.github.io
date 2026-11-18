@@ -12,7 +12,7 @@
 	<h2>Information the website uses</h2>
 	<ul>
 		<li>Visiting the site generates technical information such as your IP address, browser and device details, requested pages, and request times. Hosting and security providers process this information to deliver and protect the site.</li>
-		<li>PostHog collects website usage information, including page views and interactions. Its analytics tools may use cookies or browser storage and may include session recordings when enabled. For signed-in users, an email address is associated with analytics to distinguish administrative activity.</li>
+		<li>PostHog collects website usage information, including page views and interactions. Its analytics tools may use cookies or browser storage. Session recording is disabled, and analytics events are suppressed on admin pages. For signed-in users, an email address is associated with analytics to distinguish administrative activity.</li>
 		<li>Clerk handles sign-in and session management for administration. It processes account information, such as an email address, and uses authentication cookies or browser storage.</li>
 		<li>If you email me, I receive your email address and the information you choose to include so I can respond.</li>
 	</ul>

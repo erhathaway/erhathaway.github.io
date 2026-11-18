@@ -233,3 +233,20 @@ Admin → Themes → Empty card themes controls what fills the leftover space wh
 ## Hover card themes
 
 Admin → Themes → Hover card themes sets the shape of the glass panel that shows project details on the home gallery: the full card, or a partial panel with an adjustable width and angle, chosen separately for desktop and mobile widths. Preview on site opens a private live editor that can hold a project's hover card open. Themes are stored in existing site settings (`hover-card-theme:*` and `hover-card-active`), need no database migration, and are included in appearance backups.
+
+### Private admin and photos
+
+- `ADMIN_CLERK_USER_ID` is the single verified Clerk user ID allowed to use admin pages,
+  APIs, Google Photos, and unpublished images. Production is configured in `wrangler.toml`.
+  Set your development instance's user ID in `.env.local` (and `.env` for Vite).
+  Missing configuration denies access; signing up another Clerk account does not grant access.
+- Clerk verifies sessions and bearer tokens; OAuth connections additionally require a
+  short-lived, browser-bound state cookie and PKCE. Google credentials stay encrypted on the server.
+- Google Photos previews and owner image responses use `private, no-store`. Public image
+  requests must match a published artifact in a published project, or an active public namecard.
+  Legacy download URLs go through the same check; `Via` headers never authorize access.
+- The `IMAGES` binding optimizes bytes read directly from private R2, including drafts.
+  Keep R2 public development URLs and custom domains disabled. Images deliberately published
+  on the portfolio remain public; previously downloaded/cached public copies cannot be recalled.
+- Deploy these changes before relying on the restrictions. Purge existing Cloudflare image
+  caches at rollout, because the previous version cached image responses for a year.

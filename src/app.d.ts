@@ -1,7 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 /// <reference types="svelte-clerk/env" />
-import type { D1Database, R2Bucket } from '@cloudflare/workers-types';
+import type { D1Database, R2Bucket, ImagesBinding } from '@cloudflare/workers-types';
 import type { Db } from '$lib/server/db';
 declare module 'svelte/elements' {
 	// Svelte's typings list animationend but not animationcancel.
@@ -25,8 +25,10 @@ declare global {
 		interface Platform {
 			env: {
 				CLERK_SECRET_KEY?: string;
+				ADMIN_CLERK_USER_ID?: string;
 				DB: D1Database;
 				ARTIFACTS?: R2Bucket;
+				IMAGES?: ImagesBinding;
 				GOOGLE_CLIENT_ID?: string;
 				GOOGLE_CLIENT_SECRET?: string;
 				GOOGLE_TOKEN_ENCRYPTION_KEY?: string;

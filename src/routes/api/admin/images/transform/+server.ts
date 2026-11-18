@@ -38,11 +38,9 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		throw error(400, 'Either artifactId+field or settingKey is required');
 	}
 
-	const origin = new URL(request.url).origin;
-	console.log(`[transform] Starting: r2Key=${r2Key}, origin=${origin}`);
 	// Existing images can be shared by active cards and saved variants. Keep the
 	// source until the image library confirms that nothing references it.
-	const result = await transformToModernFormats(bucket, r2Key, origin, true);
+	const result = await transformToModernFormats(bucket, r2Key, platform?.env?.IMAGES, true);
 
 	if (!result.ok) {
 		console.error(`[transform] Failed: ${result.reason}`);

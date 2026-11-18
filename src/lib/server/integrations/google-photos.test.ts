@@ -2,9 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createClient, type Client } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { getDb, type Db } from '../db';
+import { beginGoogleOAuth } from './google-oauth';
 import { integrations } from '../db/schema';
 import {
-	decryptTokens, exchangeCodeForTokens, getIntegrationStatus, getStoredTokens,
+	decryptTokens, downloadMedia, downloadThumbnail, exchangeCodeForTokens, getIntegrationStatus, getStoredTokens,
 	getValidAccessToken, storeTokens, type GoogleTokens
 } from './google-photos';
 import { POST as createSession } from '../../../routes/api/admin/integrations/google-photos/sessions/+server';
@@ -145,9 +146,69 @@ describe('Google Photos connection recovery', () => {
 		await expect(exchangeCodeForTokens('test-code', 'https://example.test/callback', env)).rejects.toThrow('offline access');
 	});
 
+	it('exchanges a valid bound callback and stores credentials under the verified owner', async () => {
+		const values = new Map<string, string>();
+		const cookies = {
+			get: (key: string) => values.get(key), set: (key: string, value: string) => values.set(key, value),
+			delete: (key: string) => values.delete(key)
+		} as unknown as import('@sveltejs/kit').Cookies;
+		const url = new URL('https://erhathaway.com/api/integrations/google-photos/callback?code=valid-code');
+		const flow = await beginGoogleOAuth(cookies, url, 'owner');
+		url.searchParams.set('state', flow.state);
+		fetchMock.mockResolvedValueOnce(Response.json({ access_token: 'new-access', refresh_token: 'new-refresh', expires_in: 3600 }));
+		await expect(callback({ url, cookies, locals: { auth: () => ({ userId: 'owner' }) },
+			platform: { env: { ...env, DB: {}, ADMIN_CLERK_USER_ID: 'owner' } } } as Parameters<typeof callback>[0]))
+			.rejects.toMatchObject({ status: 302, location: '/admin/integrations/google-photos?connected=true' });
+		const row = await db.select().from(integrations).get();
+		expect(row?.userId).toBe('owner');
+		expect(row?.tokens).not.toContain('new-refresh');
+		const body = fetchMock.mock.calls[0][1]?.body as URLSearchParams;
+		expect(body.get('code_verifier')).toHaveLength(43);
+		await expect(callback({ url, cookies, locals: { auth: () => ({ userId: 'owner' }) },
+			platform: { env: { ...env, DB: {}, ADMIN_CLERK_USER_ID: 'owner' } } } as Parameters<typeof callback>[0]))
+			.rejects.toMatchObject({ status: 400 });
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+	});
+
 	it('shows a useful callback error when Google consent is declined without a code', async () => {
-		await expect(callback({ url: new URL('https://example.test/callback?error=access_denied') } as Parameters<typeof callback>[0]))
+		const values = new Map<string, string>();
+		const cookies = {
+			get: (key: string) => values.get(key),
+			set: (key: string, value: string) => values.set(key, value),
+			delete: (key: string) => values.delete(key)
+		} as unknown as import('@sveltejs/kit').Cookies;
+		const url = new URL('https://example.test/callback?error=access_denied');
+		const flow = await beginGoogleOAuth(cookies, url, 'owner');
+		url.searchParams.set('state', flow.state);
+		await expect(callback({ url, cookies, locals: { auth: () => ({ userId: 'owner' }) },
+			platform: { env: { ADMIN_CLERK_USER_ID: 'owner' } } } as Parameters<typeof callback>[0]))
 			.rejects.toMatchObject({ status: 302, location: expect.stringContaining('error=Google%20Photos%20access') });
 		expect(fetchMock).not.toHaveBeenCalled();
+	});
+});
+
+
+describe('Google media download safety', () => {
+	it.each([
+		'https://attacker.test/photo', 'http://lh3.googleusercontent.com/photo',
+		'https://lh3.googleusercontent.com.attacker.test/photo', 'https://www.google.com/redirect',
+		'https://user:pass@lh3.googleusercontent.com/photo', 'https://lh3.googleusercontent.com:8443/photo',
+		'https://lh3.googleusercontent.com/photo?redirect=evil', 'file:///private/photo',
+		'https://lh3.googleusercontent.com/photo#fragment'
+	])('rejects unsafe URLs without sending credentials: %s', async (url) => {
+		await expect(downloadMedia('private-token', url, 'PHOTO')).rejects.toMatchObject({ status: 400 });
+		await expect(downloadThumbnail('private-token', url)).rejects.toMatchObject({ status: 400 });
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+	it('sends credentials only to HTTPS Google media hosts and forbids redirects', async () => {
+		fetchMock.mockResolvedValue(new Response('image', { headers: { 'Content-Type': 'image/jpeg' } }));
+		await downloadMedia('private-token', 'https://lh3.googleusercontent.com/photo', 'PHOTO', 4096);
+		expect(fetchMock).toHaveBeenCalledWith('https://lh3.googleusercontent.com/photo=w4096-h4096', {
+			headers: { Authorization: 'Bearer private-token' }, redirect: 'error'
+		});
+	});
+	it('rejects active content returned by an upstream endpoint', async () => {
+		fetchMock.mockResolvedValue(new Response('<html>bad</html>', { headers: { 'Content-Type': 'text/html' } }));
+		await expect(downloadThumbnail('private-token', 'https://lh3.googleusercontent.com/photo')).rejects.toMatchObject({ status: 502 });
 	});
 });

@@ -137,18 +137,16 @@
 		pollFailures = 0;
 		pollTimer = setInterval(async () => {
 			try {
-				// No auth header needed — the session ID is authorization enough,
-				// and Clerk tokens can expire during long Google Photos selections.
-				// cache: 'no-store' prevents the browser from returning a cached
-				// mediaItemsSet:false response on subsequent polls.
+				// Clerk refreshes its session token before each poll.
+				const headers = await authHeaders();
 				const response = await fetch(
 					`/api/admin/integrations/google-photos/sessions/${sessionId}`,
-					{ cache: 'no-store' }
+					{ headers, cache: 'no-store' }
 				);
 
 				if (!response.ok) {
 					const failure = await responseError(response, 'Failed to check your Google Photos selection');
-					if (reconnectRequired) {
+					if (reconnectRequired || response.status === 401 || response.status === 403) {
 						stopPolling();
 						popup?.close();
 						errorMessage = failure.message;

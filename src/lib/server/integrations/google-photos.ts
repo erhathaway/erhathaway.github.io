@@ -81,6 +81,7 @@ export type ArtifactMetadataBlob = {
 // --- Token Encryption ---
 
 async function deriveKey(hexKey: string): Promise<CryptoKey> {
+	if (!/^[0-9a-f]{64}$/i.test(hexKey)) throw new Error('Invalid Google token encryption key');
 	const raw = hexToBuffer(hexKey);
 	return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
 }
@@ -258,14 +259,19 @@ async function refreshAccessToken(
 
 // --- OAuth Helpers ---
 
-export function buildOAuthUrl(env: { GOOGLE_CLIENT_ID: string }, redirectUri: string): string {
+export function buildOAuthUrl(
+	env: { GOOGLE_CLIENT_ID: string }, redirectUri: string, flow: { state: string; challenge: string }
+): string {
 	const params = new URLSearchParams({
 		client_id: env.GOOGLE_CLIENT_ID,
 		redirect_uri: redirectUri,
 		response_type: 'code',
 		scope: 'https://www.googleapis.com/auth/photospicker.mediaitems.readonly',
 		access_type: 'offline',
-		prompt: 'consent'
+		prompt: 'consent',
+		state: flow.state,
+		code_challenge: flow.challenge,
+		code_challenge_method: 'S256'
 	});
 
 	return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -274,7 +280,8 @@ export function buildOAuthUrl(env: { GOOGLE_CLIENT_ID: string }, redirectUri: st
 export async function exchangeCodeForTokens(
 	code: string,
 	redirectUri: string,
-	env: { GOOGLE_CLIENT_ID: string; GOOGLE_CLIENT_SECRET: string }
+	env: { GOOGLE_CLIENT_ID: string; GOOGLE_CLIENT_SECRET: string },
+	verifier?: string
 ): Promise<GoogleTokens> {
 	const response = await fetch('https://oauth2.googleapis.com/token', {
 		method: 'POST',
@@ -284,7 +291,8 @@ export async function exchangeCodeForTokens(
 			client_secret: env.GOOGLE_CLIENT_SECRET,
 			code,
 			redirect_uri: redirectUri,
-			grant_type: 'authorization_code'
+			grant_type: 'authorization_code',
+			...(verifier ? { code_verifier: verifier } : {})
 		})
 	});
 
@@ -351,7 +359,7 @@ export async function getPickerSession(
 	accessToken: string,
 	sessionId: string
 ): Promise<PickerSession> {
-	const response = await fetch(`${PICKER_BASE}/sessions/${sessionId}`, {
+	const response = await fetch(`${PICKER_BASE}/sessions/${encodeURIComponent(sessionId)}`, {
 		headers: { Authorization: `Bearer ${accessToken}` }
 	});
 
@@ -367,7 +375,7 @@ export async function deletePickerSession(
 	accessToken: string,
 	sessionId: string
 ): Promise<void> {
-	await fetch(`${PICKER_BASE}/sessions/${sessionId}`, {
+	await fetch(`${PICKER_BASE}/sessions/${encodeURIComponent(sessionId)}`, {
 		method: 'DELETE',
 		headers: { Authorization: `Bearer ${accessToken}` }
 	});
@@ -417,47 +425,42 @@ export async function listAllPickedMediaItems(
 
 // --- Media Download ---
 
+export function validateGoogleMediaUrl(baseUrl: string): void {
+	let url: URL;
+	try { url = new URL(baseUrl); } catch { error(400, 'Invalid Google Photos media URL'); }
+	if (url.protocol !== 'https:' || !url.hostname.endsWith('.googleusercontent.com') ||
+		url.username || url.password || url.port || url.search || url.hash) {
+		error(400, 'Invalid Google Photos media URL');
+	}
+}
+
+export async function fetchGoogleMedia(accessToken: string, baseUrl: string, suffix: string): Promise<Response> {
+	validateGoogleMediaUrl(baseUrl);
+	// Never follow a redirect that could send the Google bearer token to another service.
+	const response = await fetch(`${baseUrl}${suffix}`, {
+		headers: { Authorization: `Bearer ${accessToken}` }, redirect: 'error'
+	});
+	if (!response.ok) error(502, 'Failed to download Google Photos media');
+	const contentType = response.headers.get('Content-Type')?.split(';')[0];
+	if (!contentType || !['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif',
+		'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm'].includes(contentType)) {
+		error(502, 'Unexpected Google Photos media type');
+	}
+	return response;
+}
+
 export async function downloadMedia(
 	accessToken: string,
 	baseUrl: string,
 	type: 'PHOTO' | 'VIDEO',
 	maxDimension?: number
 ): Promise<Response> {
-	let downloadUrl: string;
-	if (type === 'VIDEO') {
-		downloadUrl = `${baseUrl}=dv`;
-	} else if (maxDimension) {
-		// Sized download: Google strips EXIF server-side, caps at maxDimension px
-		downloadUrl = `${baseUrl}=w${maxDimension}-h${maxDimension}`;
-	} else {
-		// Original download with EXIF (caller must strip)
-		downloadUrl = `${baseUrl}=d`;
-	}
-
-	const response = await fetch(downloadUrl, {
-		headers: { Authorization: `Bearer ${accessToken}` }
-	});
-
-	if (!response.ok) {
-		throw new Error(`Failed to download media: ${response.status}`);
-	}
-
-	return response;
+	const suffix = type === 'VIDEO' ? '=dv' : maxDimension ? `=w${maxDimension}-h${maxDimension}` : '=d';
+	return fetchGoogleMedia(accessToken, baseUrl, suffix);
 }
 
-export async function downloadThumbnail(
-	accessToken: string,
-	baseUrl: string
-): Promise<Response> {
-	const response = await fetch(`${baseUrl}=w512-h512-no`, {
-		headers: { Authorization: `Bearer ${accessToken}` }
-	});
-
-	if (!response.ok) {
-		throw new Error(`Failed to download thumbnail: ${response.status}`);
-	}
-
-	return response;
+export async function downloadThumbnail(accessToken: string, baseUrl: string): Promise<Response> {
+	return fetchGoogleMedia(accessToken, baseUrl, '=w512-h512-no');
 }
 
 // --- Metadata Extraction ---
