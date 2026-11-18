@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
   import { getTypographyPreview } from '$lib/typography/preview';
   const typographyPreview = getTypographyPreview();
   import { portfolio } from '$lib/stores/portfolio.svelte';
@@ -316,13 +315,6 @@
         <AuthButton inline onOpenModal={() => window.dispatchEvent(new Event('auth:open-login'))} />
       </div>
     </div>
-  <div class="px-8 pb-5 text-center text-xs" style="background: #f3e9e1; color: #756b62;">
-    <p class="mb-3">Ethan Hathaway's personal portfolio. Google Photos is used by the administrator to import selected photos for projects.</p>
-    <nav aria-label="Website policies" class="flex flex-wrap justify-center gap-x-6 gap-y-3">
-      <a href={resolve('/privacy')} class="underline underline-offset-4 hover:text-copper">Privacy Policy</a>
-      <a href={resolve('/terms')} class="underline underline-offset-4 hover:text-copper">Terms of Service</a>
-    </nav>
-  </div>
   </div>
   {#if portfolio.selectedCategory !== 'all' && hiddenCount > 0}
     <div class="py-10 flex items-start justify-center px-8">
