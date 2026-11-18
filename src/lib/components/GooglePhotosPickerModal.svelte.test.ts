@@ -25,4 +25,20 @@ describe('Google Photos picker connection errors', () => {
 		await expect.element(page.getByText('Google Photos is temporarily unavailable.')).toBeVisible();
 		await expect.element(page.getByRole('link', { name: 'Reconnect Google Photos' })).not.toBeInTheDocument();
 	});
+	it('gets a fresh Clerk token for polling and stops when authentication is lost', async () => {
+		const getToken = vi.fn().mockResolvedValueOnce('creation-token').mockResolvedValue('fresh-poll-token');
+		const close = vi.fn();
+		vi.spyOn(window, 'open').mockReturnValue({ closed: false, close } as unknown as Window);
+		const request = vi.spyOn(window, 'fetch')
+			.mockResolvedValueOnce(Response.json({ sessionId: 'private-session', pickerUri: 'https://photos.google.com/picker/test' }))
+			.mockResolvedValue(Response.json({ message: 'Sign in to continue' }, { status: 401 }));
+		render(GooglePhotosPickerModal, { ...props, getToken });
+		await expect.element(page.getByText('Sign in to continue'), { timeout: 6000 }).toBeVisible();
+		expect(request).toHaveBeenCalledWith('/api/admin/integrations/google-photos/sessions/private-session', {
+			headers: { Authorization: 'Bearer fresh-poll-token' }, cache: 'no-store'
+		});
+		expect(close).toHaveBeenCalled();
+		expect(getToken).toHaveBeenCalledTimes(2);
+	});
+
 });

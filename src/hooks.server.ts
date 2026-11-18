@@ -1,11 +1,12 @@
 import type { Handle } from '@sveltejs/kit';
-import { error } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { withClerkHandler } from 'svelte-clerk/server';
 import { getDb } from '$lib/server/db';
-import { verifyClerkAuth } from '$lib/server/auth';
+import { adminAuthHandle } from '$lib/server/auth';
 
-const clerkHandle = withClerkHandler();
+const clerkHandle = withClerkHandler({
+	authorizedParties: ['https://erhathaway.com', 'http://localhost:5173', 'http://127.0.0.1:5173']
+});
 
 const dbHandle: Handle = async ({ event, resolve }) => {
 	const db = event.platform?.env?.DB;
@@ -15,31 +16,13 @@ const dbHandle: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-const adminAuthHandle: Handle = async ({ event, resolve }) => {
-	if (event.url.pathname.startsWith('/api/admin/')) {
-		// Session poll uses the session ID as authorization — skip Clerk auth
-		// so polling continues working even if the Clerk token expires during
-		// a long Google Photos selection.
-		const isSessionPoll =
-			event.request.method === 'GET' &&
-			/^\/api\/admin\/integrations\/google-photos\/sessions\/[^/]+$/.test(event.url.pathname);
-
-		if (!isSessionPoll) {
-			const userId = await verifyClerkAuth(event.request, event.platform?.env);
-			const authUserId = event.locals.auth?.()?.userId ?? null;
-			if (!userId && !authUserId) {
-				throw error(401, 'Unauthorized');
-			}
-		}
-	}
-	return resolve(event);
-};
-
 const securityHeadersHandle: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
 
 	// HSTS — force HTTPS (1 year, include subdomains, preload-ready)
 	response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+
+	response.headers.set('X-Content-Type-Options', 'nosniff');
 
 	// Prevent clickjacking
 	response.headers.set('X-Frame-Options', 'DENY');

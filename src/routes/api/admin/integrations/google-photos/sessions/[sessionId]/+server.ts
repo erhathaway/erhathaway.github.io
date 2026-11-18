@@ -42,8 +42,6 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		const accessToken = await getValidAccessToken(db, googleEnv);
 		const session = await getPickerSession(accessToken, params.sessionId);
 
-		console.log(`[poll] session=${params.sessionId} mediaItemsSet=${session.mediaItemsSet}`);
-
 		return json(
 			{
 				mediaItemsSet: session.mediaItemsSet,

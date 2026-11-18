@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { error } from '@sveltejs/kit';
 import { getDb } from '$lib/server/db';
-import { getValidAccessToken } from '$lib/server/integrations/google-photos';
+import { getValidAccessToken, fetchGoogleMedia, validateGoogleMediaUrl } from '$lib/server/integrations/google-photos';
 
 export const GET: RequestHandler = async ({ platform, url }) => {
 	const baseUrl = url.searchParams.get('baseUrl');
@@ -9,6 +9,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		throw error(400, 'baseUrl is required');
 	}
 
+	validateGoogleMediaUrl(baseUrl);
 	const env = platform?.env;
 	if (!env?.GOOGLE_CLIENT_ID || !env?.GOOGLE_CLIENT_SECRET || !env?.GOOGLE_TOKEN_ENCRYPTION_KEY) {
 		throw error(500, 'Google integration not configured');
@@ -26,14 +27,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			GOOGLE_TOKEN_ENCRYPTION_KEY: env.GOOGLE_TOKEN_ENCRYPTION_KEY
 		});
 
-		// Fetch thumbnail from Google with auth header
-		const thumbnailResponse = await fetch(`${baseUrl}=w256-h256-c`, {
-			headers: { Authorization: `Bearer ${accessToken}` }
-		});
-
-		if (!thumbnailResponse.ok) {
-			throw error(502, 'Failed to fetch thumbnail');
-		}
+		const thumbnailResponse = await fetchGoogleMedia(accessToken, baseUrl, '=w256-h256-c');
 
 		const contentType = thumbnailResponse.headers.get('Content-Type') ?? 'image/jpeg';
 		const body = await thumbnailResponse.arrayBuffer();
@@ -42,7 +36,8 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			status: 200,
 			headers: {
 				'Content-Type': contentType,
-				'Cache-Control': 'private, max-age=3000'
+				'Cache-Control': 'private, no-store',
+				'X-Content-Type-Options': 'nosniff'
 			}
 		});
 	} catch (err) {

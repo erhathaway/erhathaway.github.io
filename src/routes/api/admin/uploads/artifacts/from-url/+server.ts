@@ -72,9 +72,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		httpMetadata: { contentType }
 	});
 
-	// Attempt to transform to AVIF + WebP (no-op in local dev)
-	const origin = new URL(request.url).origin;
-	const result = await transformToModernFormats(bucket, key, origin);
+	// Optimize private bytes; keep the original if optimization is unavailable.
+	const result = await transformToModernFormats(bucket, key, platform?.env?.IMAGES);
 	if (result.ok) {
 		return json({ key: result.avifKey, url: `/${result.avifKey}`, formats: result.formats });
 	}

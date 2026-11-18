@@ -5,6 +5,7 @@ import { getDb } from '$lib/server/db';
 import { projectArtifacts, artifactMetadata } from '$lib/server/db/schema';
 import {
 	getValidAccessToken,
+	validateGoogleMediaUrl,
 	downloadMedia,
 	extractMetadata,
 	mimeToExtension,
@@ -51,16 +52,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		throw error(400, 'projectId and item with mediaFile.baseUrl are required');
 	}
 
-	// Validate baseUrl is a Google domain
-	try {
-		const url = new URL(item.mediaFile.baseUrl);
-		if (!url.hostname.endsWith('.googleusercontent.com') && !url.hostname.endsWith('.google.com')) {
-			throw error(400, 'Invalid media URL');
-		}
-	} catch (e) {
-		if (e && typeof e === 'object' && 'status' in e) throw e;
-		throw error(400, 'Invalid media URL');
-	}
+	validateGoogleMediaUrl(item.mediaFile.baseUrl);
 
 	if (item.type === 'VIDEO') {
 		throw error(400, 'Video items are not yet supported');

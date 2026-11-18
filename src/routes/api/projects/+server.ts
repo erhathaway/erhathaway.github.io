@@ -37,7 +37,11 @@ export const GET: RequestHandler = async ({ locals }) => {
 		})
 		.from(projects)
 		.leftJoin(projectCoverArtifact, eq(projects.id, projectCoverArtifact.projectId))
-		.leftJoin(projectArtifacts, eq(projectCoverArtifact.artifactId, projectArtifacts.id))
+		.leftJoin(projectArtifacts, and(
+			eq(projectCoverArtifact.artifactId, projectArtifacts.id),
+			eq(projectArtifacts.projectId, projects.id),
+			eq(projectArtifacts.isPublished, true)
+		))
 		.where(eq(projects.isPublished, true))
 		.orderBy(asc(projects.sortOrder), asc(projects.id));
 

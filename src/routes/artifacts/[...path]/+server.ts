@@ -2,9 +2,10 @@ import type { RequestHandler } from './$types';
 import { error } from '@sveltejs/kit';
 import { eq, sql, and, inArray } from 'drizzle-orm';
 import { projectArtifacts, projects, siteSettings } from '$lib/server/db/schema';
+import { isAdmin } from '$lib/server/auth';
 import { getDb } from '$lib/server/db';
 
-export const GET: RequestHandler = async ({ request, params, platform, locals }) => {
+export const GET: RequestHandler = async ({ params, platform, locals }) => {
 	const path = params.path;
 	if (!path) {
 		throw error(400, 'Missing path');
@@ -18,12 +19,10 @@ export const GET: RequestHandler = async ({ request, params, platform, locals })
 		throw error(500, 'Artifacts bucket not configured');
 	}
 
-	// Cloudflare Image Resizing subrequests include "image-resizing" in the Via header
-	const isImageResizing = request.headers.get('via')?.includes('image-resizing');
-
-	// If no authenticated user (and not an image-resizing subrequest), verify the artifact is published
-	const userId = locals.auth?.()?.userId;
-	if (!userId && !isImageResizing) {
+	// Resizing requests must pass the same publication check as every other visitor.
+	// A Via header is caller-controlled and is never an authorization credential.
+	const owner = isAdmin(locals, platform?.env);
+	if (!owner) {
 		const db = platform?.env?.DB ? getDb(platform.env.DB as unknown as import('@cloudflare/workers-types').D1Database) : null;
 		if (!db) {
 			throw error(500, 'Database not available');
@@ -56,7 +55,7 @@ export const GET: RequestHandler = async ({ request, params, platform, locals })
 				.select({ key: siteSettings.key })
 				.from(siteSettings)
 				.where(and(
-					inArray(siteSettings.key, ['namecard_image', 'project_namecard_image', 'preview_namecard_image']),
+					inArray(siteSettings.key, ['namecard_image', 'project_namecard_image']),
 					uuidPattern
 						? sql`(json_extract(${siteSettings.value}, '$.imageUrl') = ${url} OR json_extract(${siteSettings.value}, '$.imageUrl') LIKE ${uuidPattern})`
 						: sql`json_extract(${siteSettings.value}, '$.imageUrl') = ${url}`
@@ -79,7 +78,9 @@ export const GET: RequestHandler = async ({ request, params, platform, locals })
 	if (object.httpMetadata?.contentType) {
 		headers.set('Content-Type', object.httpMetadata.contentType);
 	}
-	headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+	headers.set('Cache-Control', owner ? 'private, no-store' : 'public, max-age=0, must-revalidate');
+	headers.set('Vary', 'Cookie, Authorization');
+	headers.set('X-Content-Type-Options', 'nosniff');
 
 	return new Response(object.body as unknown as BodyInit, { status: 200, headers });
 };
