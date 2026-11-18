@@ -105,7 +105,7 @@ GOOGLE_TOKEN_ENCRYPTION_KEY=...
 `GOOGLE_TOKEN_ENCRYPTION_KEY` is a self-generated key for encrypting Google OAuth tokens in D1. Generate one with:
 
 ```sh
-openssl rand -base64 32
+openssl rand -hex 32
 ```
 
 ## Google Photos Integration
@@ -119,10 +119,16 @@ Imports photos and videos from Google Photos into projects via the [Picker API](
 3. Enable the **Photos Picker API** (APIs & Services > Library > search "Photos Picker API")
 4. Go to **APIs & Services > Credentials** and create an **OAuth 2.0 Client ID** (type: Web application)
 5. Add authorized redirect URIs:
-   - Local: `http://localhost:8788/api/integrations/google-photos/callback`
+   - Local: `http://localhost:5173/api/integrations/google-photos/callback`
    - Production: `https://erhathaway.com/api/integrations/google-photos/callback`
 6. Set `GOOGLE_CLIENT_ID` in `wrangler.toml` `[vars]`
 7. Set `GOOGLE_CLIENT_SECRET` and `GOOGLE_TOKEN_ENCRYPTION_KEY` as secrets (see above)
+
+### Expired Google Photos connections
+
+If importing fails with `invalid_grant`, Google has rejected the saved refresh token. Reconnect from **Admin > Integrations > Google Photos** to authorize again; existing imported artifacts are unaffected. The status check refreshes expired access tokens and reports **Reconnect required** if Google rejects the refresh. Temporary Google/network errors remain retryable and do not delete credentials.
+
+Google OAuth apps with an external audience and publishing status **Testing** issue refresh tokens that expire after seven days for the Photos Picker scope. Check the app's publishing status in Google Cloud Console; use **In production** for a long-lived integration, completing Google's requirements as applicable. Reauthorize afterward. Revoked access and token limits can also invalidate refresh tokens. See [Google's refresh-token expiration documentation](https://developers.google.com/identity/protocols/oauth2#expiration).
 
 ### Usage
 

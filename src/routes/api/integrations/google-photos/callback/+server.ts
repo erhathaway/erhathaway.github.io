@@ -7,14 +7,17 @@ import {
 } from '$lib/server/integrations/google-photos';
 
 export const GET: RequestHandler = async ({ url, platform }) => {
+	const errorParam = url.searchParams.get('error');
+	if (errorParam) {
+		const message = errorParam === 'access_denied'
+			? 'Google Photos access was not granted. Connect again and allow access to continue.'
+			: 'Google Photos could not connect. Please try again.';
+		throw redirect(302, `/admin/integrations/google-photos?error=${encodeURIComponent(message)}`);
+	}
+
 	const code = url.searchParams.get('code');
 	if (!code) {
 		throw error(400, 'Missing authorization code');
-	}
-
-	const errorParam = url.searchParams.get('error');
-	if (errorParam) {
-		throw redirect(302, `/admin/integrations/google-photos?error=${encodeURIComponent(errorParam)}`);
 	}
 
 	const env = platform?.env;

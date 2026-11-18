@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 
 	type PickedItem = {
 		id: string;
@@ -38,6 +39,7 @@
 	type Step = 'creating' | 'waiting' | 'loading-items' | 'confirm' | 'importing' | 'optimizing' | 'done' | 'error';
 	let step = $state<Step>('creating');
 	let errorMessage = $state('');
+	let reconnectRequired = $state(false);
 
 	let sessionId = $state('');
 	let pickerUri = $state('');
@@ -75,9 +77,17 @@
 		return token ? { Authorization: `Bearer ${token}` } : {};
 	}
 
+	async function responseError(response: Response, fallback: string): Promise<Error> {
+		const body = await response.json().catch(() => null);
+		if (body?.code === 'GOOGLE_PHOTOS_RECONNECT_REQUIRED') reconnectRequired = true;
+		return new Error(typeof body?.message === 'string' ? body.message : fallback);
+	}
+
 	// Step 1: Create session
 	async function startSession() {
 		step = 'creating';
+		reconnectRequired = false;
+		errorMessage = '';
 		try {
 			const headers = await authHeaders();
 			const response = await fetch('/api/admin/integrations/google-photos/sessions', {
@@ -86,8 +96,7 @@
 			});
 
 			if (!response.ok) {
-				const text = await response.text();
-				throw new Error(text || 'Failed to create session');
+				throw await responseError(response, 'Failed to create session');
 			}
 
 			const data = await response.json();
@@ -138,6 +147,14 @@
 				);
 
 				if (!response.ok) {
+					const failure = await responseError(response, 'Failed to check your Google Photos selection');
+					if (reconnectRequired) {
+						stopPolling();
+						popup?.close();
+						errorMessage = failure.message;
+						step = 'error';
+						return;
+					}
 					pollFailures++;
 					console.error(`[poll] Session poll failed: ${response.status} (attempt ${pollFailures})`);
 					return;
@@ -208,7 +225,7 @@
 					{ headers }
 				);
 
-				if (!response.ok) throw new Error('Failed to load items');
+				if (!response.ok) throw await responseError(response, 'Failed to load items');
 
 				const data = await response.json();
 				if (data.mediaItems) {
@@ -272,8 +289,7 @@
 				clearTimeout(timeoutId);
 
 				if (!response.ok) {
-					const text = await response.text();
-					throw new Error(text || `Import failed (${response.status})`);
+					throw await responseError(response, `Import failed (${response.status})`);
 				}
 
 				const data = await response.json();
@@ -304,6 +320,7 @@
 			}
 
 			importedCount++;
+			if (reconnectRequired) break;
 		}
 
 		currentFilename = '';
@@ -375,7 +392,7 @@
 	}
 
 	// Auto-start on mount
-	startSession();
+	onMount(() => { void startSession(); });
 
 	onDestroy(() => {
 		stopPolling();
@@ -409,6 +426,7 @@
 					type="button"
 					class="rounded-lg p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
 					onclick={handleCancel}
+					aria-label="Close Google Photos picker"
 				>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -524,7 +542,7 @@
 					{#if importResults.errors.length > 0}
 						<div class="text-xs text-red-600 space-y-1">
 							<p class="font-medium">{importResults.errors.length} item{importResults.errors.length !== 1 ? 's' : ''} failed:</p>
-							{#each importResults.errors as err}
+							{#each importResults.errors as err, index (index)}
 								<p class="text-slate-500">{err.filename}: {err.error}</p>
 							{/each}
 						</div>
@@ -569,6 +587,15 @@
 					Cancel
 				</button>
 			{:else if step === 'done' || step === 'error'}
+				{#if reconnectRequired}
+					<a
+						href={resolve('/api/admin/integrations/google-photos/connect')}
+						data-sveltekit-reload
+						class="px-4 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-150"
+					>
+						Reconnect Google Photos
+					</a>
+				{/if}
 				<button
 					type="button"
 					class="px-4 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-150"

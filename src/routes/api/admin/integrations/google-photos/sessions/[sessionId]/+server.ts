@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { error, json } from '@sveltejs/kit';
+import { error, isHttpError, json } from '@sveltejs/kit';
 import { getDb } from '$lib/server/db';
 import {
 	getValidAccessToken,
@@ -53,6 +53,7 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 			{ headers: corsHeaders }
 		);
 	} catch (err) {
+		if (isHttpError(err)) throw err;
 		console.error('Failed to poll picker session:', err);
 		const message = err instanceof Error ? err.message : 'Failed to poll session';
 		throw error(502, message);
